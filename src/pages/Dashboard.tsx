@@ -156,7 +156,7 @@ export default function Dashboard() {
                   <div key={app.id} className="flex items-center justify-between py-2 border-b last:border-0">
                     <div>
                       <p className="text-sm font-medium text-slate-900">{app.applicantName}</p>
-                      <p className="text-xs text-slate-500">{app.phone || app.email || '-'}</p>
+                      <p className="text-xs text-slate-500">{app.phone || '-'}</p>
                     </div>
                     <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-medium">
                       대기

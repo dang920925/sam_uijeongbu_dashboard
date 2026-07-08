@@ -216,7 +216,7 @@ export default function PerformanceDetail() {
                 {statusLabel[performance.status]}
               </Badge>
             </div>
-            <div><p className="text-xs text-slate-500 mb-1">등록일</p><p className="text-sm">{formatDate(performance.created_at)}</p></div>
+            <div><p className="text-xs text-slate-500 mb-1">등록일</p><p className="text-sm">{formatDate(performance.createdAt)}</p></div>
             {performance.description && (
               <div className="col-span-2"><p className="text-xs text-slate-500 mb-1">설명</p><p className="text-sm">{performance.description}</p></div>
             )}

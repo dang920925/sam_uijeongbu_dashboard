@@ -100,7 +100,7 @@ export default function Members() {
   })
 
   const { register: profileRegister, handleSubmit: handleProfileSubmit } =
-    useForm<{ intro: string; sns_url: string }>()
+    useForm<{ intro: string; snsUrl: string }>()
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -112,7 +112,7 @@ export default function Members() {
       const uploadRes = await axiosInstance.post<{ url: string }>('/upload/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      await upsertProfileMutation.mutateAsync({ profile_image: uploadRes.data.url })
+      await upsertProfileMutation.mutateAsync({ profileImage: uploadRes.data.url })
     } finally {
       setUploadingImage(false)
     }
@@ -196,7 +196,7 @@ export default function Members() {
                     </TableCell>
                     <TableCell className="text-slate-500">{member.phone || '-'}</TableCell>
                     <TableCell className="text-slate-500">
-                      {formatDate(member.joined_at || member.created_at)}
+                      {formatDate(member.createdAt)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -220,9 +220,9 @@ export default function Members() {
               <>
                 <div className="flex flex-col items-center mb-5">
                   <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center mb-2 border border-slate-200">
-                    {actorProfile?.profile_image ? (
+                    {actorProfile?.profileImage ? (
                       <img
-                        src={actorProfile.profile_image}
+                        src={actorProfile.profileImage}
                         alt={selectedMember.name}
                         className="w-full h-full object-cover"
                       />
@@ -270,8 +270,8 @@ export default function Members() {
                       <Label className="text-xs">SNS URL</Label>
                       <Input
                         placeholder="https://instagram.com/..."
-                        defaultValue={actorProfile?.sns_url || ''}
-                        {...profileRegister('sns_url')}
+                        defaultValue={actorProfile?.snsUrl || ''}
+                        {...profileRegister('snsUrl')}
                       />
                     </div>
                     {upsertProfileMutation.isSuccess && (
@@ -294,7 +294,7 @@ export default function Members() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">가입일</span>
-                  <span>{formatDate(selectedMember.joined_at || selectedMember.created_at)}</span>
+                  <span>{formatDate(selectedMember.createdAt)}</span>
                 </div>
               </div>
             )}
@@ -365,8 +365,8 @@ function MemberAvatar({ memberId }: { memberId: string }) {
 
   return (
     <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200">
-      {profile?.profile_image ? (
-        <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
+      {profile?.profileImage ? (
+        <img src={profile.profileImage} alt="" className="w-full h-full object-cover" />
       ) : (
         <User className="w-4 h-4 text-slate-400" />
       )}

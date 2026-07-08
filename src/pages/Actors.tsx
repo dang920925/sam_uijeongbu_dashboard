@@ -83,7 +83,7 @@ export default function Actors() {
   const {
     register: profileRegister,
     handleSubmit: handleProfileSubmit,
-  } = useForm<{ intro: string; sns_url: string }>()
+  } = useForm<{ intro: string; snsUrl: string }>()
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -96,7 +96,7 @@ export default function Actors() {
       const uploadRes = await axiosInstance.post<{ url: string }>('/upload/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      await upsertProfileMutation.mutateAsync({ profile_image: uploadRes.data.url })
+      await upsertProfileMutation.mutateAsync({ profileImage: uploadRes.data.url })
     } finally {
       setUploadingImage(false)
     }
@@ -144,7 +144,7 @@ export default function Actors() {
                     </TableCell>
                     <TableCell className="font-medium">{actor.name}</TableCell>
                     <TableCell className="text-slate-500">{actor.phone || '-'}</TableCell>
-                    <TableCell className="text-slate-500">{formatDate(actor.joined_at || actor.created_at)}</TableCell>
+                    <TableCell className="text-slate-500">{formatDate(actor.createdAt)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -165,9 +165,9 @@ export default function Actors() {
             {/* 프로필 이미지 */}
             <div className="flex flex-col items-center mb-5">
               <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center mb-2 border border-slate-200">
-                {actorProfile?.profile_image ? (
+                {actorProfile?.profileImage ? (
                   <img
-                    src={actorProfile.profile_image}
+                    src={actorProfile.profileImage}
                     alt={selectedActor.name}
                     className="w-full h-full object-cover"
                   />
@@ -217,8 +217,8 @@ export default function Actors() {
                   <Label className="text-xs">SNS URL</Label>
                   <Input
                     placeholder="https://instagram.com/..."
-                    defaultValue={actorProfile?.sns_url || ''}
-                    {...profileRegister('sns_url')}
+                    defaultValue={actorProfile?.snsUrl || ''}
+                    {...profileRegister('snsUrl')}
                   />
                 </div>
                 {upsertProfileMutation.isSuccess && (
@@ -273,8 +273,8 @@ function ActorAvatar({ memberId }: { memberId: string }) {
 
   return (
     <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200">
-      {profile?.profile_image ? (
-        <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
+      {profile?.profileImage ? (
+        <img src={profile.profileImage} alt="" className="w-full h-full object-cover" />
       ) : (
         <User className="w-4 h-4 text-slate-400" />
       )}
