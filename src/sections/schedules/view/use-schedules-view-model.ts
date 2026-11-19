@@ -19,6 +19,7 @@ import {
   toScheduleFormInput,
   type ScheduleFormInput,
 } from '@/src/api/schedule-mapper';
+import { normalizeScheduleLink } from '@/src/sections/schedules/utils/normalize-schedule-link';
 import {
   useCreateSchedule,
   useDeleteSchedule,
@@ -131,7 +132,14 @@ export function useSchedulesViewModel() {
 
   const handleOpenEdit = (id: string) => {
     const schedule = items.find((s) => s.id === id);
-    if (schedule) openDialog(id, toScheduleFormInput(schedule));
+    if (!schedule) return;
+    const performanceIds = performancesQuery.data
+      ? new Set(performancesQuery.data.items.map((p) => p.id))
+      : null;
+    openDialog(
+      id,
+      normalizeScheduleLink(toScheduleFormInput(schedule), performanceIds)
+    );
   };
 
   const handleFieldChange = <K extends keyof ScheduleFormInput>(

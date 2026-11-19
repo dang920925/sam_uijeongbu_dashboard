@@ -30,9 +30,17 @@ function findSchedule(id: string) {
   return getStore().schedules.find((s) => s.id === id && s.deletedAt === null);
 }
 
+/** 연결 공연이 소프트 삭제됐으면 performanceId 를 null 로(develop FN-15 qa1 Q3 — 비노출 공연은 그대로) */
 function toItem(s: MockSchedule): ScheduleItemResponse {
   const { deletedAt: _deletedAt, ...rest } = s;
-  return rest;
+  const linked = rest.performanceId
+    ? getStore().performances.find((p) => p.id === rest.performanceId)
+    : undefined;
+  return {
+    ...rest,
+    performanceId:
+      linked && linked.deletedAt === null ? rest.performanceId : null,
+  };
 }
 
 /** 오프셋 있는 datetime → UTC ISO. 형식이 틀리면 undefined */
