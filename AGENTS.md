@@ -70,6 +70,8 @@ scripts/                  check-hex·check-spacing·check-font-size·gen-iconify
 ## 10. 테스트 작성 규칙
 매퍼·utils·스토어·ViewModel 가공은 Vitest `*.spec.ts`(소스 옆, 제목 한국어 "…한다", AAA). UI 흐름은 `e2e-pw/*.spec.ts`(desktop + mobile, `resetMock` 후 픽스처). 기능 변경 = 테스트 동반.
 
+연동 E2E(실서버): `e2e-pw/integration/**` — `INT_API_BASE_URL`(기본 :4200)·`INT_ADMIN_USERNAME/PASSWORD`(로컬 픽스처 관리자, 잠금 시험 `INT_LOCK_USERNAME`·로그아웃 시험 `INT_SESSION_USERNAME`)·`INT_RELAY_SECRET`·`INT_DB_CONTAINER`·`INT_DB_NAME` 를 넣고 `pnpm test:e2e:integration`(앱 :4230, next dev, 목 없음). 픽스처는 `fixture-integration-` 접두사로 서버 API 로 만들고 그 접두사 행만 지운다(integration-developer.md §1).
+
 ## 11. 위반 자가 점검 체크리스트
 - [ ] `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build` 통과, `pnpm test:e2e` 통과
 - [ ] View 에 가공·API·store 없음, Container ≤50줄, 1 파일 1 export
