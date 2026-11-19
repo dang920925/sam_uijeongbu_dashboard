@@ -59,8 +59,12 @@ export function usePerformanceDetailViewModel(performanceId: string) {
   useErrorSnackbar(
     status === 'error' ? toApiErrorMessage(performanceQuery.error) : null
   );
+  // 공연이 없으면(not-found) 반 조회도 같은 이유로 실패한다 — 404 화면만 보이고 반 오류 스낵바는 띄우지 않는다
+  // (integration qa1: 실서버에서 UUID 아닌 id 가 반 조회 400 "id 형식이 올바르지 않습니다." 스낵바로 새던 것)
   useErrorSnackbar(
-    classesQuery.isError ? toApiErrorMessage(classesQuery.error) : null
+    classesQuery.isError && status !== 'not-found'
+      ? toApiErrorMessage(classesQuery.error)
+      : null
   );
 
   const handleEditSubmit = (input: PerformanceFormInput) => {
