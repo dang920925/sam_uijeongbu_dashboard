@@ -1,6 +1,6 @@
-// 자리 페이지 — W4 작업자가 Container 조립으로 바꾼다.
-import { PageHead } from '@/src/components/page-head';
+// SCR-D07 갤러리(FN-14·18) — 라우트는 Container 만 조립한다.
+import { GalleryContainer } from '@/src/sections/gallery/view/gallery-container';
 
-export default function Page() {
-  return <PageHead title='갤러리' />;
+export default function GalleryPage() {
+  return <GalleryContainer />;
 }
