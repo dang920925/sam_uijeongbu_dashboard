@@ -17,6 +17,7 @@ import {
   useRejectApplication,
 } from '@/src/api/application-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
+import { clampPage } from '@/src/sections/applications/utils/clamp-page';
 import {
   toApplicationRow,
   toRegisterFormInitial,
@@ -63,8 +64,11 @@ export function useApplicationsViewModel() {
   const totalPages = listQuery.data?.totalPages ?? 1;
 
   // 처리 후 마지막 쪽이 비면 앞 쪽으로 — 렌더 중 파생 상태 조정(React 문서 'adjusting state when a prop changes')
-  if (listQuery.data && page > listQuery.data.totalPages)
-    setPage(listQuery.data.totalPages);
+  // 서버는 0건이면 totalPages 0 을 준다 — clampPage 가 1 아래로 내리지 않는다(page=0 은 서버 400).
+  const clampedPage = listQuery.data
+    ? clampPage(page, listQuery.data.totalPages)
+    : page;
+  if (clampedPage !== page) setPage(clampedPage);
 
   // 목록 조회 실패는 스낵바도 띄운다(designer 스낵바 규격 "목록 조회 실패")
   const listError = listQuery.isError ? listQuery.error : null;

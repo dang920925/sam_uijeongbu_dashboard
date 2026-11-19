@@ -97,7 +97,8 @@ export function paginate<T>(items: T[], query: URLSearchParams): Paginated<T> {
   );
   const page = Math.max(Number(query.get('page') ?? 1) || 1, 1);
   const totalCount = items.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / size));
+  // 서버 PaginatedResponseDto 와 같이 0건이면 0(integration 2026-11-19 — 목이 1 을 줘 page 0 버그를 가렸다)
+  const totalPages = Math.ceil(totalCount / size);
   return {
     items: items.slice((page - 1) * size, page * size),
     totalCount,

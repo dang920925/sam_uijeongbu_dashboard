@@ -112,9 +112,10 @@ export function useSchedulesViewModel() {
     [classesQuery.data, form.performanceId]
   );
 
-  // 처리 후 마지막 쪽이 비면 앞 쪽으로 — 렌더 중 파생 상태 조정(React 문서 'adjusting state when a prop changes')
-  if (listQuery.data && page > listQuery.data.totalPages)
-    setPage(listQuery.data.totalPages);
+  // 처리 후 마지막 쪽이 비면 앞 쪽으로 — 렌더 중 파생 상태 조정(React 문서 'adjusting state when a prop changes').
+  // 실서버는 0건이면 totalPages 0 을 준다(PaginatedResponseDto) → page 0 요청(400 COMMON_001)이 되지 않게 1 아래로 내리지 않는다.
+  const lastPage = Math.max(1, listQuery.data?.totalPages ?? 1);
+  if (listQuery.data && page > lastPage) setPage(lastPage);
 
   const listError = listQuery.isError ? listQuery.error : null;
   useEffect(() => {
@@ -180,7 +181,7 @@ export function useSchedulesViewModel() {
     filterOptions: FILTER_OPTIONS,
     typeFilter,
     page,
-    totalPages: listQuery.data?.totalPages ?? 1,
+    totalPages: lastPage,
     rows,
     isLoading: listQuery.isPending,
     isError: listQuery.isError && !listQuery.data,
