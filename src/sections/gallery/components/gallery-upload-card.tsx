@@ -58,10 +58,21 @@ export function GalleryUploadCard({
         <Typo.Title.Bold component='h2'>{MSG_D07.UPLOAD_TITLE}</Typo.Title.Bold>
         <div className='flex flex-wrap items-end gap-4'>
           <div className='w-32'>
-            <FormField label={MSG_D07.CATEGORY} htmlFor={categoryId}>
+            <FormField
+              label={MSG_D07.CATEGORY}
+              htmlFor={categoryId}
+              labelId={`${categoryId}-label`}
+            >
               <TextField
                 id={categoryId}
                 select
+                slotProps={{
+                  select: {
+                    SelectDisplayProps: {
+                      'aria-labelledby': `${categoryId}-label`,
+                    } as object,
+                  },
+                }}
                 fullWidth
                 value={category}
                 disabled={isUploading}

@@ -28,6 +28,7 @@ import {
 import { usePerformanceClassDialog } from '@/src/sections/performance-detail/view/use-performance-class-dialog';
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import type { PerformanceFormInput } from '@/src/types/performance';
+import { useErrorSnackbar } from '@/src/hooks/use-error-snackbar';
 
 export type PerformanceDetailStatus =
   'loading' | 'not-found' | 'error' | 'ready';
@@ -53,6 +54,14 @@ export function usePerformanceDetailViewModel(performanceId: string) {
       : 'ready';
 
   const classes = classesQuery.data ?? [];
+
+  // 404 는 전용 화면이라 스낵바 없이, 그 밖 조회 오류는 스낵바도(designer error·class-error 프레임 — qa1 QA1-008)
+  useErrorSnackbar(
+    status === 'error' ? toApiErrorMessage(performanceQuery.error) : null
+  );
+  useErrorSnackbar(
+    classesQuery.isError ? toApiErrorMessage(classesQuery.error) : null
+  );
 
   const handleEditSubmit = (input: PerformanceFormInput) => {
     setEditError(null);

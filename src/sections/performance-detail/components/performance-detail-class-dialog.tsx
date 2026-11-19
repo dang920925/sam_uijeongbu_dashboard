@@ -127,7 +127,7 @@ export function PerformanceDetailClassDialog({
             border: 1,
             borderColor: 'semantic.alert.errorBorder',
             bgcolor: 'semantic.alert.errorBg',
-            color: 'error.main',
+            color: 'semantic.alert.errorFg',
           }}
         >
           <Iconify icon='solar:danger-triangle-linear' />
@@ -163,10 +163,21 @@ export function PerformanceDetailClassDialog({
           slotProps={{ htmlInput: { maxLength: 200 } }}
         />
       </FormField>
-      <FormField label={MSG_D04.CLASS_STATUS} htmlFor={statusId}>
+      <FormField
+        label={MSG_D04.CLASS_STATUS}
+        htmlFor={statusId}
+        labelId={`${statusId}-label`}
+      >
         <TextField
           id={statusId}
           select
+          slotProps={{
+            select: {
+              SelectDisplayProps: {
+                'aria-labelledby': `${statusId}-label`,
+              } as object,
+            },
+          }}
           value={form.status}
           onChange={(e) => dialog.onStatusChange(e.target.value as ClassStatus)}
         >

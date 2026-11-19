@@ -16,6 +16,7 @@ import {
   useSaveClass,
 } from '@/src/api/performance-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
+import { MSG_D04 } from '@/src/shared/messages/d04';
 import { toApiErrorMessage } from '@/src/utils/api-error-message';
 import {
   getDayToggleStates,
@@ -58,6 +59,7 @@ export interface ClassDialogState {
   errors: ClassFormErrors;
   dayStates: DayToggleState[];
   isConflicting: boolean;
+  /** 다이얼로그 하단 문구 — 서버 실패 문구, 없으면 화면이 감지한 충돌의 제출 차단 문구(SCR-D04 — qa1 QA1-014) */
   submitError: string | null;
   isSubmitting: boolean;
   onOpenCreate: () => void;
@@ -121,7 +123,8 @@ export function usePerformanceClassDialog(
     errors,
     dayStates,
     isConflicting,
-    submitError,
+    submitError:
+      submitError ?? (isConflicting ? MSG_D04.CLASS_CONFLICT_BLOCKED : null),
     isSubmitting,
     onOpenCreate: () => open(null, EMPTY_FORM),
     onOpenEdit: (item) => open(item.id, toClassFormInput(item)),

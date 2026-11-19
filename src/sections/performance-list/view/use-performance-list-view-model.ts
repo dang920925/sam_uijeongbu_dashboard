@@ -18,6 +18,8 @@ import { toPerformanceListRows } from '@/src/sections/performance-list/utils/to-
 import { MSG_PERF_FORM } from '@/src/shared/messages/performance-form';
 import { ADMIN_PAGE_SIZE } from '@/src/types/common';
 import type { PerformanceFormInput } from '@/src/types/performance';
+import { useErrorSnackbar } from '@/src/hooks/use-error-snackbar';
+import { MSG_D03 } from '@/src/shared/messages/d03';
 
 export function usePerformanceListViewModel() {
   const router = useRouter();
@@ -45,6 +47,8 @@ export function usePerformanceListViewModel() {
       },
     });
   };
+
+  useErrorSnackbar(query.isError ? MSG_D03.ERROR : null);
 
   return {
     isLoading: query.isPending || (query.isError && query.isFetching),
