@@ -18,5 +18,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // API·정적 파일·로그인은 제외
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icon.svg|login).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|login).*)',
+  ],
 };
