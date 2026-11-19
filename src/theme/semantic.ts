@@ -45,7 +45,12 @@ export interface SemanticTokens {
     placeholder: string;
   };
   /** onMuted: slate-100 위 부가 글자(비선택 pill·선택 행) — qa1 QA1-006 slate-500 4.34 → slate-600 6.92 */
-  text: { header: string; onImage: string; onMuted: string };
+  text: {
+    header: string;
+    onImage: string;
+    onMuted: string;
+    onPlaceholder: string;
+  };
   conflict: { bg: string; border: string; fg: string };
   scrim: { dialog: string; image: string; chip: string };
 }
@@ -95,7 +100,13 @@ export const SEMANTIC: SemanticTokens = {
     skeleton: RAW.slate100,
     placeholder: RAW.slate200,
   },
-  text: { header: RAW.slate700, onImage: RAW.white, onMuted: RAW.slate600 },
+  text: {
+    header: RAW.slate700,
+    onImage: RAW.white,
+    onMuted: RAW.slate600,
+    // 이미지 자리(회색 칸) 라벨·아이콘 — designer §12.1(qa2): slate-600
+    onPlaceholder: RAW.slate600,
+  },
   conflict: { bg: RAW.red50, border: RAW.red200, fg: RAW.red300 },
   scrim: {
     dialog: 'rgba(0 0 0 / 0.5)',

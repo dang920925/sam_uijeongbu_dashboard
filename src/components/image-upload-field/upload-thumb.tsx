@@ -36,7 +36,7 @@ export function UploadThumb({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: 'text.secondary',
+        color: 'semantic.text.onPlaceholder',
       }}
     >
       {src ? (

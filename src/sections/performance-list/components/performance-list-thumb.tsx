@@ -28,7 +28,7 @@ export function PerformanceListThumb({
         overflow: 'hidden',
         borderRadius: `${RADIUS.xs}px`,
         bgcolor: 'semantic.surface.placeholder',
-        color: 'text.secondary',
+        color: 'semantic.text.onPlaceholder',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',

@@ -23,7 +23,7 @@ export function StaffAvatar({ src, alt }: StaffAvatarProps) {
         overflow: 'hidden',
         borderRadius: '50%',
         bgcolor: 'semantic.surface.placeholder',
-        color: 'text.secondary',
+        color: 'semantic.text.onPlaceholder',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

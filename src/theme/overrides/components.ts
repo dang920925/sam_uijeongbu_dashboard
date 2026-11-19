@@ -56,13 +56,31 @@ export const componentOverrides: Components<Theme> = {
         fontSize: TYPO_TIERS.badge,
         whiteSpace: 'nowrap',
         [XS_ONLY]: { minHeight: LAYOUT.touch },
+        // 비활성 = 같은 색 50%(시안 components.css `.btn[disabled]` — qa2 QA2-008). MUI 기본 회색 대신
+        '&.Mui-disabled': { opacity: 0.5 },
+        '&.MuiButton-contained.MuiButton-colorPrimary.Mui-disabled': {
+          backgroundColor: RAW.slate900,
+          color: RAW.slate50,
+        },
+        '&.MuiButton-contained.MuiButton-colorError.Mui-disabled': {
+          backgroundColor: RAW.red600,
+          color: RAW.white,
+        },
+        '&.MuiButton-contained.MuiButton-colorSuccess.Mui-disabled': {
+          backgroundColor: RAW.green700,
+          color: RAW.white,
+        },
       },
       // sizeSmall 이 root 의 xs 44 를 덮어 xs 작은 버튼이 33 이던 문제(qa1 QA1-007 D07 "삭제") — xs 는 44
       sizeSmall: {
         minHeight: LAYOUT.controlSm,
         [XS_ONLY]: { minHeight: LAYOUT.touch },
       },
-      outlined: { borderColor: RAW.slate200, backgroundColor: RAW.white },
+      outlined: {
+        borderColor: RAW.slate200,
+        backgroundColor: RAW.white,
+        '&.Mui-disabled': { borderColor: RAW.slate200, color: RAW.slate900 },
+      },
     },
   },
   MuiIconButton: {
@@ -149,6 +167,8 @@ export const componentOverrides: Components<Theme> = {
         fontWeight: 500,
         color: RAW.slate500,
         '&.Mui-selected': { color: RAW.slate900 },
+        // 탭 목록(scroller)이 overflow hidden 이라 바깥 링이 잘린다 → 안쪽 링(qa2 QA2-004)
+        '&.Mui-focusVisible': { outlineOffset: -2 },
       },
     },
   },

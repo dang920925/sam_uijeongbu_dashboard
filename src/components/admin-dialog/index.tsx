@@ -32,6 +32,8 @@ interface AdminDialogProps {
   children: ReactNode;
   wide?: boolean;
   errorMessage?: string | null;
+  /** 제출 차단 문구 — 상자 없이 빨간 글자 한 줄(시안 SCR-D04 dialog-class, qa2 QA2-008) */
+  blockMessage?: string | null;
   /** 진행 중에는 바깥 클릭·Esc 로 닫히지 않게 */
   isBusy?: boolean;
 }
@@ -45,6 +47,7 @@ export function AdminDialog({
   children,
   wide = false,
   errorMessage,
+  blockMessage,
   isBusy = false,
 }: AdminDialogProps) {
   const theme = useTheme();
@@ -105,6 +108,11 @@ export function AdminDialog({
       <DialogContent sx={{ px: { xs: 4, md: 6 } }}>
         <div className='flex flex-col gap-4 pt-1'>
           {children}
+          {blockMessage ? (
+            <Typo.Caption.Regular color='error.main' role='alert'>
+              {blockMessage}
+            </Typo.Caption.Regular>
+          ) : null}
           {errorMessage ? (
             <Alert
               severity='error'
