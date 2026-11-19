@@ -1,0 +1,11 @@
+#!/bin/sh
+# 한국어 Conventional Commits 형식 검사 — style-guide §5.2·§5.3
+MSG=$(head -n1 "$1")
+case "$MSG" in Merge*|Revert*|fixup!*) exit 0 ;; esac
+echo "$MSG" | grep -Eq '^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?: .+' || {
+  echo "commit-msg: '<타입>(<범위>): <제목>' 형식이 아닙니다."; exit 1; }
+echo "$MSG" | grep -Eq '\.$' && { echo "commit-msg: 제목 끝에 마침표를 쓰지 않습니다."; exit 1; }
+LEN=$(printf '%s' "$MSG" | wc -m | tr -d ' ')
+[ "$LEN" -gt 72 ] && { echo "commit-msg: 제목이 72자를 넘습니다($LEN)."; exit 1; }
+[ "$LEN" -gt 50 ] && echo "commit-msg: 경고 — 제목이 50자를 넘습니다($LEN)."
+exit 0
