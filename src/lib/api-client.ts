@@ -10,16 +10,22 @@ import type { ApiErrorResponse } from '@/src/types/common';
 export class ApiError extends Error {
   readonly status: number;
   readonly payload: ApiErrorResponse | null;
+  /**
+   * 오류 코드 — 보통 payload.code. BFF 503 COMMON_005 는 화면 문구용 payload 를 비우지만(U13)
+   * 재시도 규칙이 알아볼 수 있게 code 는 남긴다(qa2 QA2-007).
+   */
+  readonly code: string | undefined;
 
-  constructor(status: number, payload: ApiErrorResponse | null) {
+  constructor(
+    status: number,
+    payload: ApiErrorResponse | null,
+    code: string | undefined = payload?.code
+  ) {
     super(payload?.message ?? `요청에 실패했습니다. (${status})`);
     this.name = 'ApiError';
     this.status = status;
     this.payload = payload;
-  }
-
-  get code(): string | undefined {
-    return this.payload?.code;
+    this.code = code;
   }
 }
 
@@ -36,22 +42,21 @@ function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
 const BFF_UNAVAILABLE_CODE = 'COMMON_005';
 
 /**
- * 실패 응답 본문 → 계약 오류 본문. 본문이 없거나 계약 모양이 아니면 null.
- * BFF 의 503 COMMON_005(서버 연결 실패)도 null 로 둔다 — 화면은 그 message 를 보이지 않고
- * 본문 없는 실패와 같은 기존 문구(다시 시도·"오류가 발생했습니다." 등)를 쓴다(U13).
+ * 실패 응답 → ApiError. 본문이 없거나 계약 모양이 아니면 payload null.
+ * BFF 의 503 COMMON_005(서버 연결 실패)는 payload 를 비우고 code 만 남긴다 — 화면은 그 message 를 보이지 않고
+ * 본문 없는 실패와 같은 기존 문구(다시 시도·"오류가 발생했습니다." 등)를 쓰며(U13), 재시도 규칙은 code 로 판단한다.
  */
-async function parseErrorPayload(
-  response: Response
-): Promise<ApiErrorResponse | null> {
+async function toApiError(response: Response): Promise<ApiError> {
+  let body: unknown = null;
   try {
-    const body: unknown = await response.json();
-    if (!isApiErrorResponse(body)) return null;
-    return response.status === 503 && body.code === BFF_UNAVAILABLE_CODE
-      ? null
-      : body;
+    body = await response.json();
   } catch {
-    return null;
+    return new ApiError(response.status, null);
   }
+  if (!isApiErrorResponse(body)) return new ApiError(response.status, null);
+  return response.status === 503 && body.code === BFF_UNAVAILABLE_CODE
+    ? new ApiError(503, null, BFF_UNAVAILABLE_CODE)
+    : new ApiError(response.status, body);
 }
 
 export async function apiFetch<T>(
@@ -63,8 +68,7 @@ export async function apiFetch<T>(
     credentials: 'same-origin',
     headers: { accept: 'application/json', ...init?.headers },
   });
-  if (!response.ok)
-    throw new ApiError(response.status, await parseErrorPayload(response));
+  if (!response.ok) throw await toApiError(response);
   const text = await response.text(); // 204 No Content 대응
   return text ? (JSON.parse(text) as T) : (undefined as T);
 }

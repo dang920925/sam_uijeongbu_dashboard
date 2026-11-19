@@ -16,6 +16,10 @@ const error = (status: number, code?: string) =>
 describe('shouldRetryQuery', () => {
   it('BFF 연결 실패 503 COMMON_005 는 재시도하지 않는다(QA2-007)', () => {
     expect(shouldRetryQuery(0, error(503, 'COMMON_005'))).toBe(false);
+    // api-client 가 실제로 만드는 모양 — 화면 문구용 payload 는 비우고 code 만 남긴다(U13)
+    expect(shouldRetryQuery(0, new ApiError(503, null, 'COMMON_005'))).toBe(
+      false
+    );
   });
 
   it('4xx 는 재시도하지 않는다', () => {

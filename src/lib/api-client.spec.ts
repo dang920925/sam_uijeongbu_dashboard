@@ -73,6 +73,8 @@ describe('apiFetch', () => {
     // Assert
     expect((error as ApiError).status).toBe(503);
     expect((error as ApiError).payload).toBeNull();
+    // 재시도 규칙(should-retry-query)이 알아보도록 code 는 남긴다(qa2 QA2-007)
+    expect((error as ApiError).code).toBe('COMMON_005');
   });
 });
 
