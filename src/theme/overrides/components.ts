@@ -32,7 +32,19 @@ export const componentOverrides: Components<Theme> = {
     },
   },
   MuiStack: { defaultProps: { useFlexGap: true } },
-  MuiButtonBase: { defaultProps: { disableRipple: true } },
+  MuiButtonBase: {
+    defaultProps: { disableRipple: true },
+    // 리플을 끈 대신 키보드 포커스 링(designer §6 slate-900, WCAG 2.4.7 — qa1 QA1-009).
+    // 어두운 내비·pill 처럼 자체 링이 있는 곳은 sx 가 덮는다.
+    styleOverrides: {
+      root: {
+        '&.Mui-focusVisible': {
+          outline: `2px solid ${RAW.slate900}`,
+          outlineOffset: 2,
+        },
+      },
+    },
+  },
   MuiButton: {
     defaultProps: { disableElevation: true },
     styleOverrides: {
@@ -45,7 +57,11 @@ export const componentOverrides: Components<Theme> = {
         whiteSpace: 'nowrap',
         [XS_ONLY]: { minHeight: LAYOUT.touch },
       },
-      sizeSmall: { minHeight: LAYOUT.controlSm },
+      // sizeSmall 이 root 의 xs 44 를 덮어 xs 작은 버튼이 33 이던 문제(qa1 QA1-007 D07 "삭제") — xs 는 44
+      sizeSmall: {
+        minHeight: LAYOUT.controlSm,
+        [XS_ONLY]: { minHeight: LAYOUT.touch },
+      },
       outlined: { borderColor: RAW.slate200, backgroundColor: RAW.white },
     },
   },
@@ -76,6 +92,8 @@ export const componentOverrides: Components<Theme> = {
         },
       },
       input: {
+        // placeholder = text.secondary(시안 components.css:441) — MUI 기본 opacity 0.42 는 2.70:1(qa1 QA1-011)
+        '&::placeholder': { color: RAW.slate500, opacity: 1 },
         paddingTop: 8,
         paddingBottom: 8,
         minHeight: LAYOUT.control - 16,

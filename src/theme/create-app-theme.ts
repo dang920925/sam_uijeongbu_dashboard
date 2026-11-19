@@ -29,9 +29,10 @@ export const appTheme = createTheme({
     },
     secondary: { main: RAW.slate100, contrastText: RAW.slate900 },
     error: { main: RAW.red600, dark: RAW.red700, contrastText: RAW.white },
+    // ⚑ qa1 QA1-006(designer §11.2): green-600 글자 3.30 → green-700 5.02, hover green-800
     success: {
-      main: RAW.green600,
-      dark: RAW.green700,
+      main: RAW.green700,
+      dark: RAW.green800,
       contrastText: RAW.white,
     },
     warning: { main: RAW.amber700, contrastText: RAW.white },

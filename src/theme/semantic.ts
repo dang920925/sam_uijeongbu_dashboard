@@ -25,6 +25,8 @@ export interface SemanticTokens {
     warningFg: string;
     errorBg: string;
     errorBorder: string;
+    /** alert--error 글자(qa1 QA1-006: red-600/red-50 4.41 → red-700 5.91) */
+    errorFg: string;
     infoBg: string;
     infoFg: string;
   };
@@ -42,7 +44,8 @@ export interface SemanticTokens {
     skeleton: string;
     placeholder: string;
   };
-  text: { header: string; onImage: string };
+  /** onMuted: slate-100 위 부가 글자(비선택 pill·선택 행) — qa1 QA1-006 slate-500 4.34 → slate-600 6.92 */
+  text: { header: string; onImage: string; onMuted: string };
   conflict: { bg: string; border: string; fg: string };
   scrim: { dialog: string; image: string; chip: string };
 }
@@ -69,6 +72,7 @@ export const SEMANTIC: SemanticTokens = {
     warningFg: RAW.amber700,
     errorBg: RAW.red50,
     errorBorder: RAW.red200,
+    errorFg: RAW.red700,
     infoBg: RAW.blue50,
     infoFg: RAW.blue700,
   },
@@ -91,7 +95,7 @@ export const SEMANTIC: SemanticTokens = {
     skeleton: RAW.slate100,
     placeholder: RAW.slate200,
   },
-  text: { header: RAW.slate700, onImage: RAW.white },
+  text: { header: RAW.slate700, onImage: RAW.white, onMuted: RAW.slate600 },
   conflict: { bg: RAW.red50, border: RAW.red200, fg: RAW.red300 },
   scrim: {
     dialog: 'rgba(0 0 0 / 0.5)',

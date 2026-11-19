@@ -15,6 +15,10 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import type { KeyboardEvent, ReactNode } from 'react';
 
+/** Typo 의 'text.secondary' 는 이 CSS 변수로 풀린다(테마 cssVariables) */
+const SECONDARY_VAR = '--mui-palette-text-secondary';
+const ON_MUTED_VAR = 'var(--mui-palette-semantic-text-onMuted)';
+
 export interface DataTableColumn<T> {
   key: string;
   header: ReactNode;
@@ -107,6 +111,8 @@ export function DataTable<T>({
                     '&:last-child td': { borderBottom: 0 },
                     '&.Mui-selected, &.Mui-selected:hover': {
                       bgcolor: 'semantic.surface.muted',
+                      // 선택 행(slate-100) 위 부가 글자는 slate-600 — text.secondary 변수를 행 범위에서만 바꾼다(qa1 QA1-006)
+                      [SECONDARY_VAR]: ON_MUTED_VAR,
                     },
                     '&:hover': { bgcolor: 'semantic.surface.hover' },
                     '&:focus-visible': {
@@ -171,6 +177,9 @@ export function DataTable<T>({
                   selectedKey === key
                     ? 'semantic.surface.muted'
                     : 'transparent',
+                ...(selectedKey === key
+                  ? { [SECONDARY_VAR]: ON_MUTED_VAR }
+                  : {}),
                 '&:last-of-type': { borderBottom: 0 },
                 '&:focus-visible': {
                   outline: 2,

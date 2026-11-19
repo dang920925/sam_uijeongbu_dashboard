@@ -15,6 +15,7 @@ import { Iconify } from '@/src/components/iconify';
 import { moveItem } from '@/src/components/image-upload-field/move-item';
 import { UploadThumb } from '@/src/components/image-upload-field/upload-thumb';
 import { Typo } from '@/src/components/typo';
+import { canRetryUpload } from '@/src/hooks/upload-error-message';
 import { useImageListUpload } from '@/src/hooks/use-image-list-upload';
 import { MSG_COMMON, MSG_UPLOAD } from '@/src/shared/messages/common';
 import { UPLOAD_CONTENT_TYPES, type UploadPurpose } from '@/src/types/codes';
@@ -134,18 +135,23 @@ export function ImageListUploadField({
           >
             {item.errorMessage ? (
               <div className='flex flex-wrap items-center justify-between gap-2'>
-                <Typo.Caption.Regular color='error.main' role='alert'>
+                <Typo.Caption.Regular
+                  color='semantic.alert.errorFg'
+                  role='alert'
+                >
                   {item.errorMessage}
                 </Typo.Caption.Regular>
                 <div className='flex gap-2'>
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    color='inherit'
-                    onClick={() => uploader.retry(item.key)}
-                  >
-                    {MSG_COMMON.RETRY}
-                  </Button>
+                  {canRetryUpload(item.errorMessage) ? (
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      color='inherit'
+                      onClick={() => uploader.retry(item.key)}
+                    >
+                      {MSG_COMMON.RETRY}
+                    </Button>
+                  ) : null}
                   <IconButton
                     aria-label={MSG_UPLOAD.REMOVE}
                     onClick={() => uploader.dismiss(item.key)}

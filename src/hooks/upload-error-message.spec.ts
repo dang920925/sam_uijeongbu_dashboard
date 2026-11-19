@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { UploadValidationError } from '@/src/api/upload-mapper';
-import { toUploadErrorMessage } from '@/src/hooks/upload-error-message';
+import {
+  canRetryUpload,
+  toUploadErrorMessage,
+} from '@/src/hooks/upload-error-message';
 import { ApiError } from '@/src/lib/api-client';
 
 describe('toUploadErrorMessage', () => {
@@ -29,5 +32,14 @@ describe('toUploadErrorMessage', () => {
     expect(toUploadErrorMessage(new ApiError(0, null))).toBe(
       '파일 업로드에 실패했습니다. 다시 시도해주세요.'
     );
+  });
+
+  it('형식·크기 실패엔 다시 시도를 보이지 않고 전송 실패(UPL_004)에만 보인다', () => {
+    expect(canRetryUpload('지원하지 않는 파일 형식입니다.')).toBe(false);
+    expect(canRetryUpload('파일 크기가 초과되었습니다.')).toBe(false);
+    expect(
+      canRetryUpload('파일 업로드에 실패했습니다. 다시 시도해주세요.')
+    ).toBe(true);
+    expect(canRetryUpload(null)).toBe(false);
   });
 });

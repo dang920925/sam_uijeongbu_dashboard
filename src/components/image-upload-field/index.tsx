@@ -18,6 +18,7 @@ import {
   type ThumbShape,
 } from '@/src/components/image-upload-field/upload-thumb';
 import { Typo } from '@/src/components/typo';
+import { canRetryUpload } from '@/src/hooks/upload-error-message';
 import { useImageUpload } from '@/src/hooks/use-image-upload';
 import { MSG_COMMON, MSG_UPLOAD } from '@/src/shared/messages/common';
 import { UPLOAD_CONTENT_TYPES, type UploadPurpose } from '@/src/types/codes';
@@ -120,7 +121,7 @@ export function ImageUploadField({
             bgcolor: 'semantic.alert.errorBg',
           }}
         >
-          <Typo.Caption.Regular color='error.main' role='alert'>
+          <Typo.Caption.Regular color='semantic.alert.errorFg' role='alert'>
             {uploader.errorMessage}
           </Typo.Caption.Regular>
           <div className='flex gap-2'>
@@ -132,14 +133,16 @@ export function ImageUploadField({
             >
               {MSG_UPLOAD.SELECT}
             </Button>
-            <Button
-              size='small'
-              variant='outlined'
-              color='inherit'
-              onClick={() => void runUpload(uploader.retry)}
-            >
-              {MSG_COMMON.RETRY}
-            </Button>
+            {canRetryUpload(uploader.errorMessage) ? (
+              <Button
+                size='small'
+                variant='outlined'
+                color='inherit'
+                onClick={() => void runUpload(uploader.retry)}
+              >
+                {MSG_COMMON.RETRY}
+              </Button>
+            ) : null}
           </div>
         </Box>
       ) : value ? (

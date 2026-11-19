@@ -39,7 +39,7 @@ export const MSG_UPLOAD = {
   SIZE_EXCEEDED: '파일 크기가 초과되었습니다.',
   FAILED: '파일 업로드에 실패했습니다. 다시 시도해주세요.',
   REQUIRED: '이미지를 업로드해주세요.',
-  /** 규격 안내 — 문구 미확정(designer.md §8.2 MSG-UPLOAD-HELP/HINT). 근거 규격: JPG·PNG·WEBP, 5MB/10MB */
+  /** 규격 안내 — MSG-UPLOAD-HELP/HINT 확정 문구(사용자 결정 2026-11-19 "제안 문구 그대로", integration §11.1). 규격 근거 FN-18 */
   HELP: 'JPG·PNG·WEBP, 포스터 5MB · 상세 이미지 10MB 이하',
   HINT: 'JPG·PNG·WEBP, 5MB 이하',
   /** aria-label — designer W3 신규 접근성 라벨(확인 필요 6) */

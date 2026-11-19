@@ -40,7 +40,10 @@ export function SegmentPill<T extends string>({
               px: { xs: 4, md: 3 },
               borderRadius: 9999,
               bgcolor: isSelected ? 'primary.main' : 'semantic.surface.muted',
-              color: isSelected ? 'primary.contrastText' : 'text.secondary',
+              // 비선택 글자 slate-600(qa1 QA1-006 — slate-100 위 slate-500 은 4.34)
+              color: isSelected
+                ? 'primary.contrastText'
+                : 'semantic.text.onMuted',
               transition: (t) => t.transitions.create(['background-color']),
               '&:focus-visible': {
                 outline: 2,

@@ -8,6 +8,7 @@ import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
 import Tooltip from '@mui/material/Tooltip';
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 
 import { Iconify } from '@/src/components/iconify';
 import { Typo } from '@/src/components/typo';
@@ -19,6 +20,8 @@ interface AdminNavProps {
   variant: 'sidebar' | 'rail';
   onNavigate?: () => void;
   onLogout: () => void;
+  /** xs 드로어: 열리면 포커스를 첫 메뉴로(designer §3.3 전환표 — qa1 QA1-025) */
+  autoFocusFirst?: boolean;
 }
 
 const itemSx = (isActive: boolean, isRail: boolean) => ({
@@ -52,19 +55,28 @@ export function AdminNav({
   variant,
   onNavigate,
   onLogout,
+  autoFocusFirst = false,
 }: AdminNavProps) {
   const isRail = variant === 'rail';
+  // React autoFocus 는 링크(a)에 동작하지 않아 마운트 뒤 직접 옮긴다(드로어 열림 = 마운트)
+  const firstItemRef = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    if (!autoFocusFirst) return;
+    const frame = requestAnimationFrame(() => firstItemRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [autoFocusFirst]);
   return (
     <>
       <nav
         aria-label={MSG_D00.NAV_LABEL}
         className='flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4'
       >
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.map((item, index) => {
           const isActive = isNavActive(item, pathname);
           const link = (
             <ButtonBase
               key={item.href}
+              ref={index === 0 ? firstItemRef : undefined}
               component={Link}
               href={item.href}
               onClick={onNavigate}

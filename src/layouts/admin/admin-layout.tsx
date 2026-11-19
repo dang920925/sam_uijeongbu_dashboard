@@ -92,6 +92,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <Drawer
         open={isDrawerOpen}
         onClose={closeDrawer}
+        // 컨테이너 대신 첫 메뉴(autoFocusFirst)가 포커스를 받게(qa1 QA1-025). 포커스 가둠은 그대로
+        ModalProps={{ disableAutoFocus: true }}
         sx={{ display: { md: 'none' } }}
         slotProps={{
           paper: {
@@ -112,6 +114,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           variant='sidebar'
           onNavigate={closeDrawer}
           onLogout={handleLogout}
+          autoFocusFirst
         />
       </Drawer>
 

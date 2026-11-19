@@ -76,7 +76,8 @@ export function AdminDialog({
       }}
     >
       <DialogTitle
-        id={titleId}
+        // MUI 는 id 가 없으면 DialogTitle 에 aria-labelledby id 를 붙인다 → 별도 id 로 두어 제목 글자(span)만 이름이 되게
+        id={`${titleId}-title`}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -87,7 +88,10 @@ export function AdminDialog({
           pb: { xs: 3, md: 4 },
         }}
       >
-        <Typo.Title.Bold component='span'>{title}</Typo.Title.Bold>
+        {/* 다이얼로그 이름 = 제목 글자만(닫기 버튼 이름이 섞이지 않게 — qa1 QA1-022) */}
+        <Typo.Title.Bold component='span' id={titleId}>
+          {title}
+        </Typo.Title.Bold>
         {/* 시안 오른쪽 위 닫기(X) — designer .dialog__title, aria-label 은 현행 sr-only "닫기" */}
         <IconButton
           aria-label={MSG_COMMON.CLOSE}
@@ -107,7 +111,7 @@ export function AdminDialog({
               icon={<Iconify icon='solar:danger-circle-linear' />}
               sx={{
                 bgcolor: 'semantic.alert.errorBg',
-                color: 'error.main',
+                color: 'semantic.alert.errorFg',
                 border: 1,
                 borderColor: 'semantic.alert.errorBorder',
               }}

@@ -16,3 +16,11 @@ export function toUploadErrorMessage(error: unknown): string {
   if (code === 'UPL_002') return MSG_UPLOAD.SIZE_EXCEEDED;
   return MSG_UPLOAD.FAILED;
 }
+
+/**
+ * "다시 시도"를 보일지 — 같은 파일로 다시 해도 결과가 같은 형식·크기 실패(UPL_001·002)엔 보이지 않는다
+ * (§11.9 라벨 = 동작, designer §3.3 D03 "UPL_004(+ '다시 시도')" — qa1 QA1-024).
+ */
+export function canRetryUpload(message: string | null): boolean {
+  return message === MSG_UPLOAD.FAILED;
+}

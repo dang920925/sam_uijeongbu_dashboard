@@ -24,7 +24,9 @@ export function LoginErrorBox({ message }: LoginErrorBoxProps) {
         bgcolor: 'semantic.alert.errorBg',
       }}
     >
-      <Typo.Badge.Regular color='error.main'>{message}</Typo.Badge.Regular>
+      <Typo.Badge.Regular color='semantic.alert.errorFg'>
+        {message}
+      </Typo.Badge.Regular>
     </Box>
   );
 }
