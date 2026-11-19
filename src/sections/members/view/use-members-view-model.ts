@@ -19,6 +19,7 @@ import {
   type MemberFilter,
 } from '@/src/sections/members/utils/member-display';
 import type { MemberFormInput } from '@/src/types/member';
+import { useErrorSnackbar } from '@/src/hooks/use-error-snackbar';
 
 const MEMBER_PARAM = 'member';
 const EMPTY_MEMBER_FORM: MemberFormInput = {
@@ -50,6 +51,9 @@ export function useMembersViewModel() {
   };
 
   const data = membersQuery.data;
+  useErrorSnackbar(
+    membersQuery.isError ? toApiErrorMessage(membersQuery.error) : null
+  );
   return {
     filterOptions: MEMBER_FILTER_OPTIONS,
     filter,

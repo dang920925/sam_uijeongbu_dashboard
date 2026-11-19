@@ -9,6 +9,7 @@ import {
   toMemberCreateRequest,
 } from '@/src/api/member-mapper';
 import {
+  ApiError,
   apiDelete,
   apiFetch,
   apiPatch,
@@ -35,10 +36,39 @@ export async function fetchMembers(
   return { ...res, items: res.items.map(fromMemberListItemResponse) };
 }
 
+/** develop §3.1 MEM_001 문구 */
+const MEMBER_NOT_FOUND_MESSAGE = '단원 정보를 찾을 수 없습니다.';
+
+/**
+ * 상세 GET 의 id 형식 오류(400 COMMON_001 — `?member=<UUID 아님>`)는 "없는 단원"과 같다 →
+ * MEM_001 과 같은 404·문구로 바꾼다(D04 공연 상세 선례, qa1 QA1-023).
+ */
+export function toMemberNotFoundIfInvalidId(error: unknown): unknown {
+  if (
+    !(error instanceof ApiError) ||
+    error.status !== 400 ||
+    error.code !== 'COMMON_001'
+  ) {
+    return error;
+  }
+  return new ApiError(404, {
+    statusCode: 404,
+    status: 'Not Found',
+    message: MEMBER_NOT_FOUND_MESSAGE,
+    code: 'MEM_001',
+    timestamp: error.payload?.timestamp ?? '',
+    path: error.payload?.path ?? '',
+  });
+}
+
 export async function fetchMember(id: string): Promise<Member> {
-  return fromMemberListItemResponse(
-    await apiFetch<MemberListItemResponse>(endpoints.members.detail(id))
-  );
+  try {
+    return fromMemberListItemResponse(
+      await apiFetch<MemberListItemResponse>(endpoints.members.detail(id))
+    );
+  } catch (error: unknown) {
+    throw toMemberNotFoundIfInvalidId(error);
+  }
 }
 
 export async function createMember(input: MemberFormInput): Promise<Member> {

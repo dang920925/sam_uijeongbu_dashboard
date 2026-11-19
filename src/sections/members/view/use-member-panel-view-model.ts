@@ -14,13 +14,20 @@ import {
   useMember,
 } from '@/src/api/member-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
-import { toApiErrorMessage } from '@/src/utils/api-error-message';
+import {
+  isNotFoundError,
+  toApiErrorMessage,
+} from '@/src/utils/api-error-message';
 import { formatJoinedDate } from '@/src/sections/members/utils/member-display';
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import { formatMemberDeleteConfirm } from '@/src/shared/messages/d05';
+import { useQueryClient } from '@tanstack/react-query';
+import { useErrorSnackbar } from '@/src/hooks/use-error-snackbar';
+import { findMemberNameInLists } from '@/src/sections/members/utils/find-member-name';
 
 export function useMemberPanelViewModel(memberId: string, onClose: () => void) {
   const snackbar = useAppSnackbar();
+  const queryClient = useQueryClient();
   const memberQuery = useMember(memberId);
   const member = memberQuery.data ?? null;
   const isActor = member?.type === 'ACTOR';
@@ -37,6 +44,8 @@ export function useMemberPanelViewModel(memberId: string, onClose: () => void) {
       onError: (error) => {
         setIsConfirmOpen(false);
         snackbar.error(toApiErrorMessage(error));
+        // 이미 지워진 단원(404 MEM_001)이면 패널도 닫는다 — 목록은 쿼리 훅이 다시 불러온다(qa1 QA1-012)
+        if (isNotFoundError(error)) onClose();
       },
     });
   };
@@ -44,9 +53,15 @@ export function useMemberPanelViewModel(memberId: string, onClose: () => void) {
   const isLoading =
     memberQuery.isPending || (isActor && profileQuery.isPending);
   const error = memberQuery.error ?? (isActor ? profileQuery.error : null);
+  // 404 는 패널 안 문구만, 그 밖 조회 오류는 스낵바도(designer panel-error 프레임 — qa1 QA1-008)
+  useErrorSnackbar(
+    error && !isNotFoundError(error) ? toApiErrorMessage(error) : null
+  );
+  // 상세 조회가 실패해도 목록에서 이미 아는 이름을 패널 머리에 보인다(panel-error 프레임 "[이름]")
+  const listName = findMemberNameInLists(queryClient, memberId);
 
   return {
-    title: member?.name ?? '',
+    title: member?.name ?? listName ?? '',
     isLoading,
     errorMessage: error ? toApiErrorMessage(error) : null,
     onRetry: () => {
