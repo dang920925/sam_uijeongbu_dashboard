@@ -16,6 +16,8 @@ interface FormFieldProps {
   children: ReactNode;
   /** 라벨을 legend 로 쓰는 묶음(요일 토글 등) */
   asGroup?: boolean;
+  /** 라벨 요소 id — MUI select(combobox 가 div)처럼 htmlFor 로 이름이 붙지 않는 입력은 aria-labelledby 로 잇는다 */
+  labelId?: string;
 }
 
 export function FormField({
@@ -26,6 +28,7 @@ export function FormField({
   error,
   children,
   asGroup = false,
+  labelId,
 }: FormFieldProps) {
   const labelNode = (
     <Typo.Badge.Medium component='span'>
@@ -41,9 +44,13 @@ export function FormField({
   return (
     <Wrapper className='m-0 flex min-w-0 flex-col gap-1 border-0 p-0'>
       {asGroup ? (
-        <legend className='mb-1 p-0'>{labelNode}</legend>
+        <legend id={labelId} className='mb-1 p-0'>
+          {labelNode}
+        </legend>
       ) : (
-        <label htmlFor={htmlFor}>{labelNode}</label>
+        <label id={labelId} htmlFor={htmlFor}>
+          {labelNode}
+        </label>
       )}
       {children}
       {error ? (

@@ -106,12 +106,15 @@ export function paginate<T>(items: T[], query: URLSearchParams): Paginated<T> {
   };
 }
 
-/** createdAt 내림차순 */
-export function byCreatedDesc<T extends { createdAt: string }>(
+/** createdAt 내림차순 — 같은 밀리초면 id(시간 순 UUID) 내림차순으로 최신 행이 먼저 */
+export function byCreatedDesc<T extends { createdAt: string; id?: string }>(
   a: T,
   b: T
 ): number {
-  return b.createdAt.localeCompare(a.createdAt);
+  return (
+    b.createdAt.localeCompare(a.createdAt) ||
+    (b.id ?? '').localeCompare(a.id ?? '')
+  );
 }
 
 export function str(value: unknown): string | null {

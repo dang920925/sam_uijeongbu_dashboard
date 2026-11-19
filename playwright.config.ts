@@ -26,6 +26,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
+  // 작업자가 동시에 돌려도 결과 폴더가 서로 지워지지 않게 포트별로 나눈다(⚠ 2026-11-19 ENOENT 실측)
+  outputDir: `test-results/${PORT}`,
   reporter: [['list']],
   timeout: 60_000,
   use: {

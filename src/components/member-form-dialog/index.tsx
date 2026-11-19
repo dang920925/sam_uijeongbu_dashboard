@@ -112,10 +112,22 @@ function MemberFormDialogBody({
           slotProps={{ htmlInput: { inputMode: 'tel', maxLength: 20 } }}
         />
       </FormField>
-      <FormField label={MSG_MEMBER_FORM.TYPE} htmlFor={typeId} required>
+      <FormField
+        label={MSG_MEMBER_FORM.TYPE}
+        htmlFor={typeId}
+        labelId={`${typeId}-label`}
+        required
+      >
         <TextField
           id={typeId}
           select
+          slotProps={{
+            select: {
+              SelectDisplayProps: {
+                'aria-labelledby': `${typeId}-label`,
+              } as object,
+            },
+          }}
           value={form.type}
           onChange={(e) =>
             setForm({ ...form, type: e.target.value as MemberType })

@@ -64,6 +64,16 @@ export const componentOverrides: Components<Theme> = {
         backgroundColor: RAW.white,
         fontSize: TYPO_TIERS.body,
         '& .MuiOutlinedInput-notchedOutline': { borderColor: RAW.slate200 },
+        // root 의 기본 테두리 규칙이 오류·포커스 테두리를 덮지 않게 같은 구체성으로 다시 건다(⚠ 2026-11-19 실측)
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+          borderColor: RAW.slate900,
+        },
+        '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+          borderColor: RAW.red600,
+        },
+        '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+          borderColor: RAW.slate200,
+        },
       },
       input: {
         paddingTop: 8,

@@ -44,9 +44,11 @@ export function createTypo(tier: TypoTier, weight: TypoWeight): TypoComponent {
       <Typography
         component={component}
         className={className}
-        color={color}
         sx={[
           {
+            // MUI 9 Typography 의 color prop 은 'textSecondary' 같은 키만 받아 'text.secondary' 경로가 무시된다
+            // (⚠ 2026-11-19 작업자 3명 실측) → sx 로 넘겨 팔레트 경로를 해석하게 한다.
+            ...(color ? { color } : {}),
             fontSize: size,
             fontWeight: TYPO_WEIGHTS[weight],
             lineHeight: size >= 18 ? LINE_HEIGHT.snug : LINE_HEIGHT.normal,

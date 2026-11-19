@@ -11,6 +11,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import type { FormEvent, ReactNode } from 'react';
@@ -18,6 +19,7 @@ import { useId } from 'react';
 
 import { Iconify } from '@/src/components/iconify';
 import { Typo } from '@/src/components/typo';
+import { MSG_COMMON } from '@/src/shared/messages/common';
 import { LAYOUT } from '@/src/theme/layout-tokens';
 
 interface AdminDialogProps {
@@ -76,12 +78,25 @@ export function AdminDialog({
       <DialogTitle
         id={titleId}
         sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 3,
           px: { xs: 4, md: 6 },
           pt: { xs: 4, md: 6 },
           pb: { xs: 3, md: 4 },
         }}
       >
         <Typo.Title.Bold component='span'>{title}</Typo.Title.Bold>
+        {/* 시안 오른쪽 위 닫기(X) — designer .dialog__title, aria-label 은 현행 sr-only "닫기" */}
+        <IconButton
+          aria-label={MSG_COMMON.CLOSE}
+          onClick={onClose}
+          disabled={isBusy}
+          sx={{ mr: -2, color: 'text.secondary' }}
+        >
+          <Iconify icon='solar:close-circle-linear' size='md' />
+        </IconButton>
       </DialogTitle>
       <DialogContent sx={{ px: { xs: 4, md: 6 } }}>
         <div className='flex flex-col gap-4 pt-1'>

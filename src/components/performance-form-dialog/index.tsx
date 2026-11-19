@@ -123,10 +123,22 @@ function PerformanceFormBody({
         />
       </FormField>
       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-        <FormField label={MSG_PERF_FORM.TYPE} htmlFor={typeId} required>
+        <FormField
+          label={MSG_PERF_FORM.TYPE}
+          htmlFor={typeId}
+          labelId={`${typeId}-label`}
+          required
+        >
           <TextField
             id={typeId}
             select
+            slotProps={{
+              select: {
+                SelectDisplayProps: {
+                  'aria-labelledby': `${typeId}-label`,
+                } as object,
+              },
+            }}
             value={form.type}
             onChange={(e) =>
               setForm({ ...form, type: e.target.value as PerformanceType })
@@ -139,10 +151,22 @@ function PerformanceFormBody({
             ))}
           </TextField>
         </FormField>
-        <FormField label={MSG_PERF_FORM.STATUS} htmlFor={statusId} required>
+        <FormField
+          label={MSG_PERF_FORM.STATUS}
+          htmlFor={statusId}
+          labelId={`${statusId}-label`}
+          required
+        >
           <TextField
             id={statusId}
             select
+            slotProps={{
+              select: {
+                SelectDisplayProps: {
+                  'aria-labelledby': `${statusId}-label`,
+                } as object,
+              },
+            }}
             value={form.status}
             onChange={(e) =>
               setForm({ ...form, status: e.target.value as PerformanceStatus })

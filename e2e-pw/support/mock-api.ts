@@ -32,9 +32,9 @@ export async function adminApi<T>(
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
-/** 1×1 PNG — 업로드 흐름용 최소 이미지 */
+/** 2×3 회색 PNG — 업로드 흐름용 최소 이미지(캡처에서 흰 배경과 구분되게 회색) */
 export const TINY_PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAA2iEnWAAAAEElEQVR4nGM4ffUhEDGgUACdUA8HMpQj4AAAAABJRU5ErkJggg==',
   'base64'
 );
 
