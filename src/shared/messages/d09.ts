@@ -1,12 +1,12 @@
 // ----------------------------------------------------------------------
 // SCR-D09 연출진 관리 문구(MSG-D09-*) — 신규 화면(D5). 근거: design SCR-D09 · designer.md §3.4 §4.
-// 현행·기획·디자인에 글자가 없는 문구는 지어내지 않고 designer 식별자를 그대로 둔다(확인 필요).
+// 현행·기획·디자인에 글자가 없던 문구(MSG-D09-*)는 사용자 결정 2026-11-19 로 확정됐다.
 // ----------------------------------------------------------------------
 export const MSG_D09 = {
   /** 메뉴 라벨(design SCR-D00 [D5]) = 페이지 제목 */
   TITLE: '연출진 관리',
-  /** designer §3.4 §4 확인 필요 — design 에 글자 없음 */
-  SUBTITLE: '[MSG-D09-SUB — 확인 필요]',
+  /** MSG-D09-SUB — 사용자 결정 2026-11-19 확정 */
+  SUBTITLE: '연출진 정보를 관리합니다',
   /** design SCR-D09 "○○ 추가" 패턴 */
   ADD: '연출진 추가',
   ADD_TITLE: '연출진 추가',
@@ -27,8 +27,8 @@ export const MSG_D09 = {
   NAME_PH: '이름 입력',
   /** 역할 placeholder — 홈 app/page.tsx:37 표기(designer §3.4 §4) */
   ROLE_PH: '예: 예술감독 · 연출',
-  /** 소개 placeholder — designer §3.4 §4 확인 필요 */
-  BIO_PH: '[MSG-D09-BIO-PH — 확인 필요]',
+  /** 소개 placeholder MSG-D09-BIO-PH — 사용자 결정 2026-11-19 확정 */
+  BIO_PH: '연출진 소개',
   /** 이름 필수 — 현행 Members.tsx 문구(MSG_MEMBER_FORM.NAME_REQUIRED 와 같음) */
   NAME_REQUIRED: '이름을 입력해주세요',
   /** 역할 필수 — designer §3.4 §4 "역할을 입력해주세요 패턴" 기본안(확인 필요) */

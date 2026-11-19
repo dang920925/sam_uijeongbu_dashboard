@@ -7,7 +7,7 @@ export const MSG_D10 = {
   /** 메뉴 라벨(design SCR-D00 [D5]) = 페이지 제목 */
   TITLE: '팝업 관리',
   /** designer §3.4 §5 확인 필요 — design 에 글자 없음 */
-  SUBTITLE: '[MSG-D10-SUB — 확인 필요]',
+  SUBTITLE: '홈페이지 팝업을 관리합니다',
   /** design SCR-D10 · D03~D08 "○○ 추가" 패턴 */
   ADD: '팝업 추가',
   ADD_TITLE: '팝업 추가',
@@ -32,7 +32,7 @@ export const MSG_D10 = {
   END_DATE: '종료일',
   ACTIVE: '활성',
   /** 겹침 경고 — designer §3.4 §5 확인 필요 */
-  OVERLAP: '[MSG-POPUP-OVERLAP — 확인 필요]',
+  OVERLAP: '다른 팝업과 노출 기간이 겹칩니다',
   /** develop §3.1 POP_002 */
   END_BEFORE_START: '종료일은 시작일 이후여야 합니다.',
   /**

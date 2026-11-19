@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------
 // 대시보드 공용 문구(MSG-COMMON-*) — 화면은 식별자만 인용한다(가이드 §11.9).
 // 근거: 현행 대시보드 코드 문자열(S-code-20) · develop §3.1 오류 코드 표 · design §3 공통.
-// 값이 정해지지 않은 문구는 지어내지 않고 `[MSG-… — 확인 필요]` 자리표시를 그대로 둔다(designer.md §8.2).
+// designer.md §8.2 자리표시(MSG-UPLOAD-* 등)는 사용자 결정 2026-11-19 "제안 문구 그대로"로 확정됐다.
 // ----------------------------------------------------------------------
 export const MSG_COMMON = {
   /** 현행 버튼 라벨 — Performances.tsx·Members.tsx·Schedules.tsx 다이얼로그 */
@@ -40,8 +40,8 @@ export const MSG_UPLOAD = {
   FAILED: '파일 업로드에 실패했습니다. 다시 시도해주세요.',
   REQUIRED: '이미지를 업로드해주세요.',
   /** 규격 안내 — 문구 미확정(designer.md §8.2 MSG-UPLOAD-HELP/HINT). 근거 규격: JPG·PNG·WEBP, 5MB/10MB */
-  HELP: '[MSG-UPLOAD-HELP — 확인 필요]',
-  HINT: '[MSG-UPLOAD-HINT — 확인 필요]',
+  HELP: 'JPG·PNG·WEBP, 포스터 5MB · 상세 이미지 10MB 이하',
+  HINT: 'JPG·PNG·WEBP, 5MB 이하',
   /** aria-label — designer W3 신규 접근성 라벨(확인 필요 6) */
   MOVE_UP: '위로 이동',
   MOVE_DOWN: '아래로 이동',

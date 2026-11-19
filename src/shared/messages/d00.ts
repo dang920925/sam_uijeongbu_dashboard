@@ -22,8 +22,8 @@ export const MSG_D00 = {
 
 /** 404·오류 화면(가이드 A4 신설) — 대시보드용 문구는 기획에 없다 → 자리표시(지어내지 않음, front-end 확인 필요) */
 export const MSG_D00_STATE = {
-  NOT_FOUND: '[MSG-D00-404 — 확인 필요]',
-  ERROR: '[MSG-D00-ERROR — 확인 필요]',
+  NOT_FOUND: '페이지를 찾을 수 없습니다',
+  ERROR: '일시적인 오류가 발생했습니다',
   /** 이동 버튼 라벨 = 현행 메뉴 라벨 "대시보드" */
   GO_DASHBOARD: '대시보드',
 } as const;

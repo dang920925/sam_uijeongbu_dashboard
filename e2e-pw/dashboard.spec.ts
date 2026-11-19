@@ -158,7 +158,9 @@ test.describe('SCR-D02 요약', () => {
       })
     );
     await page.goto('/');
-    await expect(page.getByText('[MSG-D02-ERROR — 확인 필요]')).toBeVisible();
+    await expect(
+      page.getByText('일시적인 오류로 현황을 불러오지 못했습니다')
+    ).toBeVisible();
     // Act
     await page.unroute(url);
     await page.getByRole('button', { name: '다시 시도' }).click();

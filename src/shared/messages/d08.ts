@@ -46,7 +46,8 @@ export const MSG_D08 = {
   /** 빈 select 기본값 — designer W4 D08 "선택 안 함 옵션" 기본안, 확인 필요 */
   LINK_NONE: '선택 안 함',
   /** 도움말 — 문구 미확정(designer W4 D08). 뜻: 공연 일정에 공연을 연결해야 홈페이지 '작품 상세' 버튼이 나온다 */
-  LINK_HELP: '[MSG-D08-LINK-HELP — 확인 필요]',
+  LINK_HELP:
+    '공연 일정은 공연을 연결해야 홈페이지 일정에 작품 상세 버튼이 표시됩니다',
   /** 삭제 확인 — 현행 Schedules.tsx:226 */
   CONFIRM_DELETE: '일정을 삭제하시겠습니까?',
 } as const;

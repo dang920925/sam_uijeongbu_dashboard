@@ -13,7 +13,7 @@ import {
 } from '@/e2e-pw/support/mock-api';
 
 const PREFIX = 'fixture-1-w4-';
-const OVERLAP = '[MSG-POPUP-OVERLAP — 확인 필요]';
+const OVERLAP = '다른 팝업과 노출 기간이 겹칩니다';
 
 /** 오늘(KST)에서 days 만큼 옮긴 'YYYY-MM-DD' */
 function kstDate(days: number): string {

@@ -15,8 +15,8 @@ export const MSG_D03 = {
   COL_CREATED: '등록일',
   /** 빈 — Performances.tsx:113 */
   EMPTY: '등록된 공연이 없습니다',
-  /** 목록 조회 오류 — 기획·현행·디자인에 문구 없음(design §3 공통 "오류 = … 다시 시도") → 자리표시(확인 필요) */
-  ERROR: '[MSG-D03-ERROR — 확인 필요]',
+  /** 목록 조회 오류 — 기획·현행·디자인에 문구 없음(design §3 공통 "오류 = … 다시 시도") → MSG-D03-ERROR(사용자 결정 2026-11-19 확정) */
+  ERROR: '일시적인 오류로 공연 목록을 불러오지 못했습니다',
   /** 포스터 없음 자리 aria-label — designer W3 확인 필요 6 */
   NO_POSTER: '포스터 없음',
   /** 행·카드 aria-label — design §3 공통 "현행 title 속성 '상세 보기' 재사용" */
