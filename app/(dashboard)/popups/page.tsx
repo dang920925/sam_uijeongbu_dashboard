@@ -1,6 +1,6 @@
-// 자리 페이지 — W4 작업자가 Container 조립으로 바꾼다.
-import { PageHead } from '@/src/components/page-head';
+// SCR-D10 팝업 관리(FN-17·18, D5 신규) — 라우트는 Container 만 조립한다.
+import { PopupsContainer } from '@/src/sections/popups/view/popups-container';
 
-export default function Page() {
-  return <PageHead title='팝업 관리' />;
+export default function PopupsPage() {
+  return <PopupsContainer />;
 }
