@@ -32,12 +32,23 @@ function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
   );
 }
 
+/** BFF 가 서버에 닿지 못했을 때 만드는 오류 코드(qa1 U13 — develop §3.1 "BFF 서버 연결 실패") */
+const BFF_UNAVAILABLE_CODE = 'COMMON_005';
+
+/**
+ * 실패 응답 본문 → 계약 오류 본문. 본문이 없거나 계약 모양이 아니면 null.
+ * BFF 의 503 COMMON_005(서버 연결 실패)도 null 로 둔다 — 화면은 그 message 를 보이지 않고
+ * 본문 없는 실패와 같은 기존 문구(다시 시도·"오류가 발생했습니다." 등)를 쓴다(U13).
+ */
 async function parseErrorPayload(
   response: Response
 ): Promise<ApiErrorResponse | null> {
   try {
     const body: unknown = await response.json();
-    return isApiErrorResponse(body) ? body : null;
+    if (!isApiErrorResponse(body)) return null;
+    return response.status === 503 && body.code === BFF_UNAVAILABLE_CODE
+      ? null
+      : body;
   } catch {
     return null;
   }

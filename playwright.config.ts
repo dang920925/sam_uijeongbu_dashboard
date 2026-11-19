@@ -21,6 +21,8 @@ export const INTEGRATION_AUTH_STATE = `e2e-pw/.auth/integration-${PORT}.json`;
 
 const INTEGRATION_ENV = {
   API_BASE_URL: process.env.INT_API_BASE_URL ?? 'http://localhost:4200',
+  // qa1 U11 — 서버와 같은 중계 비밀(방문자 IP 를 레이트리밋 키로 신뢰하게)
+  RELAY_SECRET: process.env.INT_RELAY_SECRET ?? '',
   NEXT_DIST_DIR: DIST_DIR,
 };
 
