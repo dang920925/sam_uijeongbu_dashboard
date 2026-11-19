@@ -92,7 +92,7 @@ scripts/                  check-hex·check-spacing·check-font-size·gen-iconify
 요약 = 현황판(KPI) · 목록 = 테이블(dense, xs 카드 — D06·D08·D10 은 lg 미만 카드) · 갤러리 = 카드 그리드 · 폼 = Dialog(현행 유지, 사진 있으면 wide 640) · 확인 = ConfirmDialog(제목 없이 현행 문구).
 
 ## 색·토큰
-라이트 단일 모드. primary slate-900, 본문 slate-50/white, 글자 slate-900·slate-500, error red-600, alert warning amber-700(⚑ 보정값 — 사용자 확정 2026-11-19). 상태색: 신청 대기 warning·승인 success·거절 error / 공연 진행중 success·예정 warning·종료 neutral / 반 활성 success·비활성 neutral / 배우 info·일반 neutral / 단원 등록됨 neutral. 칩은 pastel(filled 금지). 아이콘 solar linear 단일(`scripts/icon-list.json` → `pnpm icons`). hex 화이트리스트: `src/theme/**`, `app/global-error.tsx`, `*.spec.ts`, 생성 아이콘 번들.
+라이트 단일 모드. primary slate-900, 본문 slate-50/white, 글자 slate-900·slate-500(slate-100 위 부가 글자 slate-600), error red-600(alert 글자 red-700), success green-700, alert warning amber-700(⚑ 보정값 — 사용자 확정 2026-11-19 · qa1 QA1-006). 상태색: 신청 대기 warning·승인 success·거절 error / 공연 진행중 success·예정 warning·종료 neutral / 반 활성 success·비활성 neutral / 배우 info·일반 neutral / 단원 등록됨 neutral. 칩은 pastel(filled 금지). 아이콘 solar linear 단일(`scripts/icon-list.json` → `pnpm icons`). hex 화이트리스트: `src/theme/**`, `app/global-error.tsx`, `*.spec.ts`, 생성 아이콘 번들.
 
 ## 화면 텍스트 위계
 Typo 티어 Caption 12·Tag 13·Badge 14·Body 16·Title 18·SubTitle 20·SubHead 24·Head 28. 대시보드 화면은 4티어(title·body·badge·caption), 로그인 로고만 SubHead. 페이지 h1·카드·다이얼로그 제목 Title.Bold, 행 주 항목 Body.Semibold, 셀·라벨·버튼 Badge, 날짜·배지·오류 Caption.
@@ -109,4 +109,9 @@ Typo 티어 Caption 12·Tag 13·Badge 14·Body 16·Title 18·SubTitle 20·SubHea
 - ⚠ 2026-11-19: OutlinedInput root 의 테두리 규칙이 오류·포커스 테두리를 덮었다 → `.Mui-error`·`.Mui-focused` 규칙을 같은 구체성으로 다시 건다.
 - ⚠ 2026-11-19: 병렬 E2E 가 `test-results/` 를 서로 지웠다 → outputDir 을 포트별로.
 - ⚠ 2026-11-19: `next dev` 가 tsconfig 를 재포맷하고 `.next-wN/types` include 를 추가한다 → 커밋 전에 되돌린다.
+- ⚠ 2026-11-19(qa1): MuiButton `sizeSmall` 이 root 의 xs 44 를 덮어 xs 작은 버튼이 33 이었다 → sizeSmall 에도 xs 44.
+- ⚠ 2026-11-19(qa1): 리플을 끄면 버튼 키보드 포커스 표시가 사라진다 → MuiButtonBase `.Mui-focusVisible` outline.
+- ⚠ 2026-11-19(qa1): MUI select 는 FormField `<label htmlFor>` 로 이름이 안 붙는다 → `labelId` + `SelectDisplayProps['aria-labelledby']`.
+- ⚠ 2026-11-19(qa1): Dialog 에 aria-labelledby 를 주면 DialogTitle 이 같은 id 를 받아 닫기 버튼까지 이름에 섞였다 → DialogTitle 에 별도 id.
+- ⚠ 2026-11-19(qa1): React autoFocus 는 링크(a)에 동작하지 않는다 → 드로어 첫 메뉴는 마운트 뒤 focus().
 <!-- END:design-rules -->
