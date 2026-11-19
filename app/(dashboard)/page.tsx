@@ -1,6 +1,6 @@
-// 자리 페이지 — W1 작업자가 Container 조립으로 바꾼다.
-import { PageHead } from '@/src/components/page-head';
+// SCR-D02 요약(/) — 조립만 한다.
+import { DashboardContainer } from '@/src/sections/dashboard/view/dashboard-container';
 
 export default function Page() {
-  return <PageHead title='대시보드' />;
+  return <DashboardContainer />;
 }
