@@ -4,7 +4,7 @@
 // QueryClient + 전역 오류 처리(가이드 A6.4).
 // - 401(AUTH_003): BFF 쿠키를 지우고 로그인으로 1회 이동. 로그인 화면 자체의 401 은 meta.suppressGlobalUnauthorized 로 제외(B7).
 // - 403: 스낵바(서버 message).
-// - 4xx 는 재시도하지 않는다(멱등하지 않은 결과를 반복하지 않게), 5xx·네트워크는 1회.
+// - 재시도 규칙은 should-retry-query: 4xx·503 COMMON_005(BFF 연결 실패) 없음, 그 밖 5xx·네트워크 1회.
 // ----------------------------------------------------------------------
 import {
   MutationCache,
@@ -17,6 +17,7 @@ import { useState, type ReactNode } from 'react';
 
 import { paths } from '@/app/paths';
 import { logout } from '@/src/api/auth';
+import { shouldRetryQuery } from '@/src/components/query-provider/should-retry-query';
 import { ApiError } from '@/src/lib/api-client';
 
 declare module '@tanstack/react-query' {
@@ -71,12 +72,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
         queries: {
           staleTime: 30_000,
           refetchOnWindowFocus: false,
-          retry: (count, error) =>
-            !(
-              error instanceof ApiError &&
-              error.status >= 400 &&
-              error.status < 500
-            ) && count < 1,
+          retry: shouldRetryQuery,
         },
         mutations: { retry: false },
       },
