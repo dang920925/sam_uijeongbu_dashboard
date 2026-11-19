@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { paths } from '@/app/paths';
 import { useLogoutMutation } from '@/src/api/auth-queries';
+import { focusPageTitleWhenReady } from '@/src/layouts/admin/focus-page-title';
 import { useLayoutStore } from '@/src/stores/layout-store';
 
 export function useAdminLayout() {
@@ -24,10 +25,7 @@ export function useAdminLayout() {
     if (previousPath.current === pathname) return;
     previousPath.current = pathname;
     closeDrawer();
-    const frame = requestAnimationFrame(() =>
-      document.getElementById('page-title')?.focus()
-    );
-    return () => cancelAnimationFrame(frame);
+    return focusPageTitleWhenReady(document);
   }, [pathname, closeDrawer]);
 
   const handleLogout = useCallback(() => {
