@@ -48,6 +48,7 @@ export function PerformanceDetailClassDialog({
       onClose={dialog.onClose}
       onSubmit={dialog.onSubmit}
       errorMessage={dialog.submitError}
+      blockMessage={dialog.blockMessage}
       isBusy={dialog.isSubmitting}
       actions={
         <>

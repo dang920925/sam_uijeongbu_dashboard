@@ -29,6 +29,10 @@ import { usePerformanceClassDialog } from '@/src/sections/performance-detail/vie
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import type { PerformanceFormInput } from '@/src/types/performance';
 import { useErrorSnackbar } from '@/src/hooks/use-error-snackbar';
+import {
+  classesErrorSnackbar,
+  detailErrorSnackbar,
+} from '@/src/sections/performance-detail/utils/detail-error-snackbar';
 
 export type PerformanceDetailStatus =
   'loading' | 'not-found' | 'error' | 'ready';
@@ -55,16 +59,20 @@ export function usePerformanceDetailViewModel(performanceId: string) {
 
   const classes = classesQuery.data ?? [];
 
-  // 404 는 전용 화면이라 스낵바 없이, 그 밖 조회 오류는 스낵바도(designer error·class-error 프레임 — qa1 QA1-008)
+  // 상세 404 는 전용 화면(스낵바 없음), 반 오류 스낵바는 상세가 ready 일 때만(qa2 QA2-003 경쟁 상태)
   useErrorSnackbar(
-    status === 'error' ? toApiErrorMessage(performanceQuery.error) : null
+    detailErrorSnackbar(
+      status,
+      performanceQuery.isError
+        ? toApiErrorMessage(performanceQuery.error)
+        : null
+    )
   );
-  // 공연이 없으면(not-found) 반 조회도 같은 이유로 실패한다 — 404 화면만 보이고 반 오류 스낵바는 띄우지 않는다
-  // (integration qa1: 실서버에서 UUID 아닌 id 가 반 조회 400 "id 형식이 올바르지 않습니다." 스낵바로 새던 것)
   useErrorSnackbar(
-    classesQuery.isError && status !== 'not-found'
-      ? toApiErrorMessage(classesQuery.error)
-      : null
+    classesErrorSnackbar(
+      status,
+      classesQuery.isError ? toApiErrorMessage(classesQuery.error) : null
+    )
   );
 
   const handleEditSubmit = (input: PerformanceFormInput) => {

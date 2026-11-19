@@ -5,7 +5,7 @@
 // - 수정 중인 자기 반은 빼고 본다(excludeId).
 // - 새 반이 비활성이면 충돌로 보지 않는다(서버도 ACTIVE 일 때만 409 — 자체 결정).
 // - 요일 토글 비활성은 현행 로직 그대로: 미선택 요일 d 는 [...선택, d] 가 겹치면 비활성
-//   (선택 자체가 이미 겹치면 나머지 요일이 전부 비활성 — designer W3 확인 필요 3, 기본안 현행).
+//   (선택 자체가 이미 겹치면 나머지 요일이 전부 비활성 — designer W3 §8.3-2 현행 유지 기본안 — 자체 결정, front-end-dashboard.md §11.2).
 // ----------------------------------------------------------------------
 import { DAY_CODES, type ClassStatus, type DayCode } from '@/src/types/codes';
 import type { PerformanceClass } from '@/src/types/performance-class';

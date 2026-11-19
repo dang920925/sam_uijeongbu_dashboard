@@ -59,8 +59,10 @@ export interface ClassDialogState {
   errors: ClassFormErrors;
   dayStates: DayToggleState[];
   isConflicting: boolean;
-  /** 다이얼로그 하단 문구 — 서버 실패 문구, 없으면 화면이 감지한 충돌의 제출 차단 문구(SCR-D04 — qa1 QA1-014) */
+  /** 서버 실패 문구(다이얼로그 오류 상자) */
   submitError: string | null;
+  /** 화면이 감지한 충돌의 제출 차단 문구(SCR-D04 — qa1 QA1-014, 모양은 qa2 QA2-008 빨간 글자 한 줄) */
+  blockMessage: string | null;
   isSubmitting: boolean;
   onOpenCreate: () => void;
   onOpenEdit: (item: PerformanceClass) => void;
@@ -123,8 +125,8 @@ export function usePerformanceClassDialog(
     errors,
     dayStates,
     isConflicting,
-    submitError:
-      submitError ?? (isConflicting ? MSG_D04.CLASS_CONFLICT_BLOCKED : null),
+    submitError,
+    blockMessage: isConflicting ? MSG_D04.CLASS_CONFLICT_BLOCKED : null,
     isSubmitting,
     onOpenCreate: () => open(null, EMPTY_FORM),
     onOpenEdit: (item) => open(item.id, toClassFormInput(item)),
