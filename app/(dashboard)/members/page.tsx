@@ -1,6 +1,12 @@
-// 자리 페이지 — W2 작업자가 Container 조립으로 바꾼다.
-import { PageHead } from '@/src/components/page-head';
+// SCR-D05 단원 관리 — Container 만 조립한다. ?member=<id> 를 useSearchParams 로 읽어 Suspense 경계가 필요하다.
+import { Suspense } from 'react';
+
+import { MembersContainer } from '@/src/sections/members/view/members-container';
 
 export default function Page() {
-  return <PageHead title='단원 관리' />;
+  return (
+    <Suspense>
+      <MembersContainer />
+    </Suspense>
+  );
 }
