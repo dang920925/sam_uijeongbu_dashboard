@@ -15,18 +15,15 @@ import {
   useStaffList,
 } from '@/src/api/staff-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
-import { ApiError } from '@/src/lib/api-client';
 import {
   createEmptyStaffForm,
   nextDisplayOrder,
 } from '@/src/sections/staff/utils/staff-form';
 import { toStaffRow } from '@/src/sections/staff/utils/staff-row';
-import { MSG_API, MSG_COMMON } from '@/src/shared/messages/common';
+import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_D09 } from '@/src/shared/messages/d09';
 import type { Staff } from '@/src/types/content';
-
-const toErrorMessage = (error: unknown) =>
-  error instanceof ApiError ? error.message : MSG_API.SERVER_ERROR;
+import { toApiErrorMessage as toErrorMessage } from '@/src/utils/api-error-message';
 
 type DialogState =
   | { mode: 'create'; initialValue: StaffFormInput }

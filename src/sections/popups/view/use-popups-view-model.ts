@@ -16,15 +16,12 @@ import {
   useSavePopup,
 } from '@/src/api/popup-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
-import { ApiError } from '@/src/lib/api-client';
 import { EMPTY_POPUP_FORM } from '@/src/sections/popups/utils/popup-form';
 import { overlapsActivePopups } from '@/src/sections/popups/utils/popup-period';
 import { toPopupRow } from '@/src/sections/popups/utils/popup-row';
-import { MSG_API, MSG_COMMON } from '@/src/shared/messages/common';
+import { MSG_COMMON } from '@/src/shared/messages/common';
+import { toApiErrorMessage as toErrorMessage } from '@/src/utils/api-error-message';
 import { todayKst } from '@/src/utils/kst-date-format';
-
-const toErrorMessage = (error: unknown) =>
-  error instanceof ApiError ? error.message : MSG_API.SERVER_ERROR;
 
 type DialogState =
   | { mode: 'create'; initialValue: PopupFormInput }

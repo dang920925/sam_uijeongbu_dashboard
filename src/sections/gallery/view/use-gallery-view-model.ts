@@ -15,7 +15,6 @@ import {
 } from '@/src/api/gallery-queries';
 import { uploadImage } from '@/src/api/upload';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
-import { ApiError } from '@/src/lib/api-client';
 import { toGalleryUploadErrorMessage } from '@/src/sections/gallery/utils/gallery-upload-error';
 import {
   GALLERY_FILTER_OPTIONS,
@@ -23,11 +22,8 @@ import {
   toGalleryTile,
   type GalleryFilter,
 } from '@/src/sections/gallery/utils/gallery-tile';
-import { MSG_API } from '@/src/shared/messages/common';
 import type { GalleryCategory } from '@/src/types/codes';
-
-const toErrorMessage = (error: unknown) =>
-  error instanceof ApiError ? error.message : MSG_API.SERVER_ERROR;
+import { toApiErrorMessage as toErrorMessage } from '@/src/utils/api-error-message';
 
 export function useGalleryViewModel() {
   const snackbar = useAppSnackbar();
