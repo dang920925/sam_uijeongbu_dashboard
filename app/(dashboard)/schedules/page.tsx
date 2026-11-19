@@ -1,6 +1,6 @@
-// 자리 페이지 — W3 작업자가 Container 조립으로 바꾼다.
-import { PageHead } from '@/src/components/page-head';
+// SCR-D08 일정 관리 `/schedules` (FN-15) — 조립만 한다.
+import { SchedulesContainer } from '@/src/sections/schedules/view/schedules-container';
 
 export default function Page() {
-  return <PageHead title='일정 관리' />;
+  return <SchedulesContainer />;
 }
