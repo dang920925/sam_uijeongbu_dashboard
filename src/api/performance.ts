@@ -1,5 +1,7 @@
 // ----------------------------------------------------------------------
 // 공연·반 요청 함수(FN-09·10) — develop §3.4. 화면 모델 변환은 performance-mapper 에 가둔다.
+// 에러 번역: 상세 GET 의 400 COMMON_001 은 경로 id 형식 오류뿐이다(본문·쿼리 없음 — 서버 UuidParamPipe).
+//   `/performances/<uuid 아님>` 도 "없는 공연"이므로 404 로 바꿔 화면이 404 상태(PERF_001 과 같은 문구)를 보이게 한다.
 // ----------------------------------------------------------------------
 import { endpoints } from '@/src/api/endpoints';
 import {
@@ -10,6 +12,7 @@ import {
   toPerformanceUpsertRequest,
 } from '@/src/api/performance-mapper';
 import {
+  ApiError,
   apiDelete,
   apiFetch,
   apiPatch,
@@ -41,10 +44,25 @@ export async function fetchPerformances(
   return { ...res, items: res.items.map(fromPerformanceListItemResponse) };
 }
 
+/** 상세 GET 의 id 형식 오류(400 COMMON_001) → 404(본문은 서버 것 그대로) */
+function toNotFoundIfInvalidId(error: unknown): unknown {
+  return error instanceof ApiError &&
+    error.status === 400 &&
+    error.code === 'COMMON_001'
+    ? new ApiError(404, error.payload)
+    : error;
+}
+
 export async function fetchPerformance(id: string): Promise<Performance> {
-  return fromPerformanceResponse(
-    await apiFetch<AdminPerformanceResponse>(endpoints.performances.detail(id))
-  );
+  try {
+    return fromPerformanceResponse(
+      await apiFetch<AdminPerformanceResponse>(
+        endpoints.performances.detail(id)
+      )
+    );
+  } catch (error: unknown) {
+    throw toNotFoundIfInvalidId(error);
+  }
 }
 
 export async function createPerformance(
