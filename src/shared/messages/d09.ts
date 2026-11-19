@@ -31,7 +31,7 @@ export const MSG_D09 = {
   BIO_PH: '연출진 소개',
   /** 이름 필수 — 현행 Members.tsx 문구(MSG_MEMBER_FORM.NAME_REQUIRED 와 같음) */
   NAME_REQUIRED: '이름을 입력해주세요',
-  /** 역할 필수 — designer §3.4 §4 "역할을 입력해주세요 패턴" 기본안(확인 필요) */
+  /** 역할 필수 — designer §3.4 §4 "역할을 입력해주세요 패턴" 제안 문구 — 사용자 확정 2026-11-19 "제안 문구 그대로" */
   ROLE_REQUIRED: '역할을 입력해주세요',
   /** design SCR-D09 빈 상태(D03 빈 상태 패턴) */
   EMPTY: '등록된 연출진이 없습니다',

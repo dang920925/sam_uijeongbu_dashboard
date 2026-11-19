@@ -1,12 +1,12 @@
 // ----------------------------------------------------------------------
 // SCR-D04 공연 상세·반 관리 문구(MSG-D04-*) — 화면은 식별자만 인용한다(가이드 §11.9).
 // 근거: 현행 PerformanceDetail.tsx(S-code-20) · design SCR-D04 · designer.md §3.3 SCR-D04 · develop §3.1·§3.4.
-// designer 가 새로 붙인 접근성 라벨·표기("공연 관리로 돌아가기" 등)는 확인 필요(designer W3 확인 필요 6).
+// designer 가 새로 붙인 접근성 라벨·표기("공연 관리로 돌아가기" 등)는 designer W3 제안 문구 — 사용자 확정 2026-11-19 "제안 문구 그대로".
 // ----------------------------------------------------------------------
 export const MSG_D04 = {
   /** 머리 부제 — PerformanceDetail.tsx:197 */
   SUBTITLE: '공연 상세 정보',
-  /** ← 아이콘 버튼 aria-label — designer W3 신규(확인 필요 6) */
+  /** ← 아이콘 버튼 aria-label — designer W3 신규(사용자 확정 2026-11-19 "제안 문구 그대로") */
   BACK: '공연 관리로 돌아가기',
 
   /** "공연 정보" 카드 — PerformanceDetail.tsx:204-221 */
@@ -18,7 +18,7 @@ export const MSG_D04 = {
   INFO_DESCRIPTION: '설명',
   /** [D5] 상세 이미지 수 — design SCR-D04 [D5], develop AdminPerformance.detailImageUrls */
   INFO_DETAIL_IMAGES: '상세 이미지',
-  /** 포스터 없음 자리 aria-label — designer W3 신규(확인 필요 6) */
+  /** 포스터 없음 자리 aria-label — designer W3 신규(사용자 확정 2026-11-19 "제안 문구 그대로") */
   NO_POSTER: '포스터 없음',
 
   /** "반(Class) 관리" 카드 — PerformanceDetail.tsx:230-247 */
@@ -33,7 +33,7 @@ export const MSG_D04 = {
   CLASS_TABLE_ARIA: '반 목록',
   /** 빈 반 — PerformanceDetail.tsx:237 */
   CLASS_EMPTY: '등록된 반이 없습니다',
-  /** 행 아이콘 버튼 aria-label — designer W3 신규(확인 필요 6), 다이얼로그 제목과 같은 말 */
+  /** 행 아이콘 버튼 aria-label — designer W3 신규(사용자 확정 2026-11-19 "제안 문구 그대로"), 다이얼로그 제목과 같은 말 */
   CLASS_EDIT_ARIA: '반 수정',
   CLASS_DELETE_ARIA: '반 삭제',
   /** 반 삭제 확인 — PerformanceDetail.tsx:271 */
@@ -64,11 +64,11 @@ export const MSG_D04 = {
 
   /** 404 PERF_001 — PerformanceDetail.tsx:187 */
   NOT_FOUND: '공연을 찾을 수 없습니다',
-  /** xs 반 카드의 마감일 접두 — designer W3 신규(확인 필요 6), 표 머리 "마감일" 재사용 */
+  /** xs 반 카드의 마감일 접두 — designer W3 신규(사용자 확정 2026-11-19 "제안 문구 그대로"), 표 머리 "마감일" 재사용 */
   CARD_DEADLINE_PREFIX: '마감일',
 } as const;
 
-/** 상세 이미지 [n]장 — designer W3 신규 표기(확인 필요 6) */
+/** 상세 이미지 [n]장 — designer W3 신규 표기(사용자 확정 2026-11-19 "제안 문구 그대로") */
 export function formatDetailImageCount(count: number): string {
   return `${count}장`;
 }

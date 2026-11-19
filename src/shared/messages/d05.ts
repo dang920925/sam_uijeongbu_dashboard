@@ -35,15 +35,15 @@ export const MSG_D05 = {
   /** [D5] 칸 — design SCR-D05 [D5] */
   ACTIVITY_START: '활동 시작일',
   DISPLAY_ORDER: '노출 순서',
-  /** 노출 순서 도움말 — develop §3.4 displayOrder 0~9999 (designer W4 확인 필요) */
+  /** 노출 순서 도움말 — develop §3.4 displayOrder 0~9999 (designer W4 제안 — 사용자 확정 2026-11-19 "제안 문구 그대로") */
   DISPLAY_ORDER_HELP: '0~9999',
   FILMOGRAPHY: '출연작',
-  /** 출연작 행 추가 버튼 — designer W4 "○○ 추가" 패턴 줄임(확인 필요) */
+  /** 출연작 행 추가 버튼 — designer W4 "○○ 추가" 패턴 줄임(사용자 확정 2026-11-19 "제안 문구 그대로") */
   FILMOGRAPHY_ADD: '추가',
   FILM_TITLE: '작품명',
   FILM_ROLE: '배역',
   FILM_YEAR: '연도',
-  /** 출연작 행 삭제 aria-label — designer W4 신규(확인 필요) */
+  /** 출연작 행 삭제 aria-label — designer W4 신규(사용자 확정 2026-11-19 "제안 문구 그대로") */
   FILM_REMOVE_ARIA: '출연작 삭제',
   /** 저장 성공 인라인 — Members.tsx:278(현행 문구 그대로, ✓ 포함) */
   SAVED_INLINE: '저장되었습니다 ✓',
@@ -62,7 +62,7 @@ export function formatMemberDeleteConfirm(name: string): string {
   return `${name}을(를) 삭제하시겠습니까?`;
 }
 
-/** 소개 글자 수 카운터 "[n]/200" — designer W4 확인 필요(값 범위는 develop §3.4) */
+/** 소개 글자 수 카운터 "[n]/200" — designer W4 제안 — 사용자 확정 2026-11-19 "제안 문구 그대로"(값 범위는 develop §3.4) */
 export function formatIntroCounter(length: number, max: number): string {
   return `${length}/${max}`;
 }

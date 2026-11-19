@@ -10,7 +10,7 @@ export const paths = {
   },
   members: {
     root: '/members',
-    /** 신청서 "단원 등록됨" 링크 → 해당 단원 패널을 연다(designer W4 확인 필요 — front-end 판단) */
+    /** 신청서 "단원 등록됨" 링크 → 해당 단원 패널을 연다(designer W4 제안 — front-end 판단, 자체 결정) */
     detail: (id: string) => `/members?member=${encodeURIComponent(id)}`,
   },
   applications: '/applications',

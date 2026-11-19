@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------
 // 팝업 폼 검증(순수 함수) — develop §3.4 PopupUpsert · §3.1 오류 문구.
 // - 이미지 없음 → UPL_003 "이미지를 업로드해주세요." · 종료일 < 시작일 → POP_002 "종료일은 시작일 이후여야 합니다."
-// - 링크 https 아님(≤500)·날짜 비어 있음 → 계약에 전용 문구가 없어 COMMON_001 기본 문구(자체 결정, designer 확인 필요).
+// - 링크 https 아님(≤500)·날짜 비어 있음 → 계약에 전용 문구가 없어 COMMON_001 기본 문구(자체 결정 — front-end-dashboard.md §11.2).
 // ----------------------------------------------------------------------
 import type { PopupFormInput } from '@/src/api/popup-mapper';
 import { MSG_UPLOAD } from '@/src/shared/messages/common';

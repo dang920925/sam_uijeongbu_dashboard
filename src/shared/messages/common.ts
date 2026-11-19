@@ -19,7 +19,7 @@ export const MSG_COMMON = {
   CLOSE: '닫기',
   /** 값 없음 표기 — 현행 formatDate '-' */
   EMPTY_VALUE: '-',
-  /** 페이지네이션 aria-label — designer W3 신규 접근성 라벨(확인 필요 6) */
+  /** 페이지네이션 aria-label — designer W3 신규 접근성 라벨(사용자 확정 2026-11-19 "제안 문구 그대로") */
   PREV_PAGE: '이전 페이지',
   NEXT_PAGE: '다음 페이지',
   /** 저장 성공 — 현행 Members.tsx:278 "저장되었습니다 ✓" (스낵바에선 ✓ 를 아이콘으로, designer 확인 4) */
@@ -42,7 +42,7 @@ export const MSG_UPLOAD = {
   /** 규격 안내 — MSG-UPLOAD-HELP/HINT 확정 문구(사용자 결정 2026-11-19 "제안 문구 그대로", integration §11.1). 규격 근거 FN-18 */
   HELP: 'JPG·PNG·WEBP, 포스터 5MB · 상세 이미지 10MB 이하',
   HINT: 'JPG·PNG·WEBP, 5MB 이하',
-  /** aria-label — designer W3 신규 접근성 라벨(확인 필요 6) */
+  /** aria-label — designer W3 신규 접근성 라벨(사용자 확정 2026-11-19 "제안 문구 그대로") */
   MOVE_UP: '위로 이동',
   MOVE_DOWN: '아래로 이동',
   REMOVE: '삭제',
