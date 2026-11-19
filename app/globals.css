@@ -1,0 +1,8 @@
+/*
+ * 전역 CSS — Tailwind 4 는 레이아웃·간격 유틸만(색·타이포 유틸 금지, 가이드 A8).
+ * 레이어 순서: Tailwind theme/base → MUI(enableCssLayer + modularCssLayers) → components → utilities.
+ * 색·배경을 unlayered :root 에 두지 않는다(MUI CssBaseline 을 이겨 다크/라이트가 깨짐 — 가이드 §11.10).
+ */
+@layer theme, base, mui, components, utilities;
+
+@import 'tailwindcss';
