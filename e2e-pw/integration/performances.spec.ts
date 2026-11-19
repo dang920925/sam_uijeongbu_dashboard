@@ -80,10 +80,15 @@ test.describe('연동 SCR-D03 공연 관리 — 현재 상태', () => {
     );
     // Act
     await page.goto('/performances');
-    // Assert
+    // Assert — 목록 자리 문구 + 같은 문구의 오류 스낵바(qa1 QA1-008 designer error 프레임)
+    await expect(
+      page
+        .getByRole('main')
+        .getByText('일시적인 오류로 공연 목록을 불러오지 못했습니다')
+    ).toBeVisible();
     await expect(
       page.getByText('일시적인 오류로 공연 목록을 불러오지 못했습니다')
-    ).toBeVisible();
+    ).toHaveCount(2);
     await expect(page.getByRole('button', { name: '다시 시도' })).toBeVisible();
   });
 

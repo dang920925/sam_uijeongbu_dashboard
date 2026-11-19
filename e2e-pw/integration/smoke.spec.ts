@@ -61,3 +61,52 @@ test('브라우저가 대시보드 출처에서 서명 URL 로 PUT 한다(CORS)'
   const image = await request.get(publicUrl);
   expect(image.status()).toBe(200);
 });
+
+test.describe('QA1-005 상태 변경 BFF 요청의 출처·JSON 검사', () => {
+  const STAFF = '/api/backend/v1/admin/staff';
+  const body = { name: 'fixture-integration-csrf', role: '연출' };
+
+  test('다른 출처 Origin 의 POST 는 403 이고 서버로 가지 않는다', async ({
+    request,
+  }) => {
+    const response = await request.post(STAFF, {
+      data: body,
+      headers: { origin: 'https://evil.example' },
+    });
+    expect(response.status()).toBe(403);
+    const list = await request.get(STAFF);
+    expect(JSON.stringify(await list.json())).not.toContain(
+      'fixture-integration-csrf'
+    );
+  });
+
+  test('Sec-Fetch-Site: cross-site 인 로그인·로그아웃은 403 이다', async ({
+    request,
+  }) => {
+    const login = await request.post('/api/auth/login', {
+      data: { username: 'x', password: 'y' },
+      headers: { 'sec-fetch-site': 'cross-site' },
+    });
+    expect(login.status()).toBe(403);
+    const logout = await request.post('/api/auth/logout', {
+      headers: { 'sec-fetch-site': 'cross-site' },
+    });
+    expect(logout.status()).toBe(403);
+    // 거부된 로그아웃은 세션을 건드리지 않는다
+    expect(
+      (await request.get('/api/backend/v1/admin/dashboard/summary')).status()
+    ).toBe(200);
+  });
+
+  test('JSON 이 아닌 본문(폼 전송)은 400 COMMON_001 이다', async ({
+    request,
+  }) => {
+    const response = await request.post(STAFF, {
+      form: { name: 'fixture-integration-csrf', role: '연출' },
+    });
+    expect(response.status()).toBe(400);
+    expect(((await response.json()) as { code: string }).code).toBe(
+      'COMMON_001'
+    );
+  });
+});

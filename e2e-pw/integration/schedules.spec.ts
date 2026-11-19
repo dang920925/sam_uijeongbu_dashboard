@@ -214,7 +214,7 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
     expect((await listSchedules()).map((s) => s.title)).not.toContain(title);
   });
 
-  test('연결 공연이 나중에 삭제된 일정은 수정 저장 시 PERF_001 을 보이고, 선택 안 함으로 바꾸면 저장된다', async ({
+  test('연결 공연이 나중에 삭제된 일정은 관리 응답이 performanceId null 이라 "선택 안 함"으로 열리고 그대로 저장된다(qa1 Q3)', async ({
     page,
   }) => {
     // Arrange — 공연을 연결해 만든 뒤 공연만 삭제
@@ -227,20 +227,21 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
       performanceId: performance.id,
     });
     await adminApi('DELETE', `/admin/performances/${performance.id}`);
+    expect(
+      (await listSchedules()).find((s) => s.id === created.id)?.performanceId
+    ).toBeNull();
     await page.goto('/schedules');
     const row = rowOf(page, title);
     await row.getByRole('button', { name: '일정 수정' }).click();
     const dialog = page.getByRole('dialog', { name: '일정 수정' });
+    await expect(
+      dialog.getByRole('combobox', { name: '연결 공연' })
+    ).toContainText('선택 안 함');
     // Act — 그대로 저장
     await dialog.getByRole('button', { name: '저장' }).click();
-    // Assert
-    await expect(dialog.getByText(PERF_NOT_FOUND)).toBeVisible();
-    // Act — 연결 해제 후 저장
-    await dialog.getByRole('combobox', { name: '연결 공연' }).click();
-    await page.getByRole('option', { name: '선택 안 함' }).click();
-    await dialog.getByRole('button', { name: '저장' }).click();
-    // Assert
+    // Assert — PERF_001 없이 저장, 저장값 null
     await expect(dialog).toBeHidden();
+    await expect(page.getByText(PERF_NOT_FOUND)).toHaveCount(0);
     const saved = (await listSchedules()).find((s) => s.id === created.id);
     expect(saved).toMatchObject({ performanceId: null, classId: null });
   });
