@@ -1,6 +1,6 @@
-// 자리 페이지 — W1 작업자가 Container 조립으로 바꾼다.
-import { PageHead } from '@/src/components/page-head';
+// SCR-D03 공연 관리(/performances) — 조립만 한다.
+import { PerformanceListContainer } from '@/src/sections/performance-list/view/performance-list-container';
 
 export default function Page() {
-  return <PageHead title='공연 관리' />;
+  return <PerformanceListContainer />;
 }
