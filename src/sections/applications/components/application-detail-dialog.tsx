@@ -63,12 +63,13 @@ export function ApplicationDetailDialog({
       {detail ? (
         <>
           <DialogTitle
-            id={titleId}
+            // 다이얼로그 이름 = 제목 글자만(닫기 버튼 제외 — qa1 QA1-022 잔여). DialogTitle 은 별도 id
+            id={`${titleId}-title`}
             component='div'
             sx={{ px: { xs: 4, md: 6 }, pt: { xs: 4, md: 6 }, pb: 4 }}
           >
             <div className='flex items-center justify-between gap-2'>
-              <Typo.Title.Bold component='h2'>
+              <Typo.Title.Bold component='h2' id={titleId}>
                 {detail.detailTitle}
               </Typo.Title.Bold>
               <IconButton
