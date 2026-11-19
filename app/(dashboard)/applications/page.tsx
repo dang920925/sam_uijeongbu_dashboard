@@ -1,6 +1,6 @@
-// 자리 페이지 — W3 작업자가 Container 조립으로 바꾼다.
-import { PageHead } from '@/src/components/page-head';
+// SCR-D06 신청서 관리 `/applications` (FN-13, D6 승인과 등록 분리).
+import { ApplicationsContainer } from '@/src/sections/applications/view/applications-container';
 
 export default function Page() {
-  return <PageHead title='참관 신청 관리' />;
+  return <ApplicationsContainer />;
 }
