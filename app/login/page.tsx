@@ -1,6 +1,6 @@
-// 자리 페이지 — W1 작업자가 Container 조립으로 바꾼다.
-import { PageHead } from '@/src/components/page-head';
+// SCR-D01 로그인(/login) — 사이드바 없는 단독 화면. 조립만 한다.
+import { LoginContainer } from '@/src/sections/login/view/login-container';
 
 export default function Page() {
-  return <PageHead title='로그인' />;
+  return <LoginContainer />;
 }
