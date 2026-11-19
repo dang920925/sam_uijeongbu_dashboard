@@ -42,7 +42,6 @@ export function fromScheduleItemResponse(res: ScheduleItemResponse): Schedule {
     description: res.description ?? null,
     classId: res.classId ?? null,
     performanceId: res.performanceId ?? null,
-    createdAt: res.createdAt,
   };
 }
 

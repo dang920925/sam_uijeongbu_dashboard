@@ -132,7 +132,6 @@ function seed(ctx: MockContext): Response {
       description: null,
       classId: null,
       performanceId: null,
-      createdAt,
       deletedAt: s.deleted === true ? createdAt : null,
     });
   }

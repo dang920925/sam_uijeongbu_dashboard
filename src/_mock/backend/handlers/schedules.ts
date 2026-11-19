@@ -160,7 +160,6 @@ export const scheduleRoutes: MockRoute[] = [
       const created = {
         ...(draft as ScheduleItemResponse),
         id: newId(),
-        createdAt: nowIso(),
         deletedAt: null,
       };
       getStore().schedules.push(created);

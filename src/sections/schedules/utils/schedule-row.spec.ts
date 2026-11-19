@@ -13,7 +13,6 @@ const SCHEDULE: Schedule = {
   description: null,
   classId: null,
   performanceId: null,
-  createdAt: '2026-11-19T00:00:00.000Z',
 };
 
 describe('schedule-row', () => {

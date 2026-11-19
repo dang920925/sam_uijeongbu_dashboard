@@ -18,7 +18,6 @@ const RES: ScheduleItemResponse = {
   description: null,
   classId: null,
   performanceId: 'p1',
-  createdAt: '2026-11-19T00:00:00.000Z',
 };
 
 describe('schedule-mapper', () => {
@@ -51,6 +50,31 @@ describe('schedule-mapper', () => {
     expect(form.endAt).toBe('');
     expect(form.performanceId).toBe('p1');
     expect(form.classId).toBe('');
+  });
+
+  it('반만 연결된 응답(서버가 반의 공연 id 를 채움)이면 수정 폼에 공연·반을 함께 채운다', () => {
+    // Arrange — 서버 ScheduleItemResponseDto: performanceId = 일정 ?? 연결 반의 공연(createdAt 없음)
+    const res: ScheduleItemResponse = {
+      ...RES,
+      endAt: '2026-12-01T12:30:00.000Z',
+      classId: 'c1',
+      performanceId: 'p9',
+    };
+    // Act
+    const form = toScheduleFormInput(fromScheduleItemResponse(res));
+    const body = toScheduleUpsertRequest(form);
+    // Assert
+    expect(form).toMatchObject({
+      endAt: '2026-12-01T21:30',
+      performanceId: 'p9',
+      classId: 'c1',
+    });
+    expect(body).toMatchObject({
+      startAt: '2026-12-01T19:00:00+09:00',
+      endAt: '2026-12-01T21:30:00+09:00',
+      performanceId: 'p9',
+      classId: 'c1',
+    });
   });
 
   it('생략된 선택 필드는 null 로 맞춘다', () => {

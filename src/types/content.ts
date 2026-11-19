@@ -1,4 +1,5 @@
 // 갤러리·일정·연출진·팝업(FN-14~17) — develop §3.4.
+// 정본: server src/admin/{galleries,staff,popups}/dto/*-response.dto.ts · src/domain/schedules/dto/schedule-item-response.dto.ts
 import type { GalleryCategory, ScheduleType } from '@/src/types/codes';
 
 export interface GalleryItemResponse {
@@ -23,8 +24,8 @@ export interface ScheduleItemResponse {
   location: string | null;
   description: string | null;
   classId: string | null;
+  /** 일정의 연결 공연 ?? 연결 반의 공연(서버 ScheduleItemResponseDto — B8) */
   performanceId: string | null;
-  createdAt: string;
 }
 export interface ScheduleUpsertRequest {
   title: string;
