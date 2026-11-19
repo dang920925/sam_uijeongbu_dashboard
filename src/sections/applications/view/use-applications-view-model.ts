@@ -13,6 +13,7 @@ import {
   useApplications,
   useApproveApplication,
   usePendingApplicationCount,
+  useRefreshApplication,
   useRegisterMemberFromApplication,
   useRejectApplication,
 } from '@/src/api/application-queries';
@@ -58,6 +59,7 @@ export function useApplicationsViewModel() {
   const approve = useApproveApplication();
   const reject = useRejectApplication();
   const register = useRegisterMemberFromApplication();
+  const refreshApplication = useRefreshApplication();
 
   const items = useMemo(() => listQuery.data?.items ?? [], [listQuery.data]);
   const rows = useMemo(() => items.map(toApplicationRow), [items]);
@@ -110,8 +112,13 @@ export function useApplicationsViewModel() {
         setConfirm(null);
       },
       onError: (error) => {
+        const id = confirm.app.id;
         setConfirm(null);
         snackbar.error(toErrorMessage(error));
+        // 이미 처리된 신청(409 APP_007)이면 열린 상세도 서버 상태로 바꾼다(qa1 QA1-026)
+        void refreshApplication(id).then((fresh) => {
+          if (fresh) replaceSelected(fresh);
+        });
       },
     });
   };

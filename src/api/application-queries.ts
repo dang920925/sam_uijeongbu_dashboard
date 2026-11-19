@@ -15,7 +15,10 @@ import {
   rejectApplication,
 } from '@/src/api/application';
 import { ROOT_KEYS } from '@/src/api/root-keys';
-import type { ApplicationListQuery } from '@/src/types/application';
+import type {
+  Application,
+  ApplicationListQuery,
+} from '@/src/types/application';
 import type { ApplicationType } from '@/src/types/codes';
 import type { MemberFormInput } from '@/src/types/member';
 
@@ -84,4 +87,24 @@ export function useRegisterMemberFromApplication() {
       registerMemberFromApplication(id, input),
     onSuccess: invalidate,
   });
+}
+
+/**
+ * 처리 실패(409 APP_007 — 다른 곳에서 먼저 처리됨) 뒤 한 건을 서버에서 다시 읽고 목록도 갱신한다.
+ * 열린 상세가 실제 상태와 같아지게 한다(qa1 QA1-026). 다시 읽기도 실패하면 null.
+ */
+export function useRefreshApplication() {
+  const queryClient = useQueryClient();
+  return async (id: string): Promise<Application | null> => {
+    void queryClient.invalidateQueries({ queryKey: applicationKeys.all });
+    try {
+      return await queryClient.fetchQuery({
+        queryKey: applicationKeys.detail(id),
+        queryFn: () => fetchApplication(id),
+        staleTime: 0,
+      });
+    } catch {
+      return null;
+    }
+  };
 }
