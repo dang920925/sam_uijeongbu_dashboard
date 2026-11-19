@@ -19,6 +19,7 @@ import type {
   MemberListQuery,
   MemberUpdateRequest,
 } from '@/src/types/member';
+import { isNotFoundError } from '@/src/utils/api-error-message';
 
 export const memberKeys = {
   all: ROOT_KEYS.member,
@@ -88,6 +89,10 @@ export function useDeleteMember() {
         invalidate(),
         queryClient.invalidateQueries({ queryKey: ROOT_KEYS.application }),
       ]),
+    // 이미 지워진 항목(404)이면 문구는 스낵바로 그대로 두고 목록을 다시 불러와 행을 없앤다(qa1 QA1-012)
+    onError: (error) => {
+      if (isNotFoundError(error)) void invalidate();
+    },
   });
 }
 

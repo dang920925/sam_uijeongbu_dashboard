@@ -13,6 +13,7 @@ import type { GalleryCreateInput } from '@/src/api/gallery-mapper';
 import { ROOT_KEYS } from '@/src/api/root-keys';
 import type { GalleryCategory } from '@/src/types/codes';
 import { ADMIN_MAX_PAGE_SIZE } from '@/src/types/common';
+import { isNotFoundError } from '@/src/utils/api-error-message';
 
 export const galleryKeys = {
   all: ROOT_KEYS.gallery,
@@ -47,5 +48,10 @@ export function useDeleteGallery() {
     mutationFn: (id: string) => deleteGallery(id),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: galleryKeys.all }),
+    // 이미 지워진 항목(404)이면 문구는 스낵바로 그대로 두고 목록을 다시 불러와 행을 없앤다(qa1 QA1-012)
+    onError: (error) => {
+      if (isNotFoundError(error))
+        void queryClient.invalidateQueries({ queryKey: galleryKeys.all });
+    },
   });
 }
