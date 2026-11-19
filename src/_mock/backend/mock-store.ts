@@ -40,6 +40,13 @@ export interface MockStore {
   >;
   /** accessToken → 만료 시각 */
   sessions: Map<string, number>;
+  /** 오류 상태 E2E·캡처용 고장 주입 — 경로 정규식이 맞는 요청 count 번을 status 로 실패시킨다 */
+  faults: {
+    method: string;
+    pattern: string;
+    status: number;
+    remaining: number;
+  }[];
   loginFailures: number;
   lockedUntil: number;
   seq: number;
@@ -58,6 +65,7 @@ function emptyStore(): MockStore {
     popups: [],
     uploads: new Map(),
     sessions: new Map(),
+    faults: [],
     loginFailures: 0,
     lockedUntil: 0,
     seq: 0,

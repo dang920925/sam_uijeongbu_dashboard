@@ -67,6 +67,21 @@ export async function handleMockRequest(req: MockRequest): Promise<Response> {
   if (route.auth && !isSessionValid(req.token)) {
     return apiError(ctx, 401, 'AUTH_003', '로그인이 필요합니다.');
   }
+  const fault = getStore().faults.find(
+    (f) =>
+      f.remaining > 0 &&
+      f.method === req.method &&
+      new RegExp(f.pattern).test(req.path)
+  );
+  if (fault) {
+    fault.remaining -= 1;
+    return apiError(
+      ctx,
+      fault.status,
+      'COMMON_004',
+      '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+    );
+  }
   const match = route.pattern.exec(req.path);
   return route.handle({
     req,

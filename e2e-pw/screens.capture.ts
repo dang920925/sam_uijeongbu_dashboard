@@ -272,3 +272,51 @@ test('대시보드 화면을 xs·md·lg 로 캡처한다', async ({
   await page.goto('/');
   await shoot(page, 'SCR-D02-empty', 'xs');
 });
+
+// 오류 상태(qa1 QA1-008 — designer 가 추가한 error·class-error·panel-error 프레임과 대조)
+test('목록·패널 조회 오류 상태를 캡처한다', async ({ page, request }) => {
+  test.setTimeout(240_000);
+  mkdirSync(OUT, { recursive: true });
+  const { performanceId, actorId } = await seed(request);
+  const fault = (pattern: string) =>
+    request.post('/api/backend/v1/__mock/fault', {
+      data: { method: 'GET', pattern, status: 500, count: 4 },
+    });
+  const cases: [string, string, string][] = [
+    ['SCR-D02-error', '/', '^/v1/admin/dashboard/summary$'],
+    ['SCR-D03-error', '/performances', '^/v1/admin/performances$'],
+    [
+      'SCR-D04-error',
+      `/performances/${performanceId}`,
+      '^/v1/admin/performances/[^/]+$',
+    ],
+    [
+      'SCR-D04-class-error',
+      `/performances/${performanceId}`,
+      '^/v1/admin/performances/[^/]+/classes$',
+    ],
+    ['SCR-D05-error', '/members', '^/v1/admin/members$'],
+    [
+      'SCR-D05-panel-error',
+      `/members?member=${actorId}`,
+      '^/v1/admin/members/[^/]+$',
+    ],
+    ['SCR-D06-error', '/applications', '^/v1/admin/applications$'],
+    ['SCR-D07-error', '/gallery', '^/v1/admin/galleries$'],
+    ['SCR-D08-error', '/schedules', '^/v1/admin/schedules$'],
+    ['SCR-D09-error', '/staff', '^/v1/admin/staff$'],
+    ['SCR-D10-error', '/popups', '^/v1/admin/popups$'],
+  ];
+  for (const [name, url, pattern] of cases) {
+    for (const vp of ['lg', 'xs'] as Vp[]) {
+      await fault(pattern);
+      await page.setViewportSize(VIEWPORTS[vp]);
+      await page.goto(url);
+      await expect(
+        page.getByRole('button', { name: '다시 시도' }).first()
+      ).toBeVisible();
+      await shoot(page, name, vp);
+      await request.post('/api/backend/v1/__mock/fault/clear');
+    }
+  }
+});

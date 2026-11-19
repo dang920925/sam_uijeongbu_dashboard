@@ -111,6 +111,10 @@ export const memberRoutes: MockRoute[] = [
     pattern: /^\/v1\/admin\/members\/(?<id>[^/]+)$/,
     auth: true,
     handle: (ctx) => {
+      // 실서버 UuidParamPipe 처럼 형식이 틀린 id 는 400 COMMON_001(qa1 QA1-023 재현용)
+      if (!/^[0-9a-f-]{36}$/i.test(ctx.params.id)) {
+        return validationError(ctx, 'id 형식이 올바르지 않습니다.');
+      }
       const m = findMember(ctx.params.id);
       return m
         ? json(toMemberItem(m))
