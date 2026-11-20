@@ -37,6 +37,7 @@ export function PerformanceDetailContainer({
   }
   return (
     <PerformanceDetailView
+      performanceId={performanceId}
       info={vm.info}
       classSection={vm.classSection}
       classDialog={vm.classDialog}

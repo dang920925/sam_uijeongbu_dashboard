@@ -14,6 +14,10 @@ export const MSG_D00 = {
   NAV_SCHEDULES: '일정 관리',
   NAV_STAFF: '연출진 관리',
   NAV_POPUPS: '팝업 관리',
+  /** R1(U24·U25) 신규 메뉴 — design §6.1 사이드바 순서(제안) · designer SHELL-ADMIN-R1 시안 */
+  NAV_RESERVATIONS: '예매 관리',
+  NAV_ADMISSION: '입장 체크',
+  NAV_ACCOUNT: '계정 설정',
   LOGOUT: '로그아웃',
   /** 햄버거 aria-label — 접근성 신규(자체 결정, 현행 햄버거 없음) */
   OPEN_MENU: '메뉴 열기',
