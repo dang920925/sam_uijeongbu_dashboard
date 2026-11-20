@@ -2,7 +2,8 @@
 // 대시보드 MUI 테마 생성.
 // - 브레이크포인트: 640/768/1024/1280(현행 Tailwind 값 = Tailwind 4 기본 — designer J-D2). 이름은 가이드 그대로.
 // - spacing 4px: sx 숫자와 Tailwind 스텝(1=4px)이 같은 축이 되게 한다(check-spacing 이 같은 허용 집합으로 검사).
-// - 라이트 단일 모드라 cssVariables 는 켜되 colorSchemes 는 light 하나(가이드 §11.10 모드 분기 함정 회피).
+// - U30 안 A '백스테이지' 다크 단일 모드: cssVariables 는 켜되 colorSchemes 는 dark 하나(가이드 §11.10 모드 분기 함정 회피).
+//   palette.mode 'dark' 만 주면 MUI 가 dark 스킴 하나로 만든다. 라이트·다크 전환 기능은 범위 밖(기획 §14).
 // - modularCssLayers: 레이어 순서 문자열을 MUI 가 head 맨 앞에 선언한다. true 로 두면 'mui' 가 Tailwind 보다 먼저 선언돼
 //   가장 낮은 레이어가 되고 preflight 가 sx 간격을 지운다(⚠ 2026-11-19 실측). 그래서 Tailwind 순서를 포함한 문자열을 준다.
 // ----------------------------------------------------------------------
@@ -21,30 +22,36 @@ export const appTheme = createTheme({
   spacing: 4,
   shape: { borderRadius: 4 },
   palette: {
-    mode: 'light',
+    mode: 'dark',
     primary: {
-      main: RAW.slate900,
-      dark: RAW.slate800,
-      contrastText: RAW.slate50,
+      main: RAW.gold,
+      dark: RAW.goldHover,
+      contrastText: RAW.onGold,
     },
-    secondary: { main: RAW.slate100, contrastText: RAW.slate900 },
-    error: { main: RAW.red600, dark: RAW.red700, contrastText: RAW.white },
-    // ⚑ qa1 QA1-006(designer §11.2): green-600 글자 3.30 → green-700 5.02, hover green-800
+    secondary: { main: RAW.raised, contrastText: RAW.text },
+    // 글자로 쓰이는 error.main 은 밝은 오류 글자(--c-error-text). 위험(contained) 버튼 바탕은 overrides 에서 RAW.danger
+    error: { main: RAW.errorText, dark: RAW.danger, contrastText: RAW.onGold },
     success: {
-      main: RAW.green700,
-      dark: RAW.green800,
-      contrastText: RAW.white,
+      main: RAW.successText,
+      dark: RAW.labelSuccess,
+      contrastText: RAW.onGold,
     },
-    warning: { main: RAW.amber700, contrastText: RAW.white },
-    info: { main: RAW.blue700, contrastText: RAW.white },
-    background: { default: RAW.slate50, paper: RAW.white },
-    divider: RAW.slate200,
+    warning: { main: RAW.warningText, contrastText: RAW.onGold },
+    info: { main: RAW.labelInfo, contrastText: RAW.onGold },
+    background: { default: RAW.bg, paper: RAW.card },
+    divider: RAW.divider,
     text: {
-      primary: RAW.slate900,
-      secondary: RAW.slate500,
-      disabled: RAW.slate400,
+      primary: RAW.text,
+      secondary: RAW.text2,
+      disabled: RAW.borderStrong,
     },
-    action: { hover: RAW.slate100, selected: RAW.slate100 },
+    action: {
+      hover: RAW.raised,
+      selected: RAW.muted,
+      focus: RAW.muted,
+      disabledBackground: RAW.muted,
+      disabled: RAW.borderStrong,
+    },
     semantic: SEMANTIC,
   },
   typography: { fontFamily: FONT_FAMILY, htmlFontSize: 16, fontSize: 14 },

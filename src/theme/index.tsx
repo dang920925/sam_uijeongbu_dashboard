@@ -3,6 +3,7 @@
 // ----------------------------------------------------------------------
 // ThemeProvider + Emotion 캐시(App Router). CssBaseline 포함.
 // enableCssLayer: Emotion 스타일을 @layer mui 에 넣어 Tailwind utilities 와 순서를 고정한다.
+// U30: Pretendard 를 <link precedence> 로 불러온다 — React 19 가 <head> 로 올린다(홈페이지 /apply 와 같은 방식).
 // ----------------------------------------------------------------------
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
@@ -10,6 +11,7 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
 import type { ReactNode } from 'react';
 
 import { appTheme } from '@/src/theme/create-app-theme';
+import { PRETENDARD_CSS } from '@/src/theme/typography';
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -18,6 +20,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children }: ThemeProviderProps) {
   return (
     <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+      <link rel='stylesheet' href={PRETENDARD_CSS} precedence='default' />
       <MuiThemeProvider theme={appTheme}>
         <CssBaseline />
         {children}
