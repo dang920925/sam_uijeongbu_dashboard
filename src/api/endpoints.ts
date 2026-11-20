@@ -18,7 +18,42 @@ export const endpoints = {
     list: `${admin}/performances`,
     detail: (id: string) => `${admin}/performances/${id}`,
     classes: (id: string) => `${admin}/performances/${id}/classes`,
+    /** FN-28 회차 목록·추가(develop §11.4) */
+    shows: (id: string) => `${admin}/performances/${id}/shows`,
+    /** FN-29 예매 설정 GET·PUT */
+    bookingPolicy: (id: string) => `${admin}/performances/${id}/booking-policy`,
   },
+  /** FN-28 회차 단건·입장 체크 회차 선택(develop §11.4) */
+  shows: {
+    /** `GET ?from=YYYY-MM-DD` — 입장 체크 회차 선택용(공연명 포함) */
+    list: `${admin}/shows`,
+    detail: (id: string) => `${admin}/shows/${id}`,
+    /** FN-36 입장 명단 `GET ?q=` */
+    admission: (id: string) => `${admin}/shows/${id}/admission`,
+  },
+  /** FN-33·34 예매 관리(develop §11.4) */
+  reservations: {
+    list: `${admin}/reservations`,
+    summary: `${admin}/reservations/summary`,
+    detail: (id: string) => `${admin}/reservations/${id}`,
+    confirm: (id: string) => `${admin}/reservations/${id}/confirm`,
+    unconfirm: (id: string) => `${admin}/reservations/${id}/unconfirm`,
+    cancel: (id: string) => `${admin}/reservations/${id}/cancel`,
+    restore: (id: string) => `${admin}/reservations/${id}/restore`,
+    cancelOverdue: `${admin}/reservations/cancel-overdue`,
+    /** FN-36 입장 증감 `{ delta }` */
+    admission: (id: string) => `${admin}/reservations/${id}/admission`,
+    /** FN-36 현장 확정 + 입장 `{ version, admit }` */
+    confirmAndAdmit: (id: string) =>
+      `${admin}/reservations/${id}/confirm-and-admit`,
+  },
+  /** FN-35 단원 초대 링크 */
+  inviteCodes: {
+    list: `${admin}/members/invite-codes`,
+    issue: (memberId: string) => `${admin}/members/${memberId}/invite-code`,
+  },
+  /** FN-41 계정 변경 — BFF 라우트(app/api/auth/account)가 새 토큰을 쿠키로 바꿔 넣는다(develop §11.5) */
+  account: { update: '/api/auth/account' },
   classes: {
     list: `${admin}/classes`,
     detail: (id: string) => `${admin}/classes/${id}`,

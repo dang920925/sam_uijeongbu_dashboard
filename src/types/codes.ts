@@ -2,6 +2,12 @@
 // 코드값(UPPER_SNAKE) ↔ 대시보드 라벨 — develop §3.1 코드값 표(라벨은 현행 대시보드 문구 S-code-20).
 // 저장 값과 화면 문구를 분리한다(style-guide §1).
 // ----------------------------------------------------------------------
+import type {
+  BookingShowState,
+  CancelReason,
+  ReservationStatus,
+} from '@/src/types/booking';
+
 export type PerformanceType = 'MUSICAL' | 'PLAY' | 'SEMINAR' | 'ETC';
 export type PerformanceStatus = 'UPCOMING' | 'ONGOING' | 'ENDED';
 export type ClassStatus = 'ACTIVE' | 'INACTIVE';
@@ -153,3 +159,38 @@ export const UPLOAD_MAX_BYTES: Record<UploadPurpose, number> = {
   GALLERY: 10 * MB,
   POPUP: 5 * MB,
 };
+
+// ─── 예매(U24 R1) — 라벨은 design §6 SCR-D11·D12 "제안"(designer 시안에서 확정) ───
+
+/** 회차 예매 상태 Label — design SCR-D11 "열림·오픈 전·매진·마감·준비 중"(제안) */
+export const BOOKING_SHOW_STATE_LABEL: Record<BookingShowState, string> = {
+  OPEN: '열림',
+  NOT_YET: '오픈 전',
+  SOLD_OUT: '매진',
+  CLOSED: '마감',
+  NOT_READY: '준비 중',
+};
+
+/** 예매 상태 — design §6 상태색 "입금 대기 · 예매 확정 · 취소", 필터 pill 은 "입금 대기·확정·취소"(제안) */
+export const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
+  PENDING: '입금 대기',
+  CONFIRMED: '확정',
+  CANCELLED: '취소',
+};
+export const RESERVATION_STATUSES: ReservationStatus[] = [
+  'PENDING',
+  'CONFIRMED',
+  'CANCELLED',
+];
+
+/** 취소 사유 — design SCR-D12 "예매자 요청·관리자·기한 지남"(제안) */
+export const CANCEL_REASON_LABEL: Record<CancelReason, string> = {
+  BOOKER_REQUEST: '예매자 요청',
+  ADMIN: '관리자',
+  DEADLINE_PASSED: '기한 지남',
+};
+export const CANCEL_REASONS: CancelReason[] = [
+  'BOOKER_REQUEST',
+  'ADMIN',
+  'DEADLINE_PASSED',
+];
