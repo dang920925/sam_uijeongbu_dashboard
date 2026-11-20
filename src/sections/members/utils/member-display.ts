@@ -1,6 +1,7 @@
 // ----------------------------------------------------------------------
 // SCR-D05 표시 모델·필터 — 단원 행을 화면 문자열로, 필터 pill 값을 목록 쿼리로(순수 함수 + spec).
 // 가입일: joinedAt(date, KST 달력) → 'YYYY.MM.DD'. 없으면 createdAt(datetime) 의 KST 날짜(B1 — '-' 대신 실제 날짜).
+// (U39) 공개 동의일: publicConsentAt(date) → 'YYYY.MM.DD', 없으면 '-'.
 // ----------------------------------------------------------------------
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_D05 } from '@/src/shared/messages/d05';
@@ -27,6 +28,7 @@ export interface MemberRowDisplay {
   typeTone: LabelTone;
   phoneText: string;
   joinedText: string;
+  consentText: string;
 }
 
 export function toMemberListQuery(
@@ -46,6 +48,15 @@ export function formatJoinedDate(member: Member): string {
     : formatKstDate(member.createdAt);
 }
 
+/** (U39) 공개 동의일 'YYYY.MM.DD', 없으면 '-' */
+export function formatConsentDate(
+  member: Pick<Member, 'publicConsentAt'>
+): string {
+  return member.publicConsentAt
+    ? formatCalendarDate(member.publicConsentAt)
+    : MSG_COMMON.EMPTY_VALUE;
+}
+
 export function toMemberRowDisplay(member: Member): MemberRowDisplay {
   return {
     id: member.id,
@@ -55,5 +66,6 @@ export function toMemberRowDisplay(member: Member): MemberRowDisplay {
     typeTone: MEMBER_TYPE_TONE[member.type],
     phoneText: member.phone ?? MSG_COMMON.EMPTY_VALUE,
     joinedText: formatJoinedDate(member),
+    consentText: formatConsentDate(member),
   };
 }

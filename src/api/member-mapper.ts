@@ -21,6 +21,7 @@ export function fromMemberListItemResponse(
     phone: res.phone ?? null,
     isVisible: res.isVisible,
     joinedAt: res.joinedAt ?? null,
+    publicConsentAt: res.publicConsentAt ?? null,
     createdAt: res.createdAt,
     profileImageUrl: res.profileImageUrl ?? null,
     inviterListed: res.inviterListed !== false,

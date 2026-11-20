@@ -1,7 +1,7 @@
 'use client';
 
 // ----------------------------------------------------------------------
-// 단원 표(md↑: 사진 32·이름·구분·연락처·가입일) / xs 카드(사진·이름·구분 / 연락처·"가입일 …" / ›).
+// 단원 표(md↑: 사진 32·이름·구분·연락처·가입일·공개 동의일(U39)) / xs 카드(사진·이름·구분 / 연락처·"가입일 …"·"공개 동의일 …" / ›).
 // 행 클릭 → 상세 패널. 선택 행은 muted 배경(DataTable selectedKey).
 // ----------------------------------------------------------------------
 import { DataTable, type DataTableColumn } from '@/src/components/data-table';
@@ -49,6 +49,11 @@ const COLUMNS: DataTableColumn<MemberRowDisplay>[] = [
     header: MSG_D05.COL_JOINED,
     render: (row) => secondary(row.joinedText),
   },
+  {
+    key: 'consent',
+    header: MSG_D05.COL_CONSENT,
+    render: (row) => secondary(row.consentText),
+  },
 ];
 
 export function MembersTable({
@@ -75,6 +80,7 @@ export function MembersTable({
             <div className='flex flex-wrap gap-x-3 gap-y-1'>
               {secondary(row.phoneText)}
               {secondary(`${MSG_D05.COL_JOINED} ${row.joinedText}`)}
+              {secondary(`${MSG_D05.COL_CONSENT} ${row.consentText}`)}
             </div>
           </div>
           <Iconify

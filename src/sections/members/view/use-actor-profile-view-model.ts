@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------
 // 배우 프로필 패널 ViewModel(FN-12). JSX 없음. 단원이 바뀌면 컨테이너가 key 로 다시 마운트해 폼을 새로 채운다.
-// - "프로필 저장" 한 버튼으로 프로필(PATCH actor-profile)과 홈페이지 노출(PATCH members isVisible, 바뀐 경우만)을
+// - "프로필 저장" 한 버튼으로 프로필(PATCH actor-profile)과 홈페이지 노출·공개 동의일(U39)(PATCH members, 바뀐 경우만)을
 //   함께 저장한다(designer §8.3-3 기본안 한 버튼 — 자체 결정). 검증 실패 가능성이 큰 프로필을 먼저 보낸다.
 // - 성공하면 패널 안 "저장되었습니다 ✓"(현행 Members.tsx:278). 칸을 다시 고치면 지운다(상태 정직성 §11.9).
 // - 실패는 스낵바(서버 message — designer W4 "서버 오류는 스낵바").
@@ -18,8 +18,10 @@ import {
   emptyFilmographyRow,
   hasActorProfileFormError,
   INTRO_MAX,
+  isPublicConsentMissing,
   toActorProfileForm,
   toActorProfileInput,
+  toMemberChangeInput,
   validateActorProfileForm,
   type ActorProfileForm,
   type ActorProfileFormErrors,
@@ -29,7 +31,8 @@ import { toApiErrorMessage } from '@/src/utils/api-error-message';
 import { formatIntroCounter } from '@/src/shared/messages/d05';
 import type { ActorProfile, Member } from '@/src/types/member';
 
-type TextField = 'intro' | 'snsUrl' | 'activityStart' | 'displayOrder';
+type TextField =
+  'intro' | 'snsUrl' | 'activityStart' | 'displayOrder' | 'publicConsentAt';
 type FilmField = 'title' | 'role' | 'year';
 
 const NO_ERRORS: ActorProfileFormErrors = {
@@ -91,11 +94,9 @@ export function useActorProfileViewModel(
       await saveProfile.mutateAsync(
         toActorProfileInput(form, member.id, profile.profileImageUrl)
       );
-      if (form.isVisible !== member.isVisible) {
-        await saveMember.mutateAsync({
-          id: member.id,
-          input: { isVisible: form.isVisible },
-        });
+      const memberInput = toMemberChangeInput(form, member);
+      if (memberInput) {
+        await saveMember.mutateAsync({ id: member.id, input: memberInput });
       }
       setIsSaved(true);
     } catch (error: unknown) {
@@ -135,6 +136,8 @@ export function useActorProfileViewModel(
     introCounter: formatIntroCounter(form.intro.length, INTRO_MAX),
     isSaved,
     isSaving,
+    /** (U39) 공개를 켰는데 동의일이 비면 경고(저장은 막지 않음) */
+    isConsentMissing: isPublicConsentMissing(form),
     onVisibleChange: (isVisible: boolean) =>
       update((prev) => ({ ...prev, isVisible })),
     onFieldChange: (field: TextField, value: string) =>

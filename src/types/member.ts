@@ -8,6 +8,8 @@ export interface MemberListItemResponse {
   phone: string | null;
   isVisible: boolean;
   joinedAt: string | null;
+  /** (U39) 홈페이지 공개 동의일 YYYY-MM-DD — 미입력 null(옛 서버는 키 없음) */
+  publicConsentAt?: string | null;
   createdAt: string;
   profileImageUrl: string | null;
   /** U36 예매 초대자 목록에 표시(back-end §16 — 기본 true, J-107 대체) */
@@ -29,6 +31,8 @@ export interface MemberUpdateRequest {
   isVisible?: boolean;
   /** U36 */
   inviterListed?: boolean;
+  /** (U39) YYYY-MM-DD, null 이면 지움 */
+  publicConsentAt?: string | null;
 }
 
 export interface MemberListQuery {
@@ -70,6 +74,8 @@ export interface Member {
   phone: string | null;
   isVisible: boolean;
   joinedAt: string | null;
+  /** (U39) 홈페이지 공개 동의일 YYYY-MM-DD | null */
+  publicConsentAt: string | null;
   createdAt: string;
   profileImageUrl: string | null;
   /** U36 — 응답에 없으면 true(J-107 대체 기본값) */

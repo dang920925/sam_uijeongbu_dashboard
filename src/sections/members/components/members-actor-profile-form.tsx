@@ -2,10 +2,12 @@
 
 // ----------------------------------------------------------------------
 // 배우 패널 View — props 만으로 렌더(designer W4 §1 순서).
-// 사진 + "이미지 변경" → 구분선 → 홈페이지 노출 → 소개(+[n]/200) → SNS URL → 활동 시작일 → 노출 순서(0~9999)
+// 사진 + "이미지 변경" → 구분선 → 홈페이지 노출 → 홈페이지 공개 동의일(U39, 노출을 켰는데 비면 경고)
+// → 소개(+[n]/200) → SNS URL → 활동 시작일 → 노출 순서(0~9999)
 // → 출연작 → "저장되었습니다 ✓"(저장 성공 후에만) → "프로필 저장".
 // 소개는 maxLength 로 자르지 않는다 — 201자를 넣으면 기획 문구로 알린다(FN-12 수용 기준).
 // ----------------------------------------------------------------------
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
@@ -30,6 +32,8 @@ export function MembersActorProfileForm({ vm }: MembersActorProfileFormProps) {
   const snsId = useId();
   const activityId = useId();
   const orderId = useId();
+  const consentId = useId();
+  const consentWarnId = useId();
   const { form, errors } = vm;
 
   return (
@@ -55,6 +59,40 @@ export function MembersActorProfileForm({ vm }: MembersActorProfileFormProps) {
         checked={form.isVisible}
         onChange={vm.onVisibleChange}
       />
+      <FormField label={MSG_D05.PUBLIC_CONSENT_AT} htmlFor={consentId}>
+        <TextField
+          id={consentId}
+          type='date'
+          value={form.publicConsentAt}
+          onChange={(e) => vm.onFieldChange('publicConsentAt', e.target.value)}
+          slotProps={{
+            htmlInput: {
+              'aria-describedby': vm.isConsentMissing
+                ? consentWarnId
+                : undefined,
+            },
+          }}
+        />
+      </FormField>
+      {vm.isConsentMissing ? (
+        <Box
+          id={consentWarnId}
+          role='status'
+          sx={{
+            px: 3,
+            py: 2,
+            borderRadius: 2,
+            border: 1,
+            borderColor: 'semantic.alert.warningBorder',
+            bgcolor: 'semantic.alert.warningBg',
+            color: 'semantic.alert.warningFg',
+          }}
+        >
+          <Typo.Caption.Medium color='inherit'>
+            {MSG_D05.PUBLIC_CONSENT_MISSING}
+          </Typo.Caption.Medium>
+        </Box>
+      ) : null}
       <FormField
         label={MSG_D05.INTRO}
         htmlFor={introId}

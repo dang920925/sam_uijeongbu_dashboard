@@ -19,8 +19,9 @@ const member = (id: string, overrides: Partial<Member> = {}): Member => ({
   createdAt: '2026-11-20T00:00:00.000Z',
   profileImageUrl: null,
   actorProfileId: `ap-${id}`,
-  // T-SEAT(U36) 필드 — v1.3.0 합치기
+  // T-SEAT(U36)·U39 필드 — v1.3.0 합치기
   inviterListed: true,
+  publicConsentAt: null,
   ...overrides,
 });
 
