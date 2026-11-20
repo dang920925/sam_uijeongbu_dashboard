@@ -4,13 +4,13 @@
 | --- | --- | --- | --- | --- | --- |
 | SCR-D00 | 공용 틀 | (전체) | `src/layouts/admin` | 사이드바·레일·드로어 | — |
 | SCR-D01 | 로그인 | `/login` | `src/sections/login` | 중앙 카드 폼 | 단일 폼 정본 |
-| SCR-D02 | 요약 | `/` | `src/sections/dashboard` | 현황판(KPI) | 현황판 정본 |
+| SCR-D02 | 요약 | `/` | `src/sections/dashboard` | 현황판(KPI) — 대기 신청서 설명 줄 "연락 전 n건"(U31) | 현황판 정본 |
 | SCR-D03 | 공연 관리 | `/performances` | `src/sections/performance-list` | 테이블 → xs 카드 + Dialog | **테이블 정본** |
 | SCR-D04 | 공연 상세·반 | `/performances/[id]` | `src/sections/performance-detail` | 상세 카드 + 테이블 (+ R1 탭 머리 `performance-detail-head`) | 상세 정본 |
 | SCR-D05 | 단원 관리 | `/members` | `src/sections/members` | 테이블 + 상세 패널(lg)/시트 | 마스터·디테일 정본 |
-| SCR-D06 | 신청서 관리 | `/applications` | `src/sections/applications` | 탭 + 테이블(lg) / 카드 | 열 많은 표(lg 전환) 정본 |
+| SCR-D06 | 신청서 관리 | `/applications` | `src/sections/applications` | 유형 pill + 한 행 표(lg 8열 · md 6열, MUI Table 직접 — DataTable 에 열 숨김 없음) / xs 카드 + 상세 드로어(lg 비모달 440 · xs 전체 화면) — U31 보강·U29 | 열 많은 표(lg 전환) 정본 |
 | SCR-D07 | 갤러리 | `/gallery` | `src/sections/gallery` | 카드 그리드 2/3/4/5 | 카드 그리드 정본 |
-| SCR-D08 | 일정 관리 | `/schedules` | `src/sections/schedules` | 테이블(lg) / 카드 + Dialog | — |
+| SCR-D08 | 일정 관리 | `/schedules` | `src/sections/schedules` | 월(6×7 칩)·주(시간 격자)·목록(테이블 lg / 카드) + 상세 팝오버(xs 시트) + Dialog, xs 월 = 아젠다 — U23 보강·U29 취소 | 달력 정본 |
 | SCR-D09 | 연출진 관리 | `/staff` | `src/sections/staff` | 테이블 / xs 카드 + Dialog | — |
 | SCR-D10 | 팝업 관리 | `/popups` | `src/sections/popups` | 테이블(lg) / 카드 + Dialog | — |
 | SCR-D11 | 회차·예매 설정(R1) | `/performances/[id]/shows` | `src/sections/performance-shows` | 공연 상세 탭 · 설정 카드(폼) + 가격 등급 표 + 회차 표(lg)/카드 + Dialog | — |
