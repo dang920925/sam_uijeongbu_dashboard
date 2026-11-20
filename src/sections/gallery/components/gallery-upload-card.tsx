@@ -19,9 +19,9 @@ import { MSG_D07 } from '@/src/shared/messages/d07';
 import {
   GALLERY_CATEGORIES,
   GALLERY_CATEGORY_LABEL,
-  UPLOAD_CONTENT_TYPES,
   type GalleryCategory,
 } from '@/src/types/codes';
+import { UPLOAD_INPUT_ACCEPT } from '@/src/utils/image-compress/compress-plan';
 
 interface GalleryUploadCardProps {
   category: GalleryCategory;
@@ -104,7 +104,7 @@ export function GalleryUploadCard({
           <input
             ref={inputRef}
             type='file'
-            accept={UPLOAD_CONTENT_TYPES.join(',')}
+            accept={UPLOAD_INPUT_ACCEPT}
             hidden
             onChange={handleFile}
           />

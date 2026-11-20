@@ -2,22 +2,29 @@
 
 // ----------------------------------------------------------------------
 // 여러 장 업로드 상태 훅(상세 이미지 — FN-18). 파일마다 진행·실패를 따로 두고, 성공하면 onUploaded(url) 로 넘긴다.
+// 업로드 전에 브라우저에서 줄인다(W5) — 마지막으로 줄인 파일의 안내를 notice 에 둔다.
 // ----------------------------------------------------------------------
 import { useCallback, useRef, useState } from 'react';
 
-import { uploadImage } from '@/src/api/upload';
+import { uploadImageWithCompress } from '@/src/api/upload';
 import { toUploadErrorMessage } from '@/src/hooks/upload-error-message';
+import { MSG_UPLOAD } from '@/src/shared/messages/common';
 import type { UploadPurpose } from '@/src/types/codes';
+import { formatMegabytes } from '@/src/utils/image-compress/compress-plan';
 
 export interface PendingUpload {
   key: string;
   progress: number;
+  /** 업로드 전 축소·압축 중 */
+  isOptimizing: boolean;
   errorMessage: string | null;
 }
 
 export interface ImageListUploadState {
   pending: PendingUpload[];
   isUploading: boolean;
+  /** 압축해 올렸을 때 안내 문구(마지막 파일) */
+  notice: string | null;
   uploadFiles: (files: File[]) => void;
   retry: (key: string) => void;
   dismiss: (key: string) => void;
@@ -28,6 +35,7 @@ export function useImageListUpload(
   onUploaded: (url: string) => void
 ): ImageListUploadState {
   const [pending, setPending] = useState<PendingUpload[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
   const files = useRef(new Map<string, File>());
   const seq = useRef(0);
 
@@ -40,16 +48,28 @@ export function useImageListUpload(
     async (key: string) => {
       const file = files.current.get(key);
       if (!file) return;
-      patch(key, { progress: 0, errorMessage: null });
+      patch(key, { progress: 0, isOptimizing: true, errorMessage: null });
       try {
-        const url = await uploadImage(purpose, file, (progress) =>
-          patch(key, { progress })
-        );
+        const result = await uploadImageWithCompress(purpose, file, {
+          onPrepared: () => patch(key, { isOptimizing: false }),
+          onProgress: (progress) => patch(key, { progress }),
+        });
         files.current.delete(key);
         setPending((list) => list.filter((p) => p.key !== key));
-        onUploaded(url);
+        if (result.originalSize !== null) {
+          setNotice(
+            MSG_UPLOAD.COMPRESSED(
+              formatMegabytes(result.originalSize),
+              formatMegabytes(result.uploadedSize)
+            )
+          );
+        }
+        onUploaded(result.url);
       } catch (e: unknown) {
-        patch(key, { errorMessage: toUploadErrorMessage(e) });
+        patch(key, {
+          isOptimizing: false,
+          errorMessage: toUploadErrorMessage(e),
+        });
       }
     },
     [purpose, onUploaded]
@@ -63,9 +83,15 @@ export function useImageListUpload(
         files.current.set(key, file);
         return key;
       });
+      setNotice(null);
       setPending((list) => [
         ...list,
-        ...keys.map((key) => ({ key, progress: 0, errorMessage: null })),
+        ...keys.map((key) => ({
+          key,
+          progress: 0,
+          isOptimizing: true,
+          errorMessage: null,
+        })),
       ]);
       void keys.reduce(
         (chain, key) => chain.then(() => run(key)),
@@ -78,6 +104,7 @@ export function useImageListUpload(
   return {
     pending,
     isUploading: pending.some((p) => p.errorMessage === null),
+    notice,
     uploadFiles,
     retry: (key: string) => void run(key),
     dismiss: (key: string) => {

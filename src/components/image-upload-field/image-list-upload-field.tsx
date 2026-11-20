@@ -3,6 +3,7 @@
 // ----------------------------------------------------------------------
 // ImageListUploadField — 여러 장(상세 이미지, ≤20) 업로드 + 순서(위·아래)·삭제(design SCR-D03 상세 이미지).
 // 실패 행은 문구(UPL_001·002·004) + "다시 시도"·삭제(designer `.upload__item.is-error`).
+// 업로드 전 압축(W5) 중엔 "이미지 최적화 중...", 줄여 올렸으면 목록 아래 안내 한 줄.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -18,7 +19,8 @@ import { Typo } from '@/src/components/typo';
 import { canRetryUpload } from '@/src/hooks/upload-error-message';
 import { useImageListUpload } from '@/src/hooks/use-image-list-upload';
 import { MSG_COMMON, MSG_UPLOAD } from '@/src/shared/messages/common';
-import { UPLOAD_CONTENT_TYPES, type UploadPurpose } from '@/src/types/codes';
+import type { UploadPurpose } from '@/src/types/codes';
+import { UPLOAD_INPUT_ACCEPT } from '@/src/utils/image-compress/compress-plan';
 
 interface ImageListUploadFieldProps {
   label: string;
@@ -82,7 +84,7 @@ export function ImageListUploadField({
         id={inputId}
         type='file'
         multiple
-        accept={UPLOAD_CONTENT_TYPES.join(',')}
+        accept={UPLOAD_INPUT_ACCEPT}
         hidden
         onChange={handleFiles}
       />
@@ -164,18 +166,29 @@ export function ImageListUploadField({
             ) : (
               <>
                 <Typo.Caption.Regular color='text.secondary' aria-live='polite'>
-                  {MSG_UPLOAD.UPLOADING}
+                  {item.isOptimizing
+                    ? MSG_UPLOAD.OPTIMIZING
+                    : MSG_UPLOAD.UPLOADING}
                 </Typo.Caption.Regular>
-                <LinearProgress
-                  variant='determinate'
-                  value={item.progress}
-                  aria-label={MSG_UPLOAD.UPLOADING}
-                />
+                {item.isOptimizing ? (
+                  <LinearProgress aria-label={MSG_UPLOAD.OPTIMIZING} />
+                ) : (
+                  <LinearProgress
+                    variant='determinate'
+                    value={item.progress}
+                    aria-label={MSG_UPLOAD.UPLOADING}
+                  />
+                )}
               </>
             )}
           </Box>
         ))}
       </ol>
+      {uploader.notice ? (
+        <Typo.Caption.Regular color='text.secondary' aria-live='polite'>
+          {uploader.notice}
+        </Typo.Caption.Regular>
+      ) : null}
       {value.length + uploader.pending.length < max ? (
         <div>
           <Button

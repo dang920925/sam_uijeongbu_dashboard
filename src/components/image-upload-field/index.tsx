@@ -2,8 +2,8 @@
 
 // ----------------------------------------------------------------------
 // ImageUploadField — 이미지 1장 서명 URL 업로드(FN-18, designer components.css `.upload`).
-// 빈 칸(점선 + "이미지 선택") → 진행("업로드 중..." + 진행 막대) → 썸네일("이미지 변경"·삭제) / 실패 행(문구 + "다시 시도").
-// 업로드가 끝나면 publicUrl 을 onChange 로 넘긴다. 저장 요청은 호출 쪽 폼이 한다.
+// 빈 칸(점선 + "이미지 선택") → 압축("이미지 최적화 중...", W5) → 진행("업로드 중..." + 진행 막대) → 썸네일("이미지 변경"·삭제) / 실패 행(문구 + "다시 시도").
+// 압축해 올렸으면 썸네일 아래 "15.2MB → 2.1MB로 줄여 올렸습니다.". 업로드가 끝나면 publicUrl 을 onChange 로 넘긴다. 저장 요청은 호출 쪽 폼이 한다.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -21,7 +21,8 @@ import { Typo } from '@/src/components/typo';
 import { canRetryUpload } from '@/src/hooks/upload-error-message';
 import { useImageUpload } from '@/src/hooks/use-image-upload';
 import { MSG_COMMON, MSG_UPLOAD } from '@/src/shared/messages/common';
-import { UPLOAD_CONTENT_TYPES, type UploadPurpose } from '@/src/types/codes';
+import type { UploadPurpose } from '@/src/types/codes';
+import { UPLOAD_INPUT_ACCEPT } from '@/src/utils/image-compress/compress-plan';
 
 interface ImageUploadFieldProps {
   label: string;
@@ -81,7 +82,7 @@ export function ImageUploadField({
         ref={inputRef}
         id={inputId}
         type='file'
-        accept={UPLOAD_CONTENT_TYPES.join(',')}
+        accept={UPLOAD_INPUT_ACCEPT}
         hidden
         onChange={handleFile}
       />
@@ -98,13 +99,19 @@ export function ImageUploadField({
           }}
         >
           <Typo.Badge.Regular color='text.secondary' aria-live='polite'>
-            {MSG_UPLOAD.UPLOADING}
+            {uploader.isOptimizing
+              ? MSG_UPLOAD.OPTIMIZING
+              : MSG_UPLOAD.UPLOADING}
           </Typo.Badge.Regular>
-          <LinearProgress
-            variant='determinate'
-            value={uploader.progress}
-            aria-label={MSG_UPLOAD.UPLOADING}
-          />
+          {uploader.isOptimizing ? (
+            <LinearProgress aria-label={MSG_UPLOAD.OPTIMIZING} />
+          ) : (
+            <LinearProgress
+              variant='determinate'
+              value={uploader.progress}
+              aria-label={MSG_UPLOAD.UPLOADING}
+            />
+          )}
         </Box>
       ) : uploader.errorMessage ? (
         <Box
@@ -146,36 +153,43 @@ export function ImageUploadField({
           </div>
         </Box>
       ) : value ? (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 3,
-            p: 2,
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 2,
-          }}
-        >
-          <UploadThumb src={value} alt={thumbAlt} shape={shape} />
-          <div className='flex flex-1 flex-wrap justify-end gap-2'>
-            <Button
-              size='small'
-              variant='outlined'
-              color='inherit'
-              onClick={openPicker}
-            >
-              {MSG_UPLOAD.CHANGE}
-            </Button>
-            <IconButton
-              aria-label={MSG_UPLOAD.REMOVE}
-              onClick={() => onChange(null)}
-              sx={{ color: 'error.main' }}
-            >
-              <Iconify icon='solar:trash-bin-trash-linear' />
-            </IconButton>
-          </div>
-        </Box>
+        <div className='flex flex-col gap-1'>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 3,
+              p: 2,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 2,
+            }}
+          >
+            <UploadThumb src={value} alt={thumbAlt} shape={shape} />
+            <div className='flex flex-1 flex-wrap justify-end gap-2'>
+              <Button
+                size='small'
+                variant='outlined'
+                color='inherit'
+                onClick={openPicker}
+              >
+                {MSG_UPLOAD.CHANGE}
+              </Button>
+              <IconButton
+                aria-label={MSG_UPLOAD.REMOVE}
+                onClick={() => onChange(null)}
+                sx={{ color: 'error.main' }}
+              >
+                <Iconify icon='solar:trash-bin-trash-linear' />
+              </IconButton>
+            </div>
+          </Box>
+          {uploader.notice ? (
+            <Typo.Caption.Regular color='text.secondary' aria-live='polite'>
+              {uploader.notice}
+            </Typo.Caption.Regular>
+          ) : null}
+        </div>
       ) : (
         <Box
           sx={{

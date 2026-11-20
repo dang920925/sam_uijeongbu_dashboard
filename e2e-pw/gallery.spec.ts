@@ -51,7 +51,8 @@ test.describe('SCR-D07 갤러리', () => {
     const description = `${PREFIX}리허설`;
     await page.goto('/gallery');
     await expect(page.getByText('등록된 이미지가 없습니다')).toBeVisible();
-    await page.getByRole('combobox').click();
+    // 헤더 '예매번호로 찾기'(R1)도 combobox 라 본문(main) 안에서 찾는다
+    await page.getByRole('main').getByRole('combobox').click();
     await page.getByRole('option', { name: '연습' }).click();
     await page.getByPlaceholder('사진 설명 입력').fill(description);
     // Act

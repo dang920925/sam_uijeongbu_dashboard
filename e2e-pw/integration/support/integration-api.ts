@@ -52,7 +52,7 @@ export async function adminToken(): Promise<string> {
 
 /** 관리 API 직접 호출(경로는 '/admin/...' — /api/v1 뒤). 실패하면 상태·본문과 함께 던진다. */
 export async function adminApi<T>(
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
   path: string,
   body?: unknown
 ): Promise<T> {
@@ -75,6 +75,23 @@ export async function relayApplication(
   body: Record<string, unknown>
 ): Promise<{ status: number; body: unknown }> {
   const response = await fetch(`${INT_API_BASE_URL}/api/v1/applications`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-relay-secret': requireEnv('INT_RELAY_SECRET'),
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await response.text();
+  return { status: response.status, body: text ? JSON.parse(text) : null };
+}
+
+/** 공개 POST 중계(예매 접수 /reservations · 예매 확인 /reservations/lookup 등) — 중계 비밀 포함, 상태·본문 그대로 */
+export async function relayPost(
+  path: string,
+  body: Record<string, unknown>
+): Promise<{ status: number; body: unknown }> {
+  const response = await fetch(`${INT_API_BASE_URL}/api/v1${path}`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -148,7 +165,11 @@ function psql(sql: string, prefix: string): void {
 
 // 신청서는 불변 트리거가 있지만 DELETE 는 막지 않는다(파기 경로). 접두사 행만 지운다.
 // 팝업은 이름 칼럼이 없어 link_url 에 접두사를 넣는 규칙이다(예: https://example.com/<접두사>).
+// R1(예매): 예매는 공연·회차를 RESTRICT 로 잡으므로 공연보다 먼저 지운다(줄·입장 기록은 CASCADE).
+// 회차·예매 설정·가격 등급은 공연 삭제에 CASCADE. 관리자 등록 예매의 예매자 이름도 접두사 규칙.
 const CLEANUP_SQL = `
+DELETE FROM reservations WHERE booker_name LIKE :'p'
+  OR performance_id IN (SELECT id FROM performances WHERE title LIKE :'p');
 DELETE FROM applications WHERE applicant_name LIKE :'p';
 DELETE FROM schedules WHERE title LIKE :'p';
 DELETE FROM galleries WHERE description LIKE :'p';

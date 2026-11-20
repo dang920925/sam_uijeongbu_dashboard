@@ -11,10 +11,10 @@ import {
   str,
   type MockRoute,
 } from '@/src/_mock/backend/mock-http';
-import { getStore } from '@/src/_mock/backend/mock-store';
+import { currentCredentials, getStore } from '@/src/_mock/backend/mock-store';
 
-const TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const LOCK_MS = 15 * 60 * 1000;
+export const TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export const LOCK_MS = 15 * 60 * 1000;
 
 export const authRoutes: MockRoute[] = [
   {
@@ -38,8 +38,8 @@ export const authRoutes: MockRoute[] = [
       }
       const username = str(ctx.body.username);
       const password = str(ctx.body.password);
-      const expectedUser = process.env.MOCK_ADMIN_USERNAME ?? '';
-      const expectedPass = process.env.MOCK_ADMIN_PASSWORD ?? '';
+      const { username: expectedUser, password: expectedPass } =
+        currentCredentials();
       if (
         !expectedUser ||
         username !== expectedUser ||
@@ -61,6 +61,7 @@ export const authRoutes: MockRoute[] = [
       const accessToken = randomUUID();
       const expiresAt = now + TOKEN_TTL_MS;
       store.sessions.set(accessToken, expiresAt);
+      store.sessionVersions.set(accessToken, store.account.sessionVersion);
       return json({
         accessToken,
         expiresAt: new Date(expiresAt).toISOString(),
@@ -83,7 +84,7 @@ export const authRoutes: MockRoute[] = [
     handle: () =>
       json({
         id: 'mock-admin',
-        username: process.env.MOCK_ADMIN_USERNAME ?? '',
+        username: currentCredentials().username,
       }),
   },
   {

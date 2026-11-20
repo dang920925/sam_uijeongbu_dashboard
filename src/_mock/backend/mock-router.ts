@@ -3,14 +3,20 @@
 // 관리 API 는 Bearer 세션이 없으면 401 AUTH_003(가드가 400·404 보다 먼저 — develop §3.1).
 // 없는 경로는 404 COMMON_002.
 // ----------------------------------------------------------------------
+import { accountRoutes } from '@/src/_mock/backend/handlers/account';
+import { admissionRoutes } from '@/src/_mock/backend/handlers/admission';
 import { applicationRoutes } from '@/src/_mock/backend/handlers/applications';
 import { authRoutes } from '@/src/_mock/backend/handlers/auth';
 import { dashboardRoutes } from '@/src/_mock/backend/handlers/dashboard';
 import { galleryRoutes } from '@/src/_mock/backend/handlers/galleries';
+import { inviteCodeRoutes } from '@/src/_mock/backend/handlers/invite-codes';
 import { memberRoutes } from '@/src/_mock/backend/handlers/members';
 import { performanceRoutes } from '@/src/_mock/backend/handlers/performances';
 import { popupRoutes } from '@/src/_mock/backend/handlers/popups';
+import { priceTierRoutes } from '@/src/_mock/backend/handlers/price-tiers';
+import { reservationRoutes } from '@/src/_mock/backend/handlers/reservations';
 import { scheduleRoutes } from '@/src/_mock/backend/handlers/schedules';
+import { showRoutes } from '@/src/_mock/backend/handlers/shows';
 import { staffRoutes } from '@/src/_mock/backend/handlers/staff';
 import { systemRoutes } from '@/src/_mock/backend/handlers/system';
 import { uploadRoutes } from '@/src/_mock/backend/handlers/uploads';
@@ -26,6 +32,13 @@ const ROUTES: MockRoute[] = [
   ...authRoutes,
   ...uploadRoutes,
   ...dashboardRoutes,
+  // R1 예매 묶음 — `members/invite-codes` 가 `members/{id}` 보다 먼저 맞아야 해서 단원 라우트 앞에 둔다
+  ...accountRoutes,
+  ...inviteCodeRoutes,
+  ...showRoutes,
+  ...priceTierRoutes,
+  ...reservationRoutes,
+  ...admissionRoutes,
   ...performanceRoutes,
   ...memberRoutes,
   ...applicationRoutes,
@@ -54,8 +67,15 @@ function parseJson(req: MockRequest): Record<string, unknown> {
 
 function isSessionValid(token: string | null): boolean {
   if (!token) return false;
-  const expiresAt = getStore().sessions.get(token);
-  return expiresAt !== undefined && expiresAt > Date.now();
+  const store = getStore();
+  const expiresAt = store.sessions.get(token);
+  // U25: 발급 당시 sessionVersion 이 지금 계정 버전과 다르면(계정 변경 뒤 다른 기기) 401
+  const version = store.sessionVersions.get(token) ?? 0;
+  return (
+    expiresAt !== undefined &&
+    expiresAt > Date.now() &&
+    version === store.account.sessionVersion
+  );
 }
 
 export async function handleMockRequest(req: MockRequest): Promise<Response> {

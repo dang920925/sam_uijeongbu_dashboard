@@ -3,6 +3,7 @@
 // 공연 상태는 요약(D02)·목록(D03)·상세(D04)·팝업 기간 상태(D10)가 같은 매핑을 쓴다.
 // ----------------------------------------------------------------------
 import type { LabelTone } from '@/src/theme/semantic';
+import type { BookingShowState, ReservationStatus } from '@/src/types/booking';
 import type {
   ApplicationStatus,
   ClassStatus,
@@ -39,4 +40,20 @@ export const SCHEDULE_TYPE_TONE: Record<ScheduleType, LabelTone> = {
   SHOW: 'info',
   EVENT: 'warning',
   ETC: 'neutral',
+};
+
+/** 예매 상태(design §6 상태색) — 입금 대기 warning · 확정 success · 취소 neutral(outline 변형은 화면이 고른다) */
+export const RESERVATION_STATUS_TONE: Record<ReservationStatus, LabelTone> = {
+  PENDING: 'warning',
+  CONFIRMED: 'success',
+  CANCELLED: 'neutral',
+};
+
+/** 회차 예매 상태 — 열림 success · 오픈 전 info · 매진·마감·준비 중 neutral(designer D11 시안) */
+export const BOOKING_SHOW_STATE_TONE: Record<BookingShowState, LabelTone> = {
+  OPEN: 'success',
+  NOT_YET: 'info',
+  SOLD_OUT: 'neutral',
+  CLOSED: 'neutral',
+  NOT_READY: 'warning',
 };

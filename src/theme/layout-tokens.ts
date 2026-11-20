@@ -21,6 +21,13 @@ export const LAYOUT = {
   iconLg: 24,
   thumb: 64,
   contentMax: 1280,
+  /** R1 designer §13.2 — 현장 터치 타깃(D13) */
+  touchField: 48,
+  /** R1 — D13 lg 현황 패널 · D15 카드 최대 폭 · 헤더 빠른 찾기 입력·결과 폭 */
+  admissionPanel: 360,
+  accountMax: 480,
+  quickSearchInput: 256,
+  quickSearchPopup: 384,
 } as const;
 
 export const RADIUS = { xs: 4, sm: 6, md: 8, lg: 12, pill: 9999 } as const;

@@ -32,7 +32,7 @@ src/components/           공용 UI(Typo·PageHead·DataTable·AdminDialog·Conf
 src/layouts/admin/        사이드바·레일·드로어·헤더
 src/api/                  2~4층: <domain>.ts · <domain>-mapper.ts(+spec) · <domain>-queries.ts · endpoints.ts · root-keys.ts
 src/lib/api-client.ts     1층 전송 래퍼(유일한 fetch/XHR)
-src/server/               서버 전용(쿠키·업스트림·설정) — Route Handler 에서만 import
+src/server/               서버 전용(쿠키·업스트림·설정·재검증) — Route Handler 와 서버 컴포넌트 page.tsx(설정 읽기 — 예 readClientPublicUrl)에서만 import
 src/_mock/backend/        MOCK_BACKEND=true 일 때 BFF 가 쓰는 계약 목(서버 전용)
 src/theme/                palette(hex 유일 위치)·semantic·typography·overrides
 src/types/                계약 DTO·코드값 라벨
@@ -57,6 +57,8 @@ scripts/                  check-hex·check-spacing·check-font-size·gen-iconify
 - 업로드(FN-18): `POST /admin/uploads` → `signedUrl` 로 파일 raw PUT(진행률 XHR) → `publicUrl` 을 저장 요청에.
 - 날짜: 서버 datetime UTC Z → `formatKstDate`/`formatKstDateTime`, 입력은 `fromKstDateTimeInput`(+09:00).
 - 목: `MOCK_BACKEND=true`(Vercel 금지, fail-fast). 시드 없음 — 테스트가 `fixture-` 픽스처를 만든다.
+- 홈페이지 즉시 반영(U27): 공용 BFF 프록시가 `/admin/*` 변경 2xx 뒤 `after()` 로 `POST {CLIENT_PUBLIC_URL}/api/revalidate`(Bearer `REVALIDATE_SECRET` ≥32자) — 실패해도 응답 그대로. 경로→태그 표 `src/server/revalidate.ts`.
+- 예매(R1): 쿼리 키는 `ROOT_KEYS.booking` 접두사 하나 — 예매·입장·회차·등급 변경 뒤 이것으로 함께 무효화. 연락처는 서버가 숫자만 주므로 `formatPhone` 으로 표시. 계정 변경(U25)은 BFF `app/api/auth/account` 가 새 토큰으로 쿠키를 바꾼다.
 
 ## 7. 타입 안전성
 `any` 금지(ESLint error). unknown + 가드. Props 는 `XxxProps` interface.

@@ -8,6 +8,11 @@ export const MSG_D04 = {
   SUBTITLE: '공연 상세 정보',
   /** ← 아이콘 버튼 aria-label — designer W3 신규(사용자 확정 2026-11-19 "제안 문구 그대로") */
   BACK: '공연 관리로 돌아가기',
+  /** 공연 상세 탭(U24 R1) — design §6 SCR-D11 "기본 정보 · 회차·예매"(제안) · designer SCR-D11 시안 */
+  TAB_INFO: '기본 정보',
+  TAB_SHOWS: '회차·예매',
+  /** 탭 목록 aria-label(접근성 전용, 자체 결정) */
+  TABS_LABEL: '공연 상세 메뉴',
 
   /** "공연 정보" 카드 — PerformanceDetail.tsx:204-221 */
   INFO_TITLE: '공연 정보',

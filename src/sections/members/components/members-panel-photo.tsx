@@ -11,7 +11,7 @@ import { Iconify } from '@/src/components/iconify';
 import { Typo } from '@/src/components/typo';
 import { MembersAvatar } from '@/src/sections/members/components/members-avatar';
 import { MSG_COMMON, MSG_UPLOAD } from '@/src/shared/messages/common';
-import { UPLOAD_CONTENT_TYPES } from '@/src/types/codes';
+import { UPLOAD_INPUT_ACCEPT } from '@/src/utils/image-compress/compress-plan';
 
 interface MembersPanelPhotoProps {
   imageUrl: string | null;
@@ -51,7 +51,7 @@ export function MembersPanelPhoto({
         <input
           type='file'
           hidden
-          accept={UPLOAD_CONTENT_TYPES.join(',')}
+          accept={UPLOAD_INPUT_ACCEPT}
           onChange={handleChange}
         />
       </Button>

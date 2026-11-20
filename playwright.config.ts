@@ -23,6 +23,10 @@ const INTEGRATION_ENV = {
   API_BASE_URL: process.env.INT_API_BASE_URL ?? 'http://localhost:4200',
   // qa1 U11 — 서버와 같은 중계 비밀(방문자 IP 를 레이트리밋 키로 신뢰하게)
   RELAY_SECRET: process.env.INT_RELAY_SECRET ?? '',
+  // R1 U27·초대 링크 — 홈페이지 주소와 재검증 비밀(홈페이지와 같은 값)
+  REVALIDATE_SECRET: process.env.INT_REVALIDATE_SECRET ?? '',
+  CLIENT_PUBLIC_URL:
+    process.env.INT_CLIENT_PUBLIC_URL ?? 'http://localhost:4220',
   NEXT_DIST_DIR: DIST_DIR,
 };
 
@@ -45,6 +49,9 @@ const MOCK_ENV = {
   MOCK_ADMIN_USERNAME: 'fixture-admin',
   MOCK_ADMIN_PASSWORD: 'fixture-password',
   NEXT_DIST_DIR: DIST_DIR,
+  // U27 — 홈페이지 재검증 대신 목의 기록 경로로 부른다(e2e-pw/revalidate.spec.ts). 비밀은 목 전용 값(32자 이상).
+  CLIENT_PUBLIC_URL: `${BASE_URL}/api/backend/v1/__mock/client`,
+  REVALIDATE_SECRET: 'fixture-revalidate-secret-0000000000',
 };
 
 export default defineConfig({

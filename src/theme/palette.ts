@@ -23,7 +23,9 @@ export const RAW = {
   red300: '#fca5a5',
   red600: '#dc2626', // ⚑ 현행 red-500 #ef4444 (흰 글자 3.76:1 → 4.83:1)
   red700: '#b91c1c',
+  green50: '#f0fdf4',
   green100: '#dcfce7',
+  green200: '#bbf7d0',
   green600: '#16a34a',
   green700: '#15803d',
   green800: '#166534',
