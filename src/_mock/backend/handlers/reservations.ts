@@ -1,11 +1,15 @@
 // ----------------------------------------------------------------------
-// 목 예매 관리(FN-33·34) — develop §11.4 상태 전이·오류(RSV_003·007·008·009).
-// 지휘자 추가 요청(2026-11-20): q 가 있으면 performanceId 없이 모든 공연에서 찾는다(헤더 빠른 검색).
-// 목 전용 `POST /v1/__mock/booking/reservation` — 공개 예매(홈페이지)가 만든 것 같은 ONLINE 예매 픽스처
-// (입금 기한·상태·입장 인원을 정해 만든다 — 기한 지남·입장 상태 E2E 용).
+// 목 예매 관리(FN-33·34 + develop §11.10 가격 등급) — 상태 전이·오류(RSV_003·007·008·009·011·012).
+// - 수동 등록: 등급 줄(items) · 직접 입력 줄(customLine) · 금액 덮어쓰기(amountOverride, 0 이상) · 상태 선택 ·
+//   연락처 선택(없으면 입금 기한·입금자명 없음) · source ADMIN('관리자 등록').
+// - `PUT /admin/reservations/{id}/items`: 줄 통째 교체 — 같은 등급 줄은 옛 가격 스냅숏 유지(J-77), 상태 그대로.
+// - 지휘자 추가 요청(2026-11-20): q 가 있으면 performanceId 없이 모든 공연에서 찾는다(헤더 빠른 검색).
+// - 목 전용 `POST /v1/__mock/booking/reservation` — 공개 예매(홈페이지)가 만든 것 같은 ONLINE 예매 픽스처.
 // ----------------------------------------------------------------------
 import {
+  activeTiersOf,
   byShowTime,
+  CUSTOM_LINE_LABEL,
   depositDueAtOf,
   depositorNameOf,
   findPerformanceAlive,
@@ -28,8 +32,16 @@ import {
   type MockContext,
   type MockRoute,
 } from '@/src/_mock/backend/mock-http';
-import { getStore, type MockReservation } from '@/src/_mock/backend/mock-store';
-import type { CancelReason, ReservationStatus } from '@/src/types/booking';
+import {
+  getStore,
+  type MockReservation,
+  type MockShow,
+} from '@/src/_mock/backend/mock-store';
+import type {
+  CancelReason,
+  ReservationLineResponse,
+  ReservationStatus,
+} from '@/src/types/booking';
 
 const NOT_FOUND = '예매를 찾을 수 없습니다.';
 const CANCEL_REASONS: CancelReason[] = [
@@ -67,11 +79,17 @@ function seatsError(ctx: MockContext, remaining: number) {
     ctx,
     409,
     'RSV_003',
-    `남은 좌석이 부족합니다. (남은 좌석 ${remaining}석)`
+    `남은 좌석이 부족합니다. (남은 좌석 ${Math.max(remaining, 0)}석)`
   );
 }
+function linesError(ctx: MockContext) {
+  return apiError(ctx, 400, 'RSV_012', '예매 매수를 확인해주세요.');
+}
+function tierError(ctx: MockContext) {
+  return apiError(ctx, 400, 'RSV_011', '선택할 수 없는 가격 등급입니다.');
+}
 
-/** 이름 포함 · 연락처 숫자 포함 · code 일치(develop §11.4) */
+/** 이름 포함 · 연락처 숫자 포함(연락처가 있을 때만) · code 일치(develop §11.4) */
 export function matchesQuery(r: MockReservation, q: string): boolean {
   const trimmed = q.trim();
   if (!trimmed) return true;
@@ -79,7 +97,8 @@ export function matchesQuery(r: MockReservation, q: string): boolean {
   return (
     r.bookerName.includes(trimmed) ||
     r.code === trimmed ||
-    (digits.length > 0 &&
+    (r.bookerPhone !== null &&
+      digits.length > 0 &&
       digits === trimmed.replace(/[\s-]/g, '') &&
       r.bookerPhone.replace(/\D/g, '').includes(digits))
   );
@@ -90,7 +109,7 @@ function byCreated(a: MockReservation, b: MockReservation) {
   return b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id);
 }
 
-/** 버전 확인 → 대상 + 다음 버전. 실패면 Response */
+/** 버전 확인 → 대상. 실패면 Response */
 function withVersion(ctx: MockContext): MockReservation | Response {
   const r = findReservation(ctx.params.id);
   if (!r) return apiError(ctx, 404, 'COMMON_002', NOT_FOUND);
@@ -102,36 +121,127 @@ function bump(r: MockReservation, patch: Partial<MockReservation>) {
   Object.assign(r, patch, { version: r.version + 1 });
 }
 
-interface CreateInput {
-  showId: unknown;
-  quantity: unknown;
-  bookerName: unknown;
-  bookerPhone: unknown;
+function isQty(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 20
+  );
 }
 
-/** 수동 등록·목 픽스처 공용 검증 → 회차. 실패면 Response */
-function readCreate(ctx: MockContext, input: CreateInput) {
-  const show =
-    typeof input.showId === 'string' ? findShow(input.showId) : undefined;
-  if (!show) return apiError(ctx, 404, 'SHW_001', '회차를 찾을 수 없습니다.');
-  const quantity = input.quantity;
-  const name = str(input.bookerName)?.trim() ?? '';
-  const phone = str(input.bookerPhone)?.trim() ?? '';
+/**
+ * 본문의 items·customLine → 등급 줄. 같은 등급이 이미 있던 줄은 previous 의 가격 스냅숏을 쓴다(J-77).
+ * 잘못이면 Response(RSV_012 줄 없음·중복 · RSV_011 쓸 수 없는 등급 · COMMON_001 범위).
+ */
+function readLines(
+  ctx: MockContext,
+  show: MockShow,
+  previous: ReservationLineResponse[] = []
+): ReservationLineResponse[] | Response {
+  const rawItems = ctx.body.items ?? [];
+  const rawCustom = ctx.body.customLine ?? null;
+  if (!Array.isArray(rawItems)) return validationError(ctx);
+  const lines: ReservationLineResponse[] = [];
+  const seen = new Set<string>();
+  const tiers = activeTiersOf(show.performanceId);
+  for (const raw of rawItems as Record<string, unknown>[]) {
+    const tierId = str(raw?.tierId);
+    if (!tierId || seen.has(tierId)) return linesError(ctx);
+    seen.add(tierId);
+    if (!isQty(raw.quantity)) return validationError(ctx);
+    const old = previous.find((line) => line.tierId === tierId);
+    const tier = tiers.find((t) => t.id === tierId);
+    if (!old && !tier) return tierError(ctx);
+    const unitPrice = old?.unitPrice ?? tier?.price ?? 0;
+    lines.push({
+      tierId,
+      tierName: old?.tierName ?? tier?.name ?? '',
+      unitPrice,
+      quantity: raw.quantity,
+      lineAmount: unitPrice * raw.quantity,
+      isCustom: false,
+      visibility: old?.visibility ?? tier?.visibility ?? null,
+    });
+  }
+  if (rawCustom !== null) {
+    if (typeof rawCustom !== 'object') return validationError(ctx);
+    const custom = rawCustom as Record<string, unknown>;
+    const label = str(custom.label)?.trim() || CUSTOM_LINE_LABEL;
+    const amount = custom.amount;
+    if (
+      label.length > 30 ||
+      !isQty(custom.quantity) ||
+      typeof amount !== 'number' ||
+      !Number.isInteger(amount) ||
+      amount < 0
+    )
+      return validationError(ctx);
+    lines.push({
+      tierId: null,
+      tierName: label,
+      // 직접 입력 줄 저장 방식은 back-end 가 정한다(develop §11.10) — 목은 줄 금액을 그대로, 단가 = 금액 ÷ 매수(내림)
+      unitPrice: Math.floor(amount / custom.quantity),
+      quantity: custom.quantity,
+      lineAmount: amount,
+      isCustom: true,
+      visibility: null,
+    });
+  }
+  const total = lines.reduce((sum, line) => sum + line.quantity, 0);
+  if (lines.length === 0 || total > 20) return linesError(ctx);
+  return lines;
+}
+
+/** amountOverride → 금액(없으면 줄 합). 잘못이면 Response */
+function readAmount(
+  ctx: MockContext,
+  lines: ReservationLineResponse[]
+): { amount: number; amountOverridden: boolean } | Response {
+  const override = ctx.body.amountOverride ?? null;
+  if (override === null)
+    return {
+      amount: lines.reduce((sum, line) => sum + line.lineAmount, 0),
+      amountOverridden: false,
+    };
   if (
-    typeof quantity !== 'number' ||
-    !Number.isInteger(quantity) ||
-    quantity < 1 ||
-    quantity > 20
+    typeof override !== 'number' ||
+    !Number.isInteger(override) ||
+    override < 0
   )
     return validationError(ctx);
+  return { amount: override, amountOverridden: true };
+}
+
+function sumQty(lines: ReservationLineResponse[]) {
+  return lines.reduce((sum, line) => sum + line.quantity, 0);
+}
+
+function readBooker(ctx: MockContext, phoneRequired: boolean) {
+  const name = str(ctx.body.bookerName)?.trim() ?? '';
+  const phone = str(ctx.body.bookerPhone)?.trim() || null;
   if (name.length < 1 || name.length > 50)
     return validationError(ctx, '이름을 입력해주세요');
-  if (!PHONE_PATTERN.test(phone))
+  if ((phoneRequired || phone !== null) && !PHONE_PATTERN.test(phone ?? ''))
     return validationError(ctx, '올바른 연락처 형식이 아닙니다.');
-  const { remainingSeats } = showCounts(show);
-  if (remainingSeats !== null && remainingSeats < quantity)
-    return seatsError(ctx, Math.max(remainingSeats, 0));
-  return { show, quantity, name, phone };
+  return { name, phone };
+}
+
+function findShowOr404(ctx: MockContext): MockShow | Response {
+  const showId = str(ctx.body.showId);
+  const show = showId ? findShow(showId) : undefined;
+  return show ?? apiError(ctx, 404, 'SHW_001', '회차를 찾을 수 없습니다.');
+}
+
+function pushAdmission(r: MockReservation, admitted: number) {
+  if (admitted <= 0) return;
+  getStore().admissionLogs.push({
+    id: newId(),
+    reservationId: r.id,
+    delta: admitted,
+    admittedAfter: admitted,
+    createdAt: nowIso(),
+  });
 }
 
 export const reservationRoutes: MockRoute[] = [
@@ -169,6 +279,41 @@ export const reservationRoutes: MockRoute[] = [
       if (!findPerformanceAlive(performanceId))
         return apiError(ctx, 404, 'PERF_001', '작품 정보를 찾을 수 없습니다.');
       const store = getStore();
+      const live = store.reservations.filter(
+        (r) => r.performanceId === performanceId && r.status !== 'CANCELLED'
+      );
+      /** 등급(직접 입력 줄은 한 묶음)별 매수·확정 금액 */
+      const tierRows = (rows: MockReservation[]) => {
+        const map = new Map<
+          string,
+          {
+            tierId: string | null;
+            tierName: string;
+            pendingQty: number;
+            confirmedQty: number;
+            confirmedAmount: number;
+          }
+        >();
+        for (const r of rows)
+          for (const line of r.items) {
+            const key = line.tierId ?? '__custom';
+            const row = map.get(key) ?? {
+              tierId: line.tierId,
+              tierName: line.isCustom ? CUSTOM_LINE_LABEL : line.tierName,
+              pendingQty: 0,
+              confirmedQty: 0,
+              confirmedAmount: 0,
+            };
+            if (r.status === 'PENDING') row.pendingQty += line.quantity;
+            else {
+              row.confirmedQty += line.quantity;
+              // 금액 덮어쓰기 예매는 줄 금액이 아니라 총액 비율 — 목은 단순화해 줄 금액 합(확인 필요)
+              row.confirmedAmount += r.amountOverridden ? 0 : line.lineAmount;
+            }
+            map.set(key, row);
+          }
+        return [...map.values()];
+      };
       const shows = store.shows
         .filter((s) => s.performanceId === performanceId)
         .sort(byShowTime)
@@ -184,11 +329,11 @@ export const reservationRoutes: MockRoute[] = [
             remainingSeats: c.remainingSeats,
             confirmedAmount: c.confirmedAmount,
             admittedCount: c.admittedCount,
+            byTier: tierRows(live.filter((r) => r.showId === s.id)).map(
+              ({ confirmedAmount: _amount, ...row }) => row
+            ),
           };
         });
-      const live = store.reservations.filter(
-        (r) => r.performanceId === performanceId && r.status !== 'CANCELLED'
-      );
       const groups = new Map<
         string,
         {
@@ -221,6 +366,7 @@ export const reservationRoutes: MockRoute[] = [
       const confirmed = all.filter((r) => r.status === 'CONFIRMED');
       return json({
         shows,
+        tiers: tierRows(live),
         inviters: [...groups.values()],
         totals: {
           pendingCount: pending.length,
@@ -237,40 +383,52 @@ export const reservationRoutes: MockRoute[] = [
     pattern: /^\/v1\/admin\/reservations$/,
     auth: true,
     handle: (ctx) => {
-      const read = readCreate(ctx, ctx.body as unknown as CreateInput);
-      if (read instanceof Response) return read;
-      const { show, quantity, name, phone } = read;
-      const confirmNow = ctx.body.confirmNow === true;
+      const show = findShowOr404(ctx);
+      if (show instanceof Response) return show;
+      const booker = readBooker(ctx, false);
+      if (booker instanceof Response) return booker;
+      const status = ctx.body.status;
+      if (status !== 'PENDING' && status !== 'CONFIRMED')
+        return validationError(ctx);
+      const lines = readLines(ctx, show);
+      if (lines instanceof Response) return lines;
+      const money = readAmount(ctx, lines);
+      if (money instanceof Response) return money;
+      const quantity = sumQty(lines);
       const admitNow =
-        confirmNow && typeof ctx.body.admitNow === 'number'
+        status === 'CONFIRMED' && typeof ctx.body.admitNow === 'number'
           ? ctx.body.admitNow
           : 0;
       if (!Number.isInteger(admitNow) || admitNow < 0 || admitNow > quantity)
         return validationError(ctx);
-      const inviterMemberId = str(ctx.body.inviterMemberId) || null;
       const memo = str(ctx.body.memo)?.trim() || null;
       if (memo && memo.length > 500) return validationError(ctx);
-      const now = Date.now();
+      const { remainingSeats } = showCounts(show);
+      if (remainingSeats !== null && remainingSeats < quantity)
+        return seatsError(ctx, remainingSeats);
       const code = newReservationCode(show.performanceId);
-      const unitPrice = show.price ?? 0;
+      // 목 가정: 관리자 등록은 연락처가 있고 입금 대기일 때만 입금자명·기한을 둔다(정본은 back-end.md)
+      const needsDeposit = status === 'PENDING' && booker.phone !== null;
       const created: MockReservation = {
         id: newId(),
         performanceId: show.performanceId,
         showId: show.id,
         code,
         quantity,
-        unitPrice,
-        amount: unitPrice * quantity,
-        bookerName: name,
-        bookerPhone: phone,
-        depositorName: depositorNameOf(name, code),
-        inviterMemberId,
+        amount: money.amount,
+        items: lines,
+        tierTokenUsed: false,
+        amountOverridden: money.amountOverridden,
+        bookerName: booker.name,
+        bookerPhone: booker.phone,
+        depositorName: needsDeposit ? depositorNameOf(booker.name, code) : null,
+        inviterMemberId: str(ctx.body.inviterMemberId) || null,
         inviterNote: null,
-        status: confirmNow ? 'CONFIRMED' : 'PENDING',
+        status,
         source: 'ADMIN',
-        depositDueAt: depositDueAtOf(show, now),
-        confirmedAt: confirmNow ? nowIso() : null,
-        confirmedBy: confirmNow ? 'MANUAL' : null,
+        depositDueAt: needsDeposit ? depositDueAtOf(show, Date.now()) : null,
+        confirmedAt: status === 'CONFIRMED' ? nowIso() : null,
+        confirmedBy: status === 'CONFIRMED' ? 'MANUAL' : null,
         cancelledAt: null,
         cancelReason: null,
         memo,
@@ -278,17 +436,39 @@ export const reservationRoutes: MockRoute[] = [
         version: 1,
         createdAt: nowIso(),
       };
-      const store = getStore();
-      store.reservations.push(created);
-      if (admitNow > 0)
-        store.admissionLogs.push({
-          id: newId(),
-          reservationId: created.id,
-          delta: admitNow,
-          admittedAfter: admitNow,
-          createdAt: nowIso(),
-        });
+      getStore().reservations.push(created);
+      pushAdmission(created, admitNow);
       return json(toAdminReservationItem(created), 201);
+    },
+  },
+  {
+    method: 'PUT',
+    pattern: /^\/v1\/admin\/reservations\/(?<id>[^/]+)\/items$/,
+    auth: true,
+    handle: (ctx) => {
+      const r = withVersion(ctx);
+      if (r instanceof Response) return r;
+      if (r.status === 'CANCELLED') return invalidTransitionError(ctx);
+      const show = findShow(r.showId);
+      if (!show)
+        return apiError(ctx, 404, 'SHW_001', '회차를 찾을 수 없습니다.');
+      const lines = readLines(ctx, show, r.items);
+      if (lines instanceof Response) return lines;
+      const money = readAmount(ctx, lines);
+      if (money instanceof Response) return money;
+      const quantity = sumQty(lines);
+      if (quantity < r.admittedCount) return admittedError(ctx);
+      const { remainingSeats } = showCounts(show);
+      const added = quantity - r.quantity;
+      if (added > 0 && remainingSeats !== null && remainingSeats < added)
+        return seatsError(ctx, remainingSeats);
+      bump(r, {
+        items: lines,
+        quantity,
+        amount: money.amount,
+        amountOverridden: money.amountOverridden,
+      });
+      return json(toAdminReservationItem(r));
     },
   },
   {
@@ -364,7 +544,7 @@ export const reservationRoutes: MockRoute[] = [
       const show = findShow(r.showId);
       const remaining = show ? showCounts(show).remainingSeats : null;
       if (remaining !== null && remaining < r.quantity)
-        return seatsError(ctx, Math.max(remaining, 0));
+        return seatsError(ctx, remaining);
       bump(r, {
         status: 'PENDING',
         cancelledAt: null,
@@ -399,15 +579,23 @@ export const reservationRoutes: MockRoute[] = [
     },
   },
   {
-    // 목 전용 픽스처 — 본문 { showId, quantity, bookerName, bookerPhone, status?, depositDueAt?, admittedCount?,
-    //   inviteCode?, inviterNote?, memo? }. 공개 예매처럼 ONLINE·접수 시각 지금. 좌석 검사는 한다.
+    // 목 전용 픽스처(공개 예매 흉내 — ONLINE). 본문 { showId, bookerName, bookerPhone, items: [{tierId, quantity}],
+    //   status?, depositDueAt?, admittedCount?, code?, inviteCode?, inviterNote?, memo?, tierTokenUsed? }.
+    // 좌석은 검사한다. 상태는 픽스처 편의로 고를 수 있다(공개 예매는 늘 PENDING).
     method: 'POST',
     pattern: /^\/v1\/__mock\/booking\/reservation$/,
     auth: false,
     handle: (ctx) => {
-      const read = readCreate(ctx, ctx.body as unknown as CreateInput);
-      if (read instanceof Response) return read;
-      const { show, quantity, name, phone } = read;
+      const show = findShowOr404(ctx);
+      if (show instanceof Response) return show;
+      const booker = readBooker(ctx, true);
+      if (booker instanceof Response) return booker;
+      const lines = readLines(ctx, show);
+      if (lines instanceof Response) return lines;
+      const quantity = sumQty(lines);
+      const { remainingSeats } = showCounts(show);
+      if (remainingSeats !== null && remainingSeats < quantity)
+        return seatsError(ctx, remainingSeats);
       const store = getStore();
       const status = (str(ctx.body.status) ?? 'PENDING') as ReservationStatus;
       const code = str(ctx.body.code) ?? newReservationCode(show.performanceId);
@@ -417,18 +605,19 @@ export const reservationRoutes: MockRoute[] = [
             ([, c]) => c === inviteCode
           )?.[0] ?? null)
         : null;
-      const unitPrice = show.price ?? 0;
       const created: MockReservation = {
         id: newId(),
         performanceId: show.performanceId,
         showId: show.id,
         code,
         quantity,
-        unitPrice,
-        amount: unitPrice * quantity,
-        bookerName: name,
-        bookerPhone: phone,
-        depositorName: depositorNameOf(name, code),
+        amount: lines.reduce((sum, line) => sum + line.lineAmount, 0),
+        items: lines,
+        tierTokenUsed: ctx.body.tierTokenUsed === true,
+        amountOverridden: false,
+        bookerName: booker.name,
+        bookerPhone: booker.phone,
+        depositorName: depositorNameOf(booker.name, code),
         inviterMemberId,
         inviterNote: inviterMemberId
           ? null

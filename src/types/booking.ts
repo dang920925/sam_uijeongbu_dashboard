@@ -17,6 +17,8 @@ export type CancelReason = 'BOOKER_REQUEST' | 'ADMIN' | 'DEADLINE_PASSED';
 // ─── 예매 설정(FN-29) ───────────────────────────────────────────────
 
 export interface BookingPolicyUpsertRequest {
+  /** 문의처(develop §11.10 추가 — 선택, ≤200, http 로 시작하면 https:// 만). missingFields 에 넣지 않는다 */
+  inquiryContact: string | null;
   depositBank: string | null;
   depositAccountNumber: string | null;
   depositAccountHolder: string | null;
@@ -40,8 +42,7 @@ export interface ShowUpsertRequest {
   venue?: string | null;
   classId?: string | null;
   totalSeats?: number | null;
-  price?: number | null;
-  /** datetime(ISO) */
+  /** datetime(ISO) — 가격은 공연 단위 등급(develop §11.10 J-72, 회차 price 삭제) */
   bookingOpenAt?: string | null;
   bookingEnabled?: boolean;
   status?: ShowStatus;
@@ -58,19 +59,79 @@ export interface AdminShowItemResponse {
   bookingEnabled: boolean;
   bookingOpenAt: string | null;
   totalSeats: number | null;
-  price: number | null;
   pendingQty: number;
   confirmedQty: number;
   remainingSeats: number | null;
   admittedCount: number;
   state: BookingShowState;
-  /** 회차 + 공연 설정 둘 다의 빈 필드 이름 */
+  /** 회차 + 공연 설정 둘 다의 빈 필드 이름(+ `publicTier` = 사용 중 PUBLIC 등급 없음 — 경고만) */
   missingFields: string[];
 }
 
 /** `GET /admin/shows?from=` 항목 — 입장 체크 회차 선택용 */
 export interface AdminShowWithTitleResponse extends AdminShowItemResponse {
   performanceTitle: string;
+  /**
+   * 계약 §11.4 에 없음(계약 변경 요청 — 입장 체크 현장 등록이 그 공연의 가격 등급을 불러오려면 필요).
+   * 없으면 현장 등록은 '직접 입력' 방식만 보인다.
+   */
+  performanceId?: string;
+}
+
+// ─── 가격 등급(develop §11.10 — U24 보강2) ──────────────────────────
+
+export type PriceTierVisibility = 'PUBLIC' | 'LINK_ONLY';
+
+export interface AdminPriceTierResponse {
+  id: string;
+  name: string;
+  /** 1~1,000,000원(0원 등급 없음 — 사용자 결정) */
+  price: number;
+  visibility: PriceTierVisibility;
+  /** LINK_ONLY 일 때만 — 링크 `{CLIENT_PUBLIC_URL}/works/{performanceId}/book?tier={linkToken}` */
+  linkToken: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  /** PENDING·CONFIRMED 매수 */
+  usedQty: number;
+}
+
+export interface PriceTierCreateRequest {
+  name: string;
+  price: number;
+  visibility: PriceTierVisibility;
+  sortOrder?: number;
+  isActive?: boolean;
+}
+
+export type PriceTierPatchRequest = Partial<PriceTierCreateRequest>;
+
+/** 예매의 등급 줄(관리 응답) — isCustom = 관리자 '직접 입력' 줄(tierId null) */
+export interface ReservationLineResponse {
+  tierId: string | null;
+  tierName: string;
+  unitPrice: number;
+  quantity: number;
+  lineAmount: number;
+  isCustom: boolean;
+  /** 등급 노출 방식 — LINK_ONLY = 할인(링크 전용) 등급 Label, 직접 입력 줄은 null(지휘자 확정 2026-11-20) */
+  visibility: PriceTierVisibility | null;
+}
+
+/** 등급 줄 요청 */
+export interface ReservationTierLineRequest {
+  tierId: string;
+  /** 1~20 */
+  quantity: number;
+}
+
+/** 관리자 '직접 입력' 줄 */
+export interface ReservationCustomLineRequest {
+  /** ≤30, 기본 "직접 입력" */
+  label?: string;
+  quantity: number;
+  /** 0 이상 */
+  amount: number;
 }
 
 // ─── 예매(FN-33·34) ─────────────────────────────────────────────────
@@ -99,17 +160,25 @@ export interface AdminReservationItemResponse {
   showId: string;
   showDate: string;
   startTime: string;
+  /** 줄 수량 합 */
   quantity: number;
-  unitPrice: number;
+  /** 줄 금액 합 또는 관리자가 덮어쓴 금액(0 이상) */
   amount: number;
+  /** 등급별 줄(develop §11.10) */
+  items: ReservationLineResponse[];
+  tierTokenUsed: boolean;
+  amountOverridden: boolean;
   bookerName: string;
-  bookerPhone: string;
-  depositorName: string;
+  /** 관리자 등록이면 null 가능 */
+  bookerPhone: string | null;
+  depositorName: string | null;
   inviter: { memberId: string; name: string } | null;
   inviterNote: string | null;
   status: ReservationStatus;
+  /** ADMIN = '관리자 등록' 표시 */
   source: ReservationSource;
-  depositDueAt: string;
+  depositDueAt: string | null;
+  /** 입금 기한이 없으면 항상 false */
   deadlinePassed: boolean;
   confirmedAt: string | null;
   confirmedBy: ConfirmedBy | null;
@@ -121,17 +190,31 @@ export interface AdminReservationItemResponse {
   createdAt: string;
 }
 
+/** 수동 등록(develop §11.10 보강 — 무료·특별 초대도 여기로). items·customLine 중 하나 이상(RSV_012) */
 export interface ManualReservationRequest {
   showId: string;
-  /** 1~20 — 1인 최대는 적용 안 함 */
-  quantity: number;
+  /** 1~50 */
   bookerName: string;
-  bookerPhone: string;
-  inviterMemberId?: string | null;
+  /** 선택 */
+  bookerPhone?: string | null;
+  items?: ReservationTierLineRequest[];
+  customLine?: ReservationCustomLineRequest | null;
+  /** 0 이상 — 있으면 총액을 이 값으로 */
+  amountOverride?: number | null;
+  status: 'PENDING' | 'CONFIRMED';
+  /** ≤500 */
   memo?: string | null;
-  confirmNow: boolean;
-  /** 0~quantity, confirmNow=true 일 때만 */
+  inviterMemberId?: string | null;
+  /** 0~매수, CONFIRMED 일 때만 */
   admitNow?: number;
+}
+
+/** `PUT /admin/reservations/{id}/items` — 줄 통째 교체(같은 등급 줄은 옛 가격 스냅숏 유지, J-77). 상태는 안 바뀜 */
+export interface ReservationItemsRequest {
+  items?: ReservationTierLineRequest[];
+  customLine?: ReservationCustomLineRequest | null;
+  amountOverride?: number | null;
+  version: number;
 }
 
 export interface ReservationMemoRequest {
@@ -167,6 +250,19 @@ export interface ReservationSummaryShowRow {
   remainingSeats: number | null;
   confirmedAmount: number;
   admittedCount: number;
+  /** 회차 × 등급(직접 입력 줄은 tierId null) */
+  byTier: ReservationSummaryTierQty[];
+}
+
+export interface ReservationSummaryTierQty {
+  tierId: string | null;
+  tierName: string;
+  pendingQty: number;
+  confirmedQty: number;
+}
+
+export interface ReservationSummaryTierRow extends ReservationSummaryTierQty {
+  confirmedAmount: number;
 }
 
 export interface ReservationSummaryInviterRow {
@@ -179,6 +275,8 @@ export interface ReservationSummaryInviterRow {
 
 export interface ReservationSummaryBoardResponse {
   shows: ReservationSummaryShowRow[];
+  /** 공연 합계 등급별 */
+  tiers: ReservationSummaryTierRow[];
   inviters: ReservationSummaryInviterRow[];
   totals: {
     pendingCount: number;
@@ -205,12 +303,24 @@ export interface InviteCodeIssuedResponse {
 
 // ─── 입장 체크(FN-36) ───────────────────────────────────────────────
 
+/** 입장 명단의 등급 줄 — 입장 인원은 예매 단위로만 센다(J-75) */
+export interface AdmissionLineResponse {
+  tierName: string;
+  quantity: number;
+  isCustom: boolean;
+  /** LINK_ONLY = 할인 등급 info Label, 직접 입력 줄은 null(지휘자 확정 2026-11-20 — back-end 가 추가) */
+  visibility: PriceTierVisibility | null;
+}
+
 export interface AdmissionItemResponse {
   id: string;
   code: string;
   bookerName: string;
-  phoneLast4: string;
+  /** 관리자 등록에 연락처가 없으면 null */
+  phoneLast4: string | null;
   quantity: number;
+  items: AdmissionLineResponse[];
+  source: ReservationSource;
   admittedCount: number;
   status: 'PENDING' | 'CONFIRMED';
   amount: number;

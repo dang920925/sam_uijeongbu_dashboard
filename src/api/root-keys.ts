@@ -19,6 +19,7 @@ export const ROOT_KEYS = {
   booking: ['booking'] as const,
   show: ['booking', 'show'] as const,
   bookingPolicy: ['booking', 'policy'] as const,
+  priceTier: ['booking', 'price-tier'] as const,
   reservation: ['booking', 'reservation'] as const,
   admission: ['booking', 'admission'] as const,
   inviteCode: ['booking', 'invite-code'] as const,

@@ -40,6 +40,8 @@ export const endpoints = {
     unconfirm: (id: string) => `${admin}/reservations/${id}/unconfirm`,
     cancel: (id: string) => `${admin}/reservations/${id}/cancel`,
     restore: (id: string) => `${admin}/reservations/${id}/restore`,
+    /** 등급 줄 교체(develop §11.10) `{ items?, customLine?, amountOverride?, version }` */
+    items: (id: string) => `${admin}/reservations/${id}/items`,
     cancelOverdue: `${admin}/reservations/cancel-overdue`,
     /** FN-36 입장 증감 `{ delta }` */
     admission: (id: string) => `${admin}/reservations/${id}/admission`,

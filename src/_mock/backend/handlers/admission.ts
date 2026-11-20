@@ -33,7 +33,10 @@ function matches(r: MockReservation, q: string): boolean {
   if (r.bookerName.includes(q)) return true;
   return (
     CODE.test(q) &&
-    (r.code === q || r.bookerPhone.replace(/\D/g, '').slice(-4) === q)
+    (r.code === q ||
+      // 연락처 끝 4자리는 연락처가 있는 예매에서만(관리자 등록은 없을 수 있음)
+      (r.bookerPhone !== null &&
+        r.bookerPhone.replace(/\D/g, '').slice(-4) === q))
   );
 }
 

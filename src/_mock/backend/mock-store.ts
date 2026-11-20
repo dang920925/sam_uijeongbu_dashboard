@@ -18,6 +18,8 @@ import type {
   BookingPolicyUpsertRequest,
   CancelReason,
   ConfirmedBy,
+  PriceTierVisibility,
+  ReservationLineResponse,
   ReservationSource,
   ReservationStatus,
   ShowStatus,
@@ -45,7 +47,19 @@ export interface MockShow {
   bookingEnabled: boolean;
   bookingOpenAt: string | null;
   totalSeats: number | null;
-  price: number | null;
+  createdAt: string;
+}
+
+/** 가격 등급(price_tiers — develop §11.10) */
+export interface MockPriceTier {
+  id: string;
+  performanceId: string;
+  name: string;
+  price: number;
+  visibility: PriceTierVisibility;
+  linkToken: string | null;
+  sortOrder: number;
+  isActive: boolean;
   createdAt: string;
 }
 
@@ -56,16 +70,18 @@ export interface MockReservation {
   showId: string;
   code: string;
   quantity: number;
-  unitPrice: number;
   amount: number;
+  items: ReservationLineResponse[];
+  tierTokenUsed: boolean;
+  amountOverridden: boolean;
   bookerName: string;
-  bookerPhone: string;
-  depositorName: string;
+  bookerPhone: string | null;
+  depositorName: string | null;
   inviterMemberId: string | null;
   inviterNote: string | null;
   status: ReservationStatus;
   source: ReservationSource;
-  depositDueAt: string;
+  depositDueAt: string | null;
   confirmedAt: string | null;
   confirmedBy: ConfirmedBy | null;
   cancelledAt: string | null;
@@ -94,6 +110,7 @@ export interface MockStore {
   staff: SoftDeleted<AdminStaffItemResponse>[];
   popups: SoftDeleted<MockPopup>[];
   shows: MockShow[];
+  priceTiers: MockPriceTier[];
   bookingPolicies: Map<string, BookingPolicyUpsertRequest>;
   reservations: MockReservation[];
   admissionLogs: {
@@ -140,6 +157,7 @@ function emptyStore(): MockStore {
     staff: [],
     popups: [],
     shows: [],
+    priceTiers: [],
     bookingPolicies: new Map(),
     reservations: [],
     admissionLogs: [],

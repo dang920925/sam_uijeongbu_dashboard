@@ -90,11 +90,6 @@ function readShowPatch(
     if (seats === 'invalid') return validationError(ctx);
     out.totalSeats = seats;
   }
-  if ('price' in body) {
-    const price = intOrNull(body.price, 0, 1_000_000);
-    if (price === 'invalid') return validationError(ctx);
-    out.price = price;
-  }
   if ('bookingOpenAt' in body) {
     if (
       body.bookingOpenAt !== null &&
@@ -157,6 +152,15 @@ function readPolicy(
   const max = intOrNull(body.maxTicketsPerBooking ?? null, 1, 20);
   const hours = intOrNull(body.depositDeadlineHours ?? null, 1, 168);
   const refund = textOrNull(body.refundPolicyText ?? null, 2000);
+  // 문의처(develop §11.10 추가): ≤200, http 로 시작하면 https:// 만
+  const inquiry = textOrNull(body.inquiryContact ?? null, 200);
+  if (
+    inquiry === 'invalid' ||
+    (typeof inquiry === 'string' &&
+      /^http/i.test(inquiry) &&
+      !/^https:\/\//i.test(inquiry))
+  )
+    return validationError(ctx);
   if (
     [bank, number, holder, max, hours, refund].includes('invalid') ||
     (typeof number === 'string' && !/^[0-9-]{6,30}$/.test(number))
@@ -169,6 +173,7 @@ function readPolicy(
     maxTicketsPerBooking: max as number | null,
     depositDeadlineHours: hours as number | null,
     refundPolicyText: refund as string | null,
+    inquiryContact: inquiry,
   };
 }
 
@@ -234,7 +239,6 @@ export const showRoutes: MockRoute[] = [
         bookingEnabled: true,
         bookingOpenAt: null,
         totalSeats: null,
-        price: null,
         createdAt: nowIso(),
         ...read,
       };
@@ -257,6 +261,8 @@ export const showRoutes: MockRoute[] = [
         .map((s) => ({
           ...toAdminShowItem(s),
           performanceTitle: findPerformanceAlive(s.performanceId)?.title ?? '',
+          // 계약 밖(계약 변경 요청) — 입장 체크 현장 등록이 등급을 불러오려고
+          performanceId: s.performanceId,
         }));
       return json({ items });
     },

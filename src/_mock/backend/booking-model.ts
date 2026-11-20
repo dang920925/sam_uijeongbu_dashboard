@@ -5,12 +5,14 @@
 // ----------------------------------------------------------------------
 import {
   getStore,
+  type MockPriceTier,
   type MockReservation,
   type MockShow,
 } from '@/src/_mock/backend/mock-store';
 import type {
   AdminReservationItemResponse,
   AdminShowItemResponse,
+  AdminPriceTierResponse,
   AdmissionItemResponse,
   AdmissionSummaryResponse,
   BookingPolicyResponse,
@@ -18,11 +20,8 @@ import type {
   BookingShowState,
 } from '@/src/types/booking';
 
-export const SHOW_FIELDS_REQUIRED = [
-  'price',
-  'totalSeats',
-  'bookingOpenAt',
-] as const;
+/** 회차 필드(가격은 공연 등급 — develop §11.10 J-72) */
+export const SHOW_FIELDS_REQUIRED = ['totalSeats', 'bookingOpenAt'] as const;
 export const POLICY_FIELDS_REQUIRED = [
   'depositBank',
   'depositAccountNumber',
@@ -33,6 +32,7 @@ export const POLICY_FIELDS_REQUIRED = [
 ] as const;
 
 export const EMPTY_POLICY: BookingPolicyUpsertRequest = {
+  inquiryContact: null,
   depositBank: null,
   depositAccountNumber: null,
   depositAccountHolder: null,
@@ -114,10 +114,23 @@ export function showCounts(show: MockShow): ShowCounts {
   };
 }
 
+/** 사용 중 등급(정렬 순) */
+export function activeTiersOf(performanceId: string): MockPriceTier[] {
+  return getStore()
+    .priceTiers.filter((t) => t.performanceId === performanceId && t.isActive)
+    .sort(
+      (a, b) =>
+        a.sortOrder - b.sortOrder || a.createdAt.localeCompare(b.createdAt)
+    );
+}
+
+/** 빈 필드 이름 — 사용 중 PUBLIC 등급이 없으면 `publicTier`(경고만 — develop §11.10) */
 export function showMissing(show: MockShow): string[] {
+  const tiers = activeTiersOf(show.performanceId);
   return [
     ...SHOW_FIELDS_REQUIRED.filter((key) => show[key] === null),
     ...policyMissing(policyOf(show.performanceId)),
+    ...(tiers.some((t) => t.visibility === 'PUBLIC') ? [] : ['publicTier']),
   ];
 }
 
@@ -126,7 +139,11 @@ export function showState(
   show: MockShow,
   now: number = Date.now()
 ): BookingShowState {
-  if (showMissing(show).length > 0) return 'NOT_READY';
+  // 관리 화면 state = 토큰 없는 방문자 기준이 아니라 "누군가 예매할 수 있는가" — 등급이 하나도 없으면 NOT_READY,
+  // 링크 전용 등급만 있으면 publicTier 경고만(링크로는 열림 — J-73)
+  const missing = showMissing(show).filter((key) => key !== 'publicTier');
+  if (missing.length > 0 || activeTiersOf(show.performanceId).length === 0)
+    return 'NOT_READY';
   if (
     show.status === 'COMPLETED' ||
     !show.bookingEnabled ||
@@ -153,7 +170,6 @@ export function toAdminShowItem(show: MockShow): AdminShowItemResponse {
     bookingEnabled: show.bookingEnabled,
     bookingOpenAt: show.bookingOpenAt,
     totalSeats: show.totalSeats,
-    price: show.price,
     pendingQty: counts.pendingQty,
     confirmedQty: counts.confirmedQty,
     remainingSeats: counts.remainingSeats,
@@ -167,7 +183,11 @@ export function isDeadlinePassed(
   r: MockReservation,
   now: number = Date.now()
 ): boolean {
-  return r.status === 'PENDING' && new Date(r.depositDueAt).getTime() < now;
+  return (
+    r.status === 'PENDING' &&
+    r.depositDueAt !== null &&
+    new Date(r.depositDueAt).getTime() < now
+  );
 }
 
 export function toAdminReservationItem(
@@ -188,8 +208,13 @@ export function toAdminReservationItem(
     showDate: show?.showDate ?? '',
     startTime: show?.startTime ?? '',
     quantity: r.quantity,
-    unitPrice: r.unitPrice,
     amount: r.amount,
+    items: r.items.map((line) => ({
+      ...line,
+      visibility: line.tierId ? tierVisibility(line.tierId) : null,
+    })),
+    tierTokenUsed: r.tierTokenUsed,
+    amountOverridden: r.amountOverridden,
     bookerName: r.bookerName,
     bookerPhone: r.bookerPhone,
     depositorName: r.depositorName,
@@ -215,8 +240,17 @@ export function toAdmissionItem(r: MockReservation): AdmissionItemResponse {
     id: r.id,
     code: r.code,
     bookerName: r.bookerName,
-    phoneLast4: r.bookerPhone.replace(/\D/g, '').slice(-4),
+    phoneLast4: r.bookerPhone
+      ? r.bookerPhone.replace(/\D/g, '').slice(-4)
+      : null,
     quantity: r.quantity,
+    items: r.items.map((line) => ({
+      tierName: line.tierName,
+      quantity: line.quantity,
+      isCustom: line.isCustom,
+      visibility: line.tierId ? tierVisibility(line.tierId) : null,
+    })),
+    source: r.source,
     admittedCount: r.admittedCount,
     status: r.status === 'CONFIRMED' ? 'CONFIRMED' : 'PENDING',
     amount: r.amount,
@@ -271,3 +305,35 @@ export function depositDueAtOf(show: MockShow, now: number): string {
 }
 
 export const PHONE_PATTERN = /^01[016789]-?\d{3,4}-?\d{4}$/;
+
+/** 등급 노출 방식(지운 등급이면 null) */
+export function tierVisibility(tierId: string) {
+  return getStore().priceTiers.find((t) => t.id === tierId)?.visibility ?? null;
+}
+
+export function toAdminPriceTier(tier: MockPriceTier): AdminPriceTierResponse {
+  const usedQty = getStore()
+    .reservations.filter((r) => r.status !== 'CANCELLED')
+    .flatMap((r) => r.items)
+    .filter((line) => line.tierId === tier.id)
+    .reduce((sum, line) => sum + line.quantity, 0);
+  return {
+    id: tier.id,
+    name: tier.name,
+    price: tier.price,
+    visibility: tier.visibility,
+    linkToken: tier.linkToken,
+    sortOrder: tier.sortOrder,
+    isActive: tier.isActive,
+    usedQty,
+  };
+}
+
+/** 128비트 무작위 base64url 22자(J-76) */
+export function newTierToken(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Buffer.from(bytes).toString('base64url');
+}
+
+export const CUSTOM_LINE_LABEL = '직접 입력';
