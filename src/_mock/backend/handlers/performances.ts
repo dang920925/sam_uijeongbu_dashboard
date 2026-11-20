@@ -1,6 +1,7 @@
 // ----------------------------------------------------------------------
 // 목 공연·반(FN-09·10) — develop §3.4. 소프트 삭제, createdAt desc, 반 충돌 409 CLS_002 · 종료≤시작 400 CLS_003.
 // ----------------------------------------------------------------------
+import { provisionMockTeam } from '@/src/_mock/backend/handlers/team-accounts';
 import {
   apiError,
   byCreatedDesc,
@@ -195,6 +196,8 @@ export const performanceRoutes: MockRoute[] = [
         deletedAt: null,
       };
       getStore().performances.push(created);
+      // U34 PR-1 — 공연 등록과 함께 팀 접두어·A 계정
+      provisionMockTeam(created);
       return json(toDetail(created), 201);
     },
   },

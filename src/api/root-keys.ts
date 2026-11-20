@@ -26,4 +26,7 @@ export const ROOT_KEYS = {
   account: ['account'] as const,
   /** U37 새 예매 푸시 — 공개키·내 기기 */
   push: ['push'] as const,
+  /** U34 팀 계정(공연별) · 연습실 예약 */
+  teamAccount: ['team-account'] as const,
+  roomReservation: ['room-reservation'] as const,
 };

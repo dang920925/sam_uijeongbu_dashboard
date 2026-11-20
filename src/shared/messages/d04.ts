@@ -11,6 +11,8 @@ export const MSG_D04 = {
   /** 공연 상세 탭(U24 R1) — design §6 SCR-D11 "기본 정보 · 회차·예매"(제안) · designer SCR-D11 시안 */
   TAB_INFO: '기본 정보',
   TAB_SHOWS: '회차·예매',
+  /** U34 — design §13 SCR-D04 '팀 계정' 탭 */
+  TAB_TEAMS: '팀 계정',
   /** 탭 목록 aria-label(접근성 전용, 자체 결정) */
   TABS_LABEL: '공연 상세 메뉴',
 

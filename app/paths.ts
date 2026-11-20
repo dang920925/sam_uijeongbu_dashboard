@@ -11,7 +11,11 @@ export const paths = {
     detail: (id: string) => `/performances/${id}`,
     /** SCR-D11 회차·예매 탭(공연 상세의 탭 — design §6 SCR-D11) */
     shows: (id: string) => `/performances/${id}/shows`,
+    /** U34 팀 계정 탭(공연 상세의 탭 — design §13 SCR-D04 '팀 계정') */
+    teams: (id: string) => `/performances/${id}/teams`,
   },
+  /** U34 연습실 예약 목록(관리자 — U23 캘린더 레이어는 T-SA 배포 뒤 연결) */
+  roomReservations: '/room-reservations',
   members: {
     root: '/members',
     /** 신청서 "단원 등록됨" 링크 → 해당 단원 패널을 연다(designer W4 제안 — front-end 판단, 자체 결정) */

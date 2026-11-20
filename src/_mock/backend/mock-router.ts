@@ -20,6 +20,7 @@ import { scheduleRoutes } from '@/src/_mock/backend/handlers/schedules';
 import { showRoutes } from '@/src/_mock/backend/handlers/shows';
 import { staffRoutes } from '@/src/_mock/backend/handlers/staff';
 import { systemRoutes } from '@/src/_mock/backend/handlers/system';
+import { teamAccountRoutes } from '@/src/_mock/backend/handlers/team-accounts';
 import { uploadRoutes } from '@/src/_mock/backend/handlers/uploads';
 import {
   apiError,
@@ -41,6 +42,8 @@ const ROUTES: MockRoute[] = [
   ...priceTierRoutes,
   ...reservationRoutes,
   ...admissionRoutes,
+  // U34 — `performances/{id}/team-accounts` 를 공연 라우트보다 먼저
+  ...teamAccountRoutes,
   ...performanceRoutes,
   ...memberRoutes,
   ...applicationRoutes,

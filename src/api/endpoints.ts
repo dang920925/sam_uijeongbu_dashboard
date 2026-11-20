@@ -24,6 +24,21 @@ export const endpoints = {
     bookingPolicy: (id: string) => `${admin}/performances/${id}/booking-policy`,
     /** 가격 등급 목록·추가(develop §11.10) */
     priceTiers: (id: string) => `${admin}/performances/${id}/price-tiers`,
+    /** U34 팀 계정 목록·추가(develop §18.2) */
+    teamAccounts: (id: string) => `${admin}/performances/${id}/team-accounts`,
+    /** U34 팀 아이디 접두어 변경 */
+    teamPrefix: (id: string) => `${admin}/performances/${id}/team-prefix`,
+  },
+  /** U34 팀 계정 단건 — 재발급·사용 켜기/끄기 */
+  teamAccounts: {
+    detail: (id: string) => `${admin}/team-accounts/${id}`,
+    resetPassword: (id: string) =>
+      `${admin}/team-accounts/${id}/reset-password`,
+  },
+  /** U34 연습실 예약(관리) — 기간 목록·삭제 */
+  roomReservations: {
+    list: `${admin}/room-reservations`,
+    detail: (id: string) => `${admin}/room-reservations/${id}`,
   },
   /** 가격 등급 단건(develop §11.10) — PATCH·DELETE, 링크 토큰 재발급 */
   priceTiers: {

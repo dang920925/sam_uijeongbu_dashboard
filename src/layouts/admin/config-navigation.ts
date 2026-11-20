@@ -66,6 +66,12 @@ export const NAV_GROUPS: NavItem[][] = [
       label: MSG_D00.NAV_SCHEDULES,
       icon: 'solar:calendar-linear',
     },
+    // U34 — 연습실 예약 목록(일정 옆. U23 캘린더 '연습실 예약' 레이어는 T-SA 배포 뒤 연결)
+    {
+      href: paths.roomReservations,
+      label: MSG_D00.NAV_ROOM_RESERVATIONS,
+      icon: 'solar:calendar-mark-linear',
+    },
     {
       href: paths.staff,
       label: MSG_D00.NAV_STAFF,
