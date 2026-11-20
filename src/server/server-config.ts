@@ -34,3 +34,30 @@ export function readServerConfig(): ServerConfig {
     relaySecret: process.env.RELAY_SECRET || null,
   };
 }
+
+/** 비밀 최소 길이 — develop §12.1 "32자 미만이면 대시보드는 호출을 건너뛴다" */
+export const REVALIDATE_SECRET_MIN_LENGTH = 32;
+
+/**
+ * 홈페이지 주소(develop §11.4 초대 링크 · §12.1 재검증 대상) — `CLIENT_PUBLIC_URL`, 끝 `/` 제거. 없으면 null.
+ * 운영 = https://sam-uijeongbu-client.vercel.app
+ */
+export function readClientPublicUrl(): string | null {
+  const value = (process.env.CLIENT_PUBLIC_URL ?? '')
+    .trim()
+    .replace(/\/+$/, '');
+  return value === '' ? null : value;
+}
+
+/**
+ * 홈페이지 재검증 호출 설정(U27 FN-45) — 주소와 32자 이상 비밀이 모두 있어야 켠다. 아니면 null(호출 건너뜀, 부팅은 계속).
+ */
+export function readRevalidateConfig(): {
+  clientUrl: string;
+  secret: string;
+} | null {
+  const clientUrl = readClientPublicUrl();
+  const secret = process.env.REVALIDATE_SECRET ?? '';
+  if (!clientUrl || secret.length < REVALIDATE_SECRET_MIN_LENGTH) return null;
+  return { clientUrl, secret };
+}

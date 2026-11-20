@@ -4,9 +4,10 @@
 // 갱신 토큰은 없다(develop FN-08 — 7일 토큰, 단일 운영자).
 // - 상태 변경(POST·PATCH·PUT·DELETE)은 출처·JSON 검사 뒤에만 중계한다(qa1 QA1-005, request-guard).
 // - 중계 비밀·방문자 IP 부착과 서버 연결 실패 503 은 callUpstream 이 한다(qa1 U11·U13).
+// - U27(FN-45): `/admin/*` 변경 요청이 2xx 면 응답 뒤 `after()` 로 홈페이지 재검증을 부른다(실패해도 응답 그대로).
 // ----------------------------------------------------------------------
 import { cookies } from 'next/headers';
-import type { NextRequest } from 'next/server';
+import { after, type NextRequest } from 'next/server';
 
 import { ADMIN_COOKIE, clearAdminCookie } from '@/src/server/auth-cookie';
 import {
@@ -14,6 +15,10 @@ import {
   relayResponse,
 } from '@/src/server/relay-response';
 import { checkStateChangingRequest } from '@/src/server/request-guard';
+import {
+  notifyClientRevalidate,
+  revalidateTargetsFor,
+} from '@/src/server/revalidate';
 import { readServerConfig } from '@/src/server/server-config';
 import { callUpstream } from '@/src/server/upstream';
 import { visitorIpOf } from '@/src/server/visitor-ip';
@@ -44,9 +49,10 @@ async function proxy(request: NextRequest, context: RouteContext) {
   }
 
   const token = (await cookies()).get(ADMIN_COOKIE)?.value ?? null;
+  const upstreamPath = `/${path.map(encodeURIComponent).join('/')}`;
   const upstream = await callUpstream({
     method: request.method,
-    path: `/${path.map(encodeURIComponent).join('/')}`,
+    path: upstreamPath,
     search: request.nextUrl.search,
     token,
     contentType: request.headers.get('content-type'),
@@ -56,6 +62,12 @@ async function proxy(request: NextRequest, context: RouteContext) {
   });
   const response = await relayResponse(upstream);
   if (upstream.status === 401 && token) clearAdminCookie(response);
+  const targets = revalidateTargetsFor(
+    request.method,
+    upstreamPath,
+    upstream.status
+  );
+  if (targets) after(() => notifyClientRevalidate(targets));
   return response;
 }
 
