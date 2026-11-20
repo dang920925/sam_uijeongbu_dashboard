@@ -22,6 +22,13 @@ export const endpoints = {
     shows: (id: string) => `${admin}/performances/${id}/shows`,
     /** FN-29 예매 설정 GET·PUT */
     bookingPolicy: (id: string) => `${admin}/performances/${id}/booking-policy`,
+    /** 가격 등급 목록·추가(develop §11.10) */
+    priceTiers: (id: string) => `${admin}/performances/${id}/price-tiers`,
+  },
+  /** 가격 등급 단건(develop §11.10) — PATCH·DELETE, 링크 토큰 재발급 */
+  priceTiers: {
+    detail: (id: string) => `${admin}/price-tiers/${id}`,
+    linkToken: (id: string) => `${admin}/price-tiers/${id}/link-token`,
   },
   /** FN-28 회차 단건·입장 체크 회차 선택(develop §11.4) */
   shows: {

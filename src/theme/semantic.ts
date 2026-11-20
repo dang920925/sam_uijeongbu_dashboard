@@ -52,6 +52,10 @@ export interface SemanticTokens {
     onPlaceholder: string;
   };
   conflict: { bg: string; border: string; fg: string };
+  /** R1 designer §13.2·§13.11 — 현장(D13) 입력·보조 버튼 테두리 3:1 이상(`--color-input-border-strong` slate-500 4.76) */
+  input: { borderStrong: string };
+  /** R1 designer §13.2 `--color-success-soft-bg/-border` — D13 입장 완료 행 */
+  successSoft: { bg: string; border: string };
   scrim: { dialog: string; image: string; chip: string };
 }
 
@@ -108,6 +112,8 @@ export const SEMANTIC: SemanticTokens = {
     onPlaceholder: RAW.slate600,
   },
   conflict: { bg: RAW.red50, border: RAW.red200, fg: RAW.red300 },
+  input: { borderStrong: RAW.slate500 },
+  successSoft: { bg: RAW.green50, border: RAW.green200 },
   scrim: {
     dialog: 'rgba(0 0 0 / 0.5)',
     image: 'rgba(0 0 0 / 0.6)',

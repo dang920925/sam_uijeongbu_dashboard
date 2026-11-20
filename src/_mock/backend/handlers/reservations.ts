@@ -112,7 +112,7 @@ function byCreated(a: MockReservation, b: MockReservation) {
 /** 버전 확인 → 대상. 실패면 Response */
 function withVersion(ctx: MockContext): MockReservation | Response {
   const r = findReservation(ctx.params.id);
-  if (!r) return apiError(ctx, 404, 'COMMON_002', NOT_FOUND);
+  if (!r) return apiError(ctx, 404, 'RSV_013', NOT_FOUND);
   if (ctx.body.version !== r.version) return staleVersionError(ctx);
   return r;
 }
@@ -219,10 +219,12 @@ function sumQty(lines: ReservationLineResponse[]) {
 
 function readBooker(ctx: MockContext, phoneRequired: boolean) {
   const name = str(ctx.body.bookerName)?.trim() ?? '';
-  const phone = str(ctx.body.bookerPhone)?.trim() || null;
+  const raw = str(ctx.body.bookerPhone)?.trim() || null;
+  // 서버는 숫자만 저장·응답한다(back-end.md §14.4)
+  const phone = raw === null ? null : raw.replace(/\D/g, '');
   if (name.length < 1 || name.length > 50)
     return validationError(ctx, '이름을 입력해주세요');
-  if ((phoneRequired || phone !== null) && !PHONE_PATTERN.test(phone ?? ''))
+  if ((phoneRequired || raw !== null) && !PHONE_PATTERN.test(raw ?? ''))
     return validationError(ctx, '올바른 연락처 형식이 아닙니다.');
   return { name, phone };
 }

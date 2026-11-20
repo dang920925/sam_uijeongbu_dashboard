@@ -350,9 +350,9 @@ export interface AdmissionBoardResponse {
   items: AdmissionItemResponse[];
   /**
    * 지휘자 추가 요청(2026-11-20) — q 가 예매번호 형식인데 이 회차에 없을 때 다른 회차의 같은 번호 예매.
-   * back-end 가 넣으면 쓰고, 없으면 화면이 `GET /admin/reservations?q=` 로 보조 조회한다(모양 확인 필요).
+   * 서버가 항상 배열로 준다(최대 5건 — back-end.md §14.4). 대시보드는 보조 조회하지 않는다.
    */
-  otherShowMatches?: AdmissionOtherShowMatch[];
+  otherShowMatches: AdmissionOtherShowMatch[];
 }
 
 export interface AdmissionOtherShowMatch {

@@ -153,8 +153,7 @@ export const admissionRoutes: MockRoute[] = [
     auth: true,
     handle: (ctx) => {
       const r = findReservation(ctx.params.id);
-      if (!r)
-        return apiError(ctx, 404, 'COMMON_002', '예매를 찾을 수 없습니다.');
+      if (!r) return apiError(ctx, 404, 'RSV_013', '예매를 찾을 수 없습니다.');
       if (ctx.body.version !== r.version) return staleVersionError(ctx);
       if (r.status !== 'PENDING') return invalidTransitionError(ctx);
       const admit = ctx.body.admit;
