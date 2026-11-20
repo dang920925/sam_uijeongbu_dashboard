@@ -79,6 +79,8 @@ export const endpoints = {
     approve: (id: string) => `${admin}/applications/${id}/approve`,
     reject: (id: string) => `${admin}/applications/${id}/reject`,
     member: (id: string) => `${admin}/applications/${id}/member`,
+    contact: (id: string) => `${admin}/applications/${id}/contact`,
+    progress: (id: string) => `${admin}/applications/${id}/progress`,
   },
   galleries: {
     list: `${admin}/galleries`,
@@ -87,6 +89,9 @@ export const endpoints = {
   schedules: {
     list: `${admin}/schedules`,
     detail: (id: string) => `${admin}/schedules/${id}`,
+    cancel: (id: string) => `${admin}/schedules/${id}/cancel`,
+    restore: (id: string) => `${admin}/schedules/${id}/restore`,
+    cancelImpact: (id: string) => `${admin}/schedules/${id}/cancel-impact`,
   },
   staff: {
     list: `${admin}/staff`,

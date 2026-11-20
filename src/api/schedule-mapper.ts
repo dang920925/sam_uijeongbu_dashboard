@@ -3,9 +3,13 @@
 // 요청에는 `+09:00` 오프셋을 붙인다(develop §3.1 "입력은 오프셋 필수", B12 9시간 차이 고침).
 // 빈 문자열(종료·장소·설명·연결 공연/반)은 null 로 보낸다.
 // ----------------------------------------------------------------------
-import type { ScheduleType } from '@/src/types/codes';
+import {
+  OBSERVATION_CLOSABLE_TYPES,
+  type ScheduleType,
+} from '@/src/types/codes';
 import type {
   Schedule,
+  ScheduleCancelRequest,
   ScheduleItemResponse,
   ScheduleUpsertRequest,
 } from '@/src/types/content';
@@ -42,6 +46,24 @@ export function fromScheduleItemResponse(res: ScheduleItemResponse): Schedule {
     description: res.description ?? null,
     classId: res.classId ?? null,
     performanceId: res.performanceId ?? null,
+    // U29 — 옛 응답(필드 없음)은 진행 일정으로 본다
+    status: res.status ?? 'ACTIVE',
+    cancelReason: res.cancelReason ?? null,
+    observationClosed: res.observationClosed ?? null,
+  };
+}
+
+/** 취소 창 폼 → 요청(U29). 참관 체크는 연습·공연에서만 보이므로 그 밖은 false(서버도 false 로 저장 — C-11) */
+export function toScheduleCancelRequest(input: {
+  reason: string;
+  observationClosed: boolean;
+  type: ScheduleType;
+}): ScheduleCancelRequest {
+  return {
+    reason: input.reason.trim(),
+    observationClosed: OBSERVATION_CLOSABLE_TYPES.includes(input.type)
+      ? input.observationClosed
+      : false,
   };
 }
 

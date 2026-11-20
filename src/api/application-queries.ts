@@ -13,13 +13,15 @@ import {
   fetchPendingApplicationCount,
   registerMemberFromApplication,
   rejectApplication,
+  updateApplicationContact,
+  updateApplicationProgress,
 } from '@/src/api/application';
 import { ROOT_KEYS } from '@/src/api/root-keys';
 import type {
   Application,
   ApplicationListQuery,
 } from '@/src/types/application';
-import type { ApplicationType } from '@/src/types/codes';
+import type { ApplicationProgress, ApplicationType } from '@/src/types/codes';
 import type { MemberFormInput } from '@/src/types/member';
 
 export const applicationKeys = {
@@ -86,6 +88,39 @@ export function useRegisterMemberFromApplication() {
     mutationFn: ({ id, input }: { id: string; input: MemberFormInput }) =>
       registerMemberFromApplication(id, input),
     onSuccess: invalidate,
+  });
+}
+
+/** U31 보강 — 연락 토글·메모. 요약(연락 전 n건)도 바뀌므로 함께 무효화 */
+export function useUpdateApplicationContact() {
+  const invalidate = useInvalidateApplications();
+  return useMutation({
+    mutationFn: ({
+      id,
+      contacted,
+      note,
+    }: {
+      id: string;
+      contacted: boolean;
+      note?: string;
+    }) => updateApplicationContact(id, contacted, note),
+    onSuccess: invalidate,
+  });
+}
+
+/** U31 보강 — 진행 단계. 409 APP_012 면 실제 상태로 맞추려고 다시 받는다 */
+export function useUpdateApplicationProgress() {
+  const invalidate = useInvalidateApplications();
+  return useMutation({
+    mutationFn: ({
+      id,
+      progress,
+    }: {
+      id: string;
+      progress: ApplicationProgress;
+    }) => updateApplicationProgress(id, progress),
+    onSuccess: invalidate,
+    onError: () => void invalidate(),
   });
 }
 

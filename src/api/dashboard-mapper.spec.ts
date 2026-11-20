@@ -6,6 +6,7 @@ import type { DashboardSummaryResponse } from '@/src/types/dashboard';
 const RESPONSE: DashboardSummaryResponse = {
   performances: { total: 25, ongoing: 3, upcoming: 4 },
   actorCount: 2,
+  uncontactedPendingCount: 1,
   pendingApplicationCount: 6,
   scheduleCount: 7,
   recentPerformances: [

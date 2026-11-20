@@ -9,6 +9,8 @@ export interface DashboardSummaryResponse {
   performances: { total: number; ongoing: number; upcoming: number };
   actorCount: number;
   pendingApplicationCount: number;
+  /** U31 보강 — PENDING 이고 연락 전 */
+  uncontactedPendingCount: number;
   scheduleCount: number;
   recentPerformances: {
     id: string;

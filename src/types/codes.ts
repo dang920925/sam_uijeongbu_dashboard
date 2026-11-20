@@ -20,6 +20,14 @@ export type PreferredTime =
   'WEEKDAY_DAY' | 'WEEKDAY_EVENING' | 'WEEKEND_DAY' | 'WEEKEND_EVENING';
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 export type ScheduleType = 'PRACTICE' | 'SHOW' | 'EVENT' | 'ETC';
+/** 일정 상태(U29 — develop §13) */
+export type ScheduleStatus = 'ACTIVE' | 'CANCELLED';
+/** 신청 진행 단계(U31 보강 — develop §15.5). JOINED 는 상담만 */
+export type ApplicationProgress =
+  'RECEIVED' | 'SCHEDULED' | 'COMPLETED' | 'JOINED' | 'DROPPED';
+/** 신청 목록 정렬 기준(develop §15.5) */
+export type ApplicationSort = 'createdAt' | 'progress' | 'contactedAt';
+export type SortOrder = 'asc' | 'desc';
 export type GalleryCategory =
   'PERFORMANCE' | 'PRACTICE' | 'EVENT' | 'GROUP' | 'ETC';
 export type UploadPurpose =
@@ -121,6 +129,46 @@ export const SCHEDULE_TYPE_LABEL: Record<ScheduleType, string> = {
   EVENT: '이벤트',
   ETC: '기타',
 };
+/** 참관 받지 않음 체크를 보이는 유형 — 연습·공연(사용자 확정 2026-11-20, develop §13 C-11) */
+export const OBSERVATION_CLOSABLE_TYPES: ScheduleType[] = ['PRACTICE', 'SHOW'];
+
+/** 진행 단계 순서 — 서버 정렬 순서와 같다(back-end §15) */
+export const APPLICATION_PROGRESSES: ApplicationProgress[] = [
+  'RECEIVED',
+  'SCHEDULED',
+  'COMPLETED',
+  'JOINED',
+  'DROPPED',
+];
+/** 유형별로 쓸 수 있는 진행 단계(참관에 JOINED 없음 — APP_012) */
+export const APPLICATION_PROGRESSES_BY_TYPE: Record<
+  ApplicationType,
+  ApplicationProgress[]
+> = {
+  WORK_OBSERVATION: ['RECEIVED', 'SCHEDULED', 'COMPLETED', 'DROPPED'],
+  CONSULTATION: ['RECEIVED', 'SCHEDULED', 'COMPLETED', 'JOINED', 'DROPPED'],
+};
+/** 진행 단계 화면 이름 — 유형별(design §10.1 제안) */
+export const APPLICATION_PROGRESS_LABEL: Record<
+  ApplicationType,
+  Record<ApplicationProgress, string>
+> = {
+  WORK_OBSERVATION: {
+    RECEIVED: '접수',
+    SCHEDULED: '일정 확정',
+    COMPLETED: '참관 완료',
+    JOINED: '입단',
+    DROPPED: '불참',
+  },
+  CONSULTATION: {
+    RECEIVED: '접수',
+    SCHEDULED: '상담 예정',
+    COMPLETED: '상담 완료',
+    JOINED: '입단',
+    DROPPED: '보류',
+  },
+};
+
 export const SCHEDULE_TYPES: ScheduleType[] = [
   'PRACTICE',
   'SHOW',

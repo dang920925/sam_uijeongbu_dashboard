@@ -29,7 +29,11 @@ import type { AdminPerformanceResponse } from '@/src/types/performance';
 
 export type SoftDeleted<T> = T & { deletedAt: string | null };
 
-export type MockApplication = Omit<ApplicationItemResponse, 'member'> & {
+/** scheduleCancellation 은 일정에서 계산한다(U29 — develop §13.2) */
+export type MockApplication = Omit<
+  ApplicationItemResponse,
+  'member' | 'scheduleCancellation'
+> & {
   memberId: string | null;
 };
 export type MockPopup = Omit<AdminPopupItemResponse, 'overlapsActive'>;
