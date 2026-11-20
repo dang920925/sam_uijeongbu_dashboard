@@ -98,4 +98,50 @@ export const authRoutes: MockRoute[] = [
       return noContent();
     },
   },
+  {
+    // 슬라이딩 세션(T-PUSH 추가) — 세션이 유효하면(가드) 같은 계정 버전으로 7일 새 토큰. 로그아웃·계정 변경 뒤 토큰은 가드가 401
+    method: 'POST',
+    pattern: /^\/v1\/auth\/refresh$/,
+    auth: true,
+    handle: () => {
+      const { accessToken, expiresAt } = issueMockJwtSession(TOKEN_TTL_MS);
+      return json({
+        accessToken,
+        expiresAt: new Date(expiresAt).toISOString(),
+      });
+    },
+  },
+  {
+    // 목 전용 — 남은 기간을 정한 JWT 모양 세션을 만든다(슬라이딩 세션 E2E). 본문 { ttlSeconds }
+    method: 'POST',
+    pattern: /^\/v1\/__mock\/session$/,
+    auth: false,
+    handle: (ctx) => {
+      const ttlSeconds = Number(ctx.body.ttlSeconds ?? 0);
+      const { accessToken, expiresAt } = issueMockJwtSession(ttlSeconds * 1000);
+      return json({
+        accessToken,
+        expiresAt: new Date(expiresAt).toISOString(),
+      });
+    },
+  },
 ];
+
+/** JWT 모양(서명 없음 — 목 전용) 토큰을 만들어 세션으로 등록한다. BFF 가 exp 로 남은 기간을 읽는다 */
+function issueMockJwtSession(ttlMs: number): {
+  accessToken: string;
+  expiresAt: number;
+} {
+  const store = getStore();
+  const expiresAt = Date.now() + ttlMs;
+  const encode = (value: object) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
+  const accessToken = [
+    encode({ alg: 'none', typ: 'JWT' }),
+    encode({ exp: Math.floor(expiresAt / 1000), jti: randomUUID() }),
+    'mock',
+  ].join('.');
+  store.sessions.set(accessToken, expiresAt);
+  store.sessionVersions.set(accessToken, store.account.sessionVersion);
+  return { accessToken, expiresAt };
+}
