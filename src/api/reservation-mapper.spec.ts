@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  formatShowSlot,
   formatTierBreakdown,
+  formatWon,
   fromAdminReservationItemResponse,
+  previewLinesAmount,
+  toReservationItemsRequest,
+  toReservationLinesFormInput,
   toManualReservationRequest,
   toReservationCode,
   totalQuantityOf,
@@ -142,5 +147,83 @@ describe('fromAdminReservationItemResponse', () => {
     expect(model.performanceTitle).toBeNull();
     expect(model.bookerPhone).toBeNull();
     expect(model.items).toHaveLength(1);
+  });
+});
+
+describe('formatWon · formatShowSlot (D12)', () => {
+  it('금액에 천 단위 쉼표와 원을 붙인다', () => {
+    expect(formatWon(12000)).toBe('12,000원');
+    expect(formatWon(0)).toBe('0원');
+  });
+
+  it('회차를 "MM.DD HH:mm"(요일 선택)으로 보인다', () => {
+    expect(formatShowSlot('2099-12-12', '14:00')).toBe('12.12 14:00');
+    expect(formatShowSlot('2099-12-12', '14:00', true)).toBe(
+      '12.12 (토) 14:00'
+    );
+  });
+});
+
+describe('toReservationLinesFormInput · toReservationItemsRequest', () => {
+  it('기존 예매의 등급 줄·직접 입력 줄·덮어쓴 금액으로 폼을 채우고 같은 모양으로 되돌린다', () => {
+    // Arrange
+    const reservation = {
+      amount: 5000,
+      amountOverridden: true,
+      items: [
+        {
+          tierId: 't-1',
+          tierName: '일반',
+          unitPrice: 10000,
+          quantity: 1,
+          lineAmount: 10000,
+          isCustom: false,
+          visibility: 'PUBLIC' as const,
+        },
+        {
+          tierId: null,
+          tierName: '초대',
+          unitPrice: 0,
+          quantity: 2,
+          lineAmount: 0,
+          isCustom: true,
+          visibility: null,
+        },
+      ],
+    };
+    // Act
+    const form = toReservationLinesFormInput(reservation);
+    const request = toReservationItemsRequest(form, 3);
+    // Assert
+    expect(form.tierQuantities).toEqual({ 't-1': '1' });
+    expect(request).toEqual({
+      items: [{ tierId: 't-1', quantity: 1 }],
+      customLine: { label: '초대', quantity: 2, amount: 0 },
+      amountOverride: 5000,
+      version: 3,
+    });
+  });
+});
+
+describe('previewLinesAmount', () => {
+  it('등급 단가 × 수량 + 직접 입력 금액, 덮어쓰기가 있으면 그 금액을 준다', () => {
+    const input = {
+      ...BASE_FORM,
+      useCustom: true,
+      customQuantity: '1',
+      customAmount: '3000',
+    };
+    const priceOf = (id: string) => (id === 't-1' ? 10000 : 0);
+    expect(previewLinesAmount(input, priceOf)).toEqual({
+      quantity: 3,
+      lineAmount: 23000,
+      amount: 23000,
+    });
+    expect(
+      previewLinesAmount(
+        { ...input, useAmountOverride: true, amountOverride: '0' },
+        priceOf
+      ).amount
+    ).toBe(0);
   });
 });

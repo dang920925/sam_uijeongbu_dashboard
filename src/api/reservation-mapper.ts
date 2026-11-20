@@ -6,6 +6,7 @@ import type {
   AdminReservationItemResponse,
   ManualReservationRequest,
   ReservationCustomLineRequest,
+  ReservationItemsRequest,
   ReservationTierLineRequest,
 } from '@/src/types/booking';
 
@@ -132,4 +133,83 @@ export function formatTierBreakdown(
   lines: { tierName: string; quantity: number }[]
 ): string {
   return lines.map((line) => `${line.tierName} ${line.quantity}`).join(' · ');
+}
+
+// ─── D12 작업자(W2) 추가 ─────────────────────────────────────────────
+
+/** 금액 표시 "12,000원"(0 이면 "0원") */
+export function formatWon(amount: number): string {
+  return `${amount.toLocaleString('ko-KR')}원`;
+}
+
+const WEEKDAY = ['일', '월', '화', '수', '목', '금', '토'];
+
+/**
+ * 회차 표시 — 'YYYY-MM-DD' + 'HH:mm' → "12.12 14:00"(표 — designer 보강2 "요일 빼고"),
+ * withWeekday 면 "12.12 (토) 14:00"(Dialog·집계·드로어). 날짜 형식이 아니면 원문 그대로.
+ */
+export function formatShowSlot(
+  showDate: string,
+  startTime: string,
+  withWeekday = false
+): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(showDate);
+  if (!m) return `${showDate} ${startTime}`.trim();
+  const day = new Date(
+    Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+  ).getUTCDay();
+  const date = `${m[2]}.${m[3]}`;
+  return withWeekday
+    ? `${date} (${WEEKDAY[day]}) ${startTime}`
+    : `${date} ${startTime}`;
+}
+
+/** 등급 수정 요청(`PUT /admin/reservations/{id}/items`) — 줄 통째 교체 + version */
+export function toReservationItemsRequest(
+  input: ReservationLinesFormInput,
+  version: number
+): ReservationItemsRequest {
+  const { items, customLine, amountOverride } = toReservationLines(input);
+  return { items, customLine, amountOverride, version };
+}
+
+/** 기존 예매 → 등급 수정 폼 초기값(등급 줄 수량 · 직접 입력 줄 · 덮어쓴 금액) */
+export function toReservationLinesFormInput(
+  reservation: Pick<Reservation, 'items' | 'amount' | 'amountOverridden'>
+): ReservationLinesFormInput {
+  const custom = reservation.items.find((line) => line.isCustom) ?? null;
+  const tierQuantities: Record<string, string> = {};
+  for (const line of reservation.items)
+    if (!line.isCustom && line.tierId)
+      tierQuantities[line.tierId] = String(line.quantity);
+  return {
+    tierQuantities,
+    useCustom: custom !== null,
+    customLabel: custom?.tierName ?? '',
+    customQuantity: custom ? String(custom.quantity) : '',
+    customAmount: custom ? String(custom.lineAmount) : '',
+    useAmountOverride: reservation.amountOverridden,
+    amountOverride: reservation.amountOverridden
+      ? String(reservation.amount)
+      : '',
+  };
+}
+
+/**
+ * 폼 미리 계산 총액 — 등급 줄(단가 = priceOf(tierId)) + 직접 입력 금액. 금액 덮어쓰기가 켜져 있으면 그 값.
+ * 화면 미리보기용(서버가 정본 — 같은 등급은 스냅숏 가격, J-77).
+ */
+export function previewLinesAmount(
+  input: ReservationLinesFormInput,
+  priceOf: (tierId: string) => number
+): { quantity: number; lineAmount: number; amount: number } {
+  const { items, customLine, amountOverride } = toReservationLines(input);
+  const lineAmount =
+    items.reduce((sum, line) => sum + priceOf(line.tierId) * line.quantity, 0) +
+    (customLine?.amount ?? 0);
+  return {
+    quantity: totalQuantityOf(input),
+    lineAmount,
+    amount: amountOverride ?? lineAmount,
+  };
 }
