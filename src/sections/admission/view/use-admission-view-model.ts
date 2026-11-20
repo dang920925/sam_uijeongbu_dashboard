@@ -324,8 +324,9 @@ export function useAdmissionViewModel() {
         status: m.status,
         meta: MSG_D13.OTHER_META(
           [
-            MSG_D13.META_CODE(m.code),
-            showTitleOf(m.showId),
+            // 같은 예매번호로 찾은 결과라 번호 = 검색어(서버는 code 를 주지 않는다)
+            searchCode ? MSG_D13.META_CODE(searchCode) : '',
+            m.performanceTitle || showTitleOf(m.showId),
             formatShowWhen(m.showDate, m.startTime),
             `${m.quantity}${MSG_BOOKING.TICKET_UNIT}`,
             RESERVATION_STATUS_LABEL[m.status],

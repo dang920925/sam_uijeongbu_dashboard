@@ -97,8 +97,10 @@ export const admissionRoutes: MockRoute[] = [
                   ? [
                       {
                         reservationId: r.id,
-                        code: r.code,
                         showId: other.id,
+                        performanceTitle:
+                          findPerformanceAlive(other.performanceId)?.title ??
+                          '',
                         showDate: other.showDate,
                         startTime: other.startTime,
                         bookerName: r.bookerName,

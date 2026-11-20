@@ -21,11 +21,11 @@ export function toItemsDialogRows(
   const prices: Record<string, number> = {};
   for (const line of reservation.items) {
     if (line.isCustom || !line.tierId) continue;
-    prices[line.tierId] = line.unitPrice;
+    prices[line.tierId] = line.unitPrice ?? 0;
     rows.push({
       id: line.tierId,
       name: line.tierName,
-      priceText: MSG_D12.ITEMS_PRICE_KEPT(formatWon(line.unitPrice)),
+      priceText: MSG_D12.ITEMS_PRICE_KEPT(formatWon(line.unitPrice ?? 0)),
       isLinkOnly: line.visibility === 'LINK_ONLY',
     });
   }

@@ -3,6 +3,8 @@
 // - 명단은 받은 순간에 "남은 인원 있는 예매 먼저 · 이름순"으로 정렬해 캐시에 둔다. 낙관 표시·처리 결과는
 //   자리를 바꾸지 않고 그 행만 바꾼다(손가락 아래 행이 움직이지 않게 — designer §13.7.4 1.5). 다음 조회 때 다시 정렬.
 // - otherShowMatches 는 서버가 항상 배열로 준다(최대 5건 — back-end.md §14.4, 지휘자 전달). 보조 조회 없음.
+//   서버 항목(AdmissionOtherShowMatchItemDto)은 performanceTitle 을 주고 code 는 주지 않는다(같은 예매번호로 찾은 결과라
+//   번호 = 검색어 — 화면이 검색어로 쓴다. integration 2026-11-20 실측).
 // ----------------------------------------------------------------------
 import type {
   AdminShowWithTitleResponse,
@@ -18,7 +20,7 @@ export const OTHER_SHOW_MATCH_LIMIT = 5;
 
 export interface AdmissionShow {
   id: string;
-  /** /admin/shows 응답에 있으면(계약 변경 요청) — 없으면 null → 현장 등록은 직접 입력만 */
+  /** 서버가 항상 준다(2026-11-20 integration 추가) — 비어 오면 null → 현장 등록은 직접 입력만 */
   performanceId: string | null;
   performanceTitle: string;
   showDate: string;
@@ -53,6 +55,21 @@ export interface AdmissionItem {
 
 export type AdmissionSummary = AdmissionSummaryResponse;
 
+/** 서버 otherShowMatches[] 모양(AdmissionOtherShowMatchItemDto) — booking.ts AdmissionOtherShowMatch 와 같다 */
+type AdmissionOtherShowMatchWire = AdmissionOtherShowMatch;
+
+/** 다른 회차 안내 한 줄 — 공연이 다를 수 있어 공연명을 함께 둔다 */
+export interface AdmissionOtherMatch {
+  reservationId: string;
+  showId: string;
+  performanceTitle: string;
+  showDate: string;
+  startTime: string;
+  bookerName: string;
+  quantity: number;
+  status: AdmissionOtherShowMatch['status'];
+}
+
 export interface AdmissionBoard {
   show: {
     id: string;
@@ -63,8 +80,8 @@ export interface AdmissionBoard {
   };
   summary: AdmissionSummary;
   items: AdmissionItem[];
-  /** null = 서버가 안 줌(보조 조회 필요) */
-  otherShowMatches: AdmissionOtherShowMatch[];
+  /** 서버가 항상 배열로 준다(q 가 4자리이고 이 회차 0건일 때만 채움) */
+  otherShowMatches: AdmissionOtherMatch[];
 }
 
 export interface AdmissionResult {
@@ -126,6 +143,21 @@ export function sortAdmissionItems(items: AdmissionItem[]): AdmissionItem[] {
   });
 }
 
+export function fromAdmissionOtherMatchResponse(
+  res: AdmissionOtherShowMatchWire
+): AdmissionOtherMatch {
+  return {
+    reservationId: res.reservationId,
+    showId: res.showId,
+    performanceTitle: res.performanceTitle ?? '',
+    showDate: res.showDate,
+    startTime: res.startTime.slice(0, 5),
+    bookerName: res.bookerName,
+    quantity: res.quantity,
+    status: res.status,
+  };
+}
+
 export function fromAdmissionBoardResponse(
   res: AdmissionBoardResponse
 ): AdmissionBoard {
@@ -139,10 +171,9 @@ export function fromAdmissionBoardResponse(
     },
     summary: res.summary,
     items: sortAdmissionItems(res.items.map(fromAdmissionItemResponse)),
-    otherShowMatches: (res.otherShowMatches ?? []).slice(
-      0,
-      OTHER_SHOW_MATCH_LIMIT
-    ),
+    otherShowMatches: (res.otherShowMatches ?? [])
+      .slice(0, OTHER_SHOW_MATCH_LIMIT)
+      .map(fromAdmissionOtherMatchResponse),
   };
 }
 

@@ -12,6 +12,7 @@ import {
 } from '@/src/api/admission-mapper';
 import type {
   AdminShowWithTitleResponse,
+  AdmissionBoardResponse,
   AdmissionItemResponse,
 } from '@/src/types/booking';
 
@@ -120,20 +121,19 @@ describe('admission-mapper', () => {
     expect(result.otherShowMatches).toEqual([]);
   });
 
-  it('otherShowMatches 가 있으면 최대 5건만 쓴다', () => {
-    // Arrange
+  it('otherShowMatches(서버 모양 — code 없음·performanceTitle 있음)를 최대 5건, 시각 HH:mm 으로 쓴다', () => {
+    // Arrange — 실서버 AdmissionOtherShowMatchItemDto 응답(integration 2026-11-20 실측)
     const match = {
       reservationId: 'x',
-      code: '1234',
       showId: 's2',
+      performanceTitle: '다른 작품',
       showDate: '2099-12-13',
       startTime: '17:00',
       bookerName: '홍',
       quantity: 2,
       status: 'CONFIRMED' as const,
     };
-    // Act
-    const result = fromAdmissionBoardResponse({
+    const res = {
       show: board().show,
       summary: SUMMARY,
       items: [],
@@ -141,25 +141,50 @@ describe('admission-mapper', () => {
         ...match,
         reservationId: `x${i}`,
       })),
-    });
+    } satisfies AdmissionBoardResponse;
+    // Act
+    const result = fromAdmissionBoardResponse(res);
     // Assert
     expect(result.otherShowMatches).toHaveLength(5);
+    expect(result.otherShowMatches[0]).toEqual({
+      ...match,
+      reservationId: 'x0',
+    });
   });
 
-  it('회차 응답의 공연 id 가 없으면 null 로 둔다', () => {
-    // Arrange
-    const res = {
+  it('회차 목록 항목(서버 AdminUpcomingShowItemResponseDto)에서 공연 id·제목·시각을 읽는다', () => {
+    // Arrange — 실서버 GET /admin/shows?from= 항목
+    const res: AdminShowWithTitleResponse = {
       id: 's1',
-      performanceTitle: '작품',
+      classId: null,
       showDate: '2099-12-12',
-      startTime: '14:00:00',
-      remainingSeats: 3,
-    } as AdminShowWithTitleResponse;
+      startTime: '19:30',
+      endTime: null,
+      venue: '소극장',
+      status: 'UPCOMING',
+      bookingEnabled: true,
+      bookingOpenAt: '2099-11-01T01:00:00.000Z',
+      totalSeats: 50,
+      pendingQty: 4,
+      confirmedQty: 3,
+      remainingSeats: 43,
+      admittedCount: 0,
+      state: 'OPEN',
+      missingFields: [],
+      performanceId: 'p1',
+      performanceTitle: '작품',
+    };
     // Act
     const show = fromAdmissionShowResponse(res);
     // Assert
-    expect(show.performanceId).toBeNull();
-    expect(show.startTime).toBe('14:00');
+    expect(show).toEqual({
+      id: 's1',
+      performanceId: 'p1',
+      performanceTitle: '작품',
+      showDate: '2099-12-12',
+      startTime: '19:30',
+      remainingSeats: 43,
+    });
   });
 
   it('낙관 표시로 입장 인원과 현황을 함께 바꾸고 행 자리는 그대로 둔다', () => {

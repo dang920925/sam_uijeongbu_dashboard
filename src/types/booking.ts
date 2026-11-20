@@ -71,11 +71,8 @@ export interface AdminShowItemResponse {
 /** `GET /admin/shows?from=` 항목 — 입장 체크 회차 선택용 */
 export interface AdminShowWithTitleResponse extends AdminShowItemResponse {
   performanceTitle: string;
-  /**
-   * 계약 §11.4 에 없음(계약 변경 요청 — 입장 체크 현장 등록이 그 공연의 가격 등급을 불러오려면 필요).
-   * 없으면 현장 등록은 '직접 입력' 방식만 보인다.
-   */
-  performanceId?: string;
+  /** 입장 체크 현장 등록이 그 공연의 가격 등급을 불러오는 키 — 서버 AdminUpcomingShowItemResponseDto(2026-11-20 integration 추가) */
+  performanceId: string;
 }
 
 // ─── 가격 등급(develop §11.10 — U24 보강2) ──────────────────────────
@@ -110,7 +107,8 @@ export type PriceTierPatchRequest = Partial<PriceTierCreateRequest>;
 export interface ReservationLineResponse {
   tierId: string | null;
   tierName: string;
-  unitPrice: number;
+  /** 직접 입력 줄은 null(back-end §14.4 #6 — 단가 없음, 줄 금액만) */
+  unitPrice: number | null;
   quantity: number;
   lineAmount: number;
   isCustom: boolean;
@@ -151,11 +149,11 @@ export interface ReservationListQuery {
 export interface AdminReservationItemResponse {
   id: string;
   /**
-   * 지휘자 추가 요청(2026-11-20 "예매번호로 찾기") — 공연을 가로질러 찾을 때 공연명 표시용.
-   * 계약 §11.4 에 없던 필드라 optional(서버가 안 주면 화면은 공연명 없이 보인다 — 확인 필요).
+   * 지휘자 승인 계약 변경(2026-11-20 "예매번호로 찾기") — 서버 AdminReservationItemResponseDto 가 모든 응답에
+   * 항상 준다(back-end §14.4 #1, integration 실측). 공연을 가로질러 찾을 때 공연명 표시용.
    */
-  performanceId?: string;
-  performanceTitle?: string;
+  performanceId: string;
+  performanceTitle: string;
   code: string;
   showId: string;
   showDate: string;
@@ -355,10 +353,11 @@ export interface AdmissionBoardResponse {
   otherShowMatches: AdmissionOtherShowMatch[];
 }
 
+/** 다른 회차 같은 예매번호 — 서버 AdmissionOtherShowMatchItemDto 그대로(code 없음 — 검색어가 곧 번호, 공연명은 다른 공연일 수 있어 줌) */
 export interface AdmissionOtherShowMatch {
   reservationId: string;
-  code: string;
   showId: string;
+  performanceTitle: string;
   showDate: string;
   startTime: string;
   bookerName: string;

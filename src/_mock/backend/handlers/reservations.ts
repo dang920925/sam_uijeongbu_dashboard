@@ -180,8 +180,8 @@ function readLines(
     lines.push({
       tierId: null,
       tierName: label,
-      // 직접 입력 줄 저장 방식은 back-end 가 정한다(develop §11.10) — 목은 줄 금액을 그대로, 단가 = 금액 ÷ 매수(내림)
-      unitPrice: Math.floor(amount / custom.quantity),
+      // 직접 입력 줄은 서버처럼 단가 null, 줄 금액만(back-end §14.4 #6 — integration 2026-11-20 정합)
+      unitPrice: null,
       quantity: custom.quantity,
       lineAmount: amount,
       isCustom: true,
