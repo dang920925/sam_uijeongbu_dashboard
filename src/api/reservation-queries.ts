@@ -76,10 +76,14 @@ export function useReservationTierOptions(performanceId: string | null) {
   });
 }
 
-/** 예매 묶음 전체 무효화(회차 좌석·집계·입장 명단 함께) */
+/** 예매 묶음 전체 무효화(회차 좌석·집계·입장 명단 함께) + (U40) 요약(입금 대기 배지) */
 export function useInvalidateBooking() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: ROOT_KEYS.booking });
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ROOT_KEYS.booking }),
+      queryClient.invalidateQueries({ queryKey: ROOT_KEYS.dashboard }),
+    ]);
 }
 
 export function useTransitionReservation() {

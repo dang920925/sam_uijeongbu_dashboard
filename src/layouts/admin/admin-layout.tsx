@@ -42,8 +42,14 @@ const navSurfaceSx = {
 };
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { pathname, isDrawerOpen, openDrawer, closeDrawer, handleLogout } =
-    useAdminLayout();
+  const {
+    pathname,
+    isDrawerOpen,
+    openDrawer,
+    closeDrawer,
+    handleLogout,
+    badges,
+  } = useAdminLayout();
 
   return (
     <Box
@@ -72,6 +78,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <AdminNav
           pathname={pathname}
           variant='sidebar'
+          badges={badges}
           onLogout={handleLogout}
         />
       </Box>
@@ -95,7 +102,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {MSG_D00.RAIL_LOGO}
           </Typo.Caption.Bold>
         </Box>
-        <AdminNav pathname={pathname} variant='rail' onLogout={handleLogout} />
+        <AdminNav
+          pathname={pathname}
+          variant='rail'
+          badges={badges}
+          onLogout={handleLogout}
+        />
       </Box>
 
       <Drawer
@@ -121,6 +133,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <AdminNav
           pathname={pathname}
           variant='sidebar'
+          badges={badges}
           onNavigate={closeDrawer}
           onLogout={handleLogout}
           autoFocusFirst

@@ -12,6 +12,7 @@ const SUMMARY: DashboardSummary = {
   actorCount: 2,
   pendingApplicationCount: 6,
   uncontactedPendingCount: 4,
+  pendingReservationCount: 0,
   scheduleCount: 7,
   recentPerformances: [
     { id: 'p1', title: 'fixture-1-w1-가', type: 'MUSICAL', status: 'ONGOING' },

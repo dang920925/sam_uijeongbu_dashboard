@@ -35,6 +35,7 @@ function byCreatedThenIdDesc<T extends { createdAt: string; id: string }>(
 function buildSummary(): DashboardSummaryResponse {
   const store = getStore();
   const performances = store.performances.filter((p) => p.deletedAt === null);
+  const nowIso = new Date().toISOString();
   // (U39) 대기 = 진행 RECEIVED 또는 연락 전(끝난 신청 제외) — 연락 전 건수는 끝나지 않은 연락 전
   const pending = store.applications.filter(isWaitingApplication);
   return {
@@ -52,6 +53,13 @@ function buildSummary(): DashboardSummaryResponse {
         a.contactedAt === null &&
         a.progress !== 'JOINED' &&
         a.progress !== 'DROPPED'
+    ).length,
+    // (U40) 입금 대기 = PENDING · 기한 안 지남(없으면 포함) · 미삭제 공연 — 서버 pending-reservation.constant 와 같은 식
+    pendingReservationCount: store.reservations.filter(
+      (r) =>
+        r.status === 'PENDING' &&
+        (r.depositDueAt === null || r.depositDueAt >= nowIso) &&
+        performances.some((p) => p.id === r.performanceId)
     ).length,
     scheduleCount: store.schedules.filter((s) => s.deletedAt === null).length,
     recentPerformances: [...performances]

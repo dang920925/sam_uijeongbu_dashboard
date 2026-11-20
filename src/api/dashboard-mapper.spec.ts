@@ -8,6 +8,7 @@ const RESPONSE: DashboardSummaryResponse = {
   actorCount: 2,
   uncontactedPendingCount: 1,
   pendingApplicationCount: 6,
+  pendingReservationCount: 8,
   scheduleCount: 7,
   recentPerformances: [
     {
@@ -41,6 +42,16 @@ describe('dashboard-mapper', () => {
     expect(summary.actorCount).toBe(2);
     expect(summary.pendingApplicationCount).toBe(6);
     expect(summary.scheduleCount).toBe(7);
+    expect(summary.pendingReservationCount).toBe(8);
+  });
+
+  it('(U40) 옛 서버가 pendingReservationCount 를 빠뜨리면 0 이다', () => {
+    const { pendingReservationCount: _omit, ...legacy } = RESPONSE;
+    void _omit;
+    expect(
+      fromDashboardSummaryResponse(legacy as DashboardSummaryResponse)
+        .pendingReservationCount
+    ).toBe(0);
   });
 
   it('최근 공연·대기 신청 목록을 계약 필드만 남겨 매핑한다', () => {

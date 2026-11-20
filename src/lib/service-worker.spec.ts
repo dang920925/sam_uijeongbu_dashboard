@@ -15,6 +15,8 @@ type Listener = (event: Record<string, unknown>) => void;
 function loadWorker() {
   const listeners = new Map<string, Listener>();
   const showNotification = vi.fn().mockResolvedValue(undefined);
+  const setAppBadge = vi.fn().mockResolvedValue(undefined);
+  const clearAppBadge = vi.fn().mockResolvedValue(undefined);
   const windowClient = {
     url: `${ORIGIN}/account`,
     focus: vi.fn().mockResolvedValue(undefined),
@@ -27,14 +29,22 @@ function loadWorker() {
   };
   const self = {
     location: { origin: ORIGIN },
-    registration: { showNotification },
+    registration: { showNotification, setAppBadge, clearAppBadge },
     clients,
     skipWaiting: vi.fn(),
     addEventListener: (type: string, listener: Listener) =>
       listeners.set(type, listener),
   };
   new Function('self', SOURCE)(self);
-  return { listeners, showNotification, clients, windowClient };
+  return {
+    listeners,
+    showNotification,
+    setAppBadge,
+    clearAppBadge,
+    registration: self.registration as Record<string, unknown>,
+    clients,
+    windowClient,
+  };
 }
 
 /** 이벤트를 보내고 waitUntil 에 넘긴 약속까지 기다린다 */
@@ -105,6 +115,42 @@ describe('public/sw.js', () => {
       'SAM 의정부 관리',
       expect.objectContaining({ body: '', data: { url: `${ORIGIN}/` } })
     );
+    expect(worker.showNotification).toHaveBeenCalledTimes(2);
+  });
+
+  it('(U40) badgeCount 가 1 이상이면 setAppBadge(n), 0 이면 clearAppBadge 를 부른다', async () => {
+    const push = (payload: Record<string, unknown>) =>
+      dispatch(worker.listeners.get('push')!, {
+        data: { json: () => ({ title: '새 예매', ...payload }) },
+      });
+
+    await push({ badgeCount: 3 });
+    await push({ badgeCount: 0 });
+
+    expect(worker.setAppBadge).toHaveBeenCalledWith(3);
+    expect(worker.clearAppBadge).toHaveBeenCalledTimes(1);
+    expect(worker.showNotification).toHaveBeenCalledTimes(2);
+  });
+
+  it('(U40) badgeCount 가 없으면(시험 알림) 배지를 건드리지 않는다', async () => {
+    await dispatch(worker.listeners.get('push')!, {
+      data: { json: () => ({ title: '시험 알림', url: '/account' }) },
+    });
+
+    expect(worker.setAppBadge).not.toHaveBeenCalled();
+    expect(worker.clearAppBadge).not.toHaveBeenCalled();
+  });
+
+  it('(U40) Badging API 가 없거나 거부돼도 알림은 뜨고 오류를 내지 않는다', async () => {
+    delete worker.registration.setAppBadge;
+    await dispatch(worker.listeners.get('push')!, {
+      data: { json: () => ({ title: '새 예매', badgeCount: 2 }) },
+    });
+    worker.clearAppBadge.mockRejectedValueOnce(new TypeError('x'));
+    await dispatch(worker.listeners.get('push')!, {
+      data: { json: () => ({ title: '새 예매', badgeCount: 0 }) },
+    });
+
     expect(worker.showNotification).toHaveBeenCalledTimes(2);
   });
 

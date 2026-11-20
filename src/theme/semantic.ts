@@ -25,6 +25,9 @@ export interface SemanticTokens {
     itemHoverBg: string;
     itemActiveBg: string;
     itemActive: string;
+    /** (U40) 메뉴 숫자 배지 — 흰 글자 대비 5.25:1(AA), 내비 바탕 대비 3.2:1 이상(비텍스트 3:1) */
+    badgeBg: string;
+    badgeFg: string;
   };
   alert: {
     warningBg: string;
@@ -112,6 +115,8 @@ export const SEMANTIC: SemanticTokens = {
     itemHoverBg: ALPHA.navHoverBg,
     itemActiveBg: ALPHA.navActiveBg,
     itemActive: RAW.navFgActive,
+    badgeBg: RAW.danger,
+    badgeFg: RAW.white,
   },
   alert: {
     warningBg: ALPHA.labelWarningBg,

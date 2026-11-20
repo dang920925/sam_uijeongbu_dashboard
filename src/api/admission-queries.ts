@@ -244,6 +244,10 @@ export function useCreateOnsiteReservation() {
       return createManualReservation(input);
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ROOT_KEYS.booking }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ROOT_KEYS.booking }),
+        // (U40) 입금 대기 배지
+        queryClient.invalidateQueries({ queryKey: ROOT_KEYS.dashboard }),
+      ]),
   });
 }

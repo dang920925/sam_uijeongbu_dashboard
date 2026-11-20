@@ -4,6 +4,8 @@
 // 관리자 내비 목록 — 사이드바(lg, 라벨) · 레일(md, 아이콘만 + aria-label) · 드로어(xs) 공용.
 // 어두운 내비 위 포커스 링은 활성 글자색(designer W3 리드 요청 1). U30 A: 활성 = 골드 tint + 왼쪽 골드 막대(inset 3px).
 // R1: 묶음 사이 구분선(role=separator) · 하단 계정 설정(SHELL-ADMIN-R1 시안).
+// (U40) 빨간 숫자 배지(0 숨김 · 99+): 사이드바는 라벨 오른쪽, 레일은 아이콘 오른쪽 위. 이름은 "입금 대기 3건"(role=img aria-label),
+//   레일은 링크 aria-label 이 내용을 덮으므로 "예매 관리, 입금 대기 3건"으로 합친다.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
@@ -22,10 +24,17 @@ import {
 import { MSG_D00 } from '@/src/shared/messages/d00';
 import { RADIUS } from '@/src/theme/layout-tokens';
 import { SEMANTIC } from '@/src/theme/semantic';
+import {
+  toNavBadge,
+  type NavBadgeKey,
+  type NavBadgeView,
+} from '@/src/utils/nav-badge';
 
 interface AdminNavProps {
   pathname: string;
   variant: 'sidebar' | 'rail';
+  /** (U40) 메뉴 배지 숫자 — 없거나 0 이면 숨김 */
+  badges?: Partial<Record<NavBadgeKey, number>>;
   onNavigate?: () => void;
   onLogout: () => void;
   /** xs 드로어: 열리면 포커스를 첫 메뉴로(designer §3.3 전환표 — qa1 QA1-025) */
@@ -59,9 +68,45 @@ const itemSx = (isActive: boolean, isRail: boolean) => ({
   },
 });
 
+function NavCountBadge({
+  badge,
+  isRail,
+}: {
+  badge: NavBadgeView;
+  isRail: boolean;
+}) {
+  return (
+    <Box
+      component='span'
+      role='img'
+      aria-label={badge.label}
+      data-testid='nav-badge'
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 20,
+        height: 20,
+        px: 1,
+        borderRadius: 9999,
+        bgcolor: 'semantic.nav.badgeBg',
+        color: 'semantic.nav.badgeFg',
+        ...(isRail
+          ? { position: 'absolute', top: 0, right: -4 }
+          : { ml: 'auto' }),
+      }}
+    >
+      <Typo.Caption.Bold color='inherit' aria-hidden>
+        {badge.text}
+      </Typo.Caption.Bold>
+    </Box>
+  );
+}
+
 export function AdminNav({
   pathname,
   variant,
+  badges = {},
   onNavigate,
   onLogout,
   autoFocusFirst = false,
@@ -76,6 +121,9 @@ export function AdminNav({
   }, [autoFocusFirst]);
   const renderItem = (item: NavItem, isFirst: boolean) => {
     const isActive = isNavActive(item, pathname);
+    const badge = item.badgeKey
+      ? toNavBadge(item.badgeKey, badges[item.badgeKey])
+      : null;
     const link = (
       <ButtonBase
         key={item.href}
@@ -84,13 +132,20 @@ export function AdminNav({
         href={item.href}
         onClick={onNavigate}
         aria-current={isActive ? 'page' : undefined}
-        aria-label={isRail ? item.label : undefined}
-        sx={itemSx(isActive, isRail)}
+        aria-label={
+          isRail
+            ? badge
+              ? `${item.label}, ${badge.label}`
+              : item.label
+            : undefined
+        }
+        sx={{ ...itemSx(isActive, isRail), position: 'relative' }}
       >
         <Iconify icon={item.icon} size='md' />
         {isRail ? null : (
           <Typo.Badge.Medium color='inherit'>{item.label}</Typo.Badge.Medium>
         )}
+        {badge ? <NavCountBadge badge={badge} isRail={isRail} /> : null}
       </ButtonBase>
     );
     return isRail ? (

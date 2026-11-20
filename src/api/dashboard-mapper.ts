@@ -20,6 +20,8 @@ export function fromDashboardSummaryResponse(
     pendingApplicationCount: res.pendingApplicationCount,
     // U31 보강 — 서버가 빠뜨리면 0(옛 서버와 함께 배포되는 동안)
     uncontactedPendingCount: res.uncontactedPendingCount ?? 0,
+    // U40 — 옛 서버면 0(배지 숨김)
+    pendingReservationCount: res.pendingReservationCount ?? 0,
     scheduleCount: res.scheduleCount,
     recentPerformances: (res.recentPerformances ?? []).map((p) => ({
       id: p.id,
