@@ -10,6 +10,7 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 
 import {
+  adminApi,
   cleanupFixtures,
   FIXTURE_BASE,
   fixturePrefix,
@@ -132,5 +133,57 @@ test.describe('U27 공개 페이지 즉시 반영(production 홈페이지)', () 
     await settle();
     expect(await firstGetHtml('/about')).not.toContain(renamed);
     expect(await firstGetHtml('/')).not.toContain(renamed);
+  });
+
+  test('T-SA 일정: 대시보드에서 연습 일정을 저장하면 첫 GET /apply 의 신청 선택지에 그 작품이 있다(public:schedules 태그)', async ({
+    request,
+  }) => {
+    // 공연·반은 서버에 직접(재검증 없음) — 이것만으로는 /apply 가 옛 화면이어야 한다
+    // 실행마다 다른 이름 — 이전 실행이 남긴 ISR 캐시와 섞이지 않게
+    const title = `${PREFIX}모집작품-${Date.now()}`;
+    const performance = await adminApi<{ id: string }>(
+      'POST',
+      '/admin/performances',
+      {
+        title,
+        type: 'PLAY',
+        status: 'ONGOING',
+        description: null,
+        posterImageUrl: null,
+        detailImageUrls: [],
+        isVisible: true,
+      }
+    );
+    const klass = await adminApi<{ id: string }>(
+      'POST',
+      `/admin/performances/${performance.id}/classes`,
+      {
+        name: `${PREFIX}반`,
+        daysOfWeek: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
+        startTime: '19:00',
+        endTime: '21:00',
+        deadline: null,
+        location: null,
+        status: 'ACTIVE',
+      }
+    );
+    // 대조: 서버 직접 변경만으로는 ISR 캐시가 남아 첫 GET 에 아직 없다
+    expect(await firstGetHtml('/apply')).not.toContain(title);
+    // 일정 저장은 대시보드 BFF → public:schedules 재검증(/apply 의 선택지 fetch 가 이 태그를 단다)
+    const date = new Date(Date.now() + 9 * 3600_000 + 3 * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    await bff(request, 'POST', '/api/backend/v1/admin/schedules', {
+      title: `${PREFIX}연습`,
+      type: 'PRACTICE',
+      startAt: `${date}T19:00:00+09:00`,
+      endAt: null,
+      location: null,
+      description: null,
+      classId: klass.id,
+      performanceId: null,
+    });
+    await settle();
+    expect(await firstGetHtml('/apply')).toContain(title);
   });
 });

@@ -61,12 +61,25 @@ function kstDateOf(iso: string): string {
     .replaceAll('-', '.');
 }
 
+/**
+ * U31: 참관 신청 작품은 14일 안 참관 가능 슬롯이 있어야 한다(아니면 PERF_001) — 매일 연습하는 반을 함께 만든다.
+ */
 async function createOngoingPerformance(title: string): Promise<Created> {
-  return adminApi<Created>('POST', '/admin/performances', {
+  const performance = await adminApi<Created>('POST', '/admin/performances', {
     title,
     type: 'PLAY',
     status: 'ONGOING',
   });
+  await adminApi('POST', `/admin/performances/${performance.id}/classes`, {
+    name: `${title} 반`,
+    daysOfWeek: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
+    startTime: '19:00',
+    endTime: '21:00',
+    deadline: null,
+    location: null,
+    status: 'ACTIVE',
+  });
+  return performance;
 }
 
 async function observe(
@@ -94,6 +107,8 @@ async function consult(extra: Record<string, unknown> = {}): Promise<Created> {
     agreedToPrivacy: true,
     consultationMethod: 'PHONE',
     preferredTime: 'WEEKDAY_EVENING',
+    // U31: 참가 희망 작품 또는 '아직 모르겠어요' 필수(APP_010)
+    interestUndecided: true,
     ...extra,
   });
   expect(res.status, JSON.stringify(res.body)).toBe(201);
