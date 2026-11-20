@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------
 // AdminLayout(SCR-D00) — lg 사이드바 240 / md 아이콘 레일 72 / xs 햄버거 → 왼쪽 드로어 240(D11).
-// 헤더 64 "SAM 의정부 관리자 대시보드"(xs "SAM 의정부", h1 아님). 본문 여백 xs 16 / md↑ 24.
+// 헤더 64 "SAM 의정부 관리자 대시보드"(xs "SAM 의정부", h1 아님) + 오른쪽 '예매번호로 찾기'(quick-search, §6.1a). 본문 여백 xs 16 / md↑ 24.
 // 랜드마크: nav(사이드바) · header · main.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
@@ -13,6 +13,7 @@ import type { ReactNode } from 'react';
 import { Iconify } from '@/src/components/iconify';
 import { Typo } from '@/src/components/typo';
 import { AdminNav } from '@/src/layouts/admin/admin-nav';
+import { QuickSearch } from '@/src/layouts/admin/quick-search/quick-search';
 import { useAdminLayout } from '@/src/layouts/admin/use-admin-layout';
 import { MSG_D00 } from '@/src/shared/messages/d00';
 import { LAYOUT, SHADOW } from '@/src/theme/layout-tokens';
@@ -161,6 +162,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <Typo.Body.Semibold color='inherit' sx={{ display: { md: 'none' } }}>
             {MSG_D00.LOGO}
           </Typo.Body.Semibold>
+          <QuickSearch />
         </Box>
         <Box
           component='main'
