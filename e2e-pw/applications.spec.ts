@@ -2,7 +2,7 @@
 // SCR-D06 신청서 관리(FN-13, 사용자 결정 2026-11-19 D6 "승인과 등록 분리") — 수용 기준을 화면·API 로 확인한다.
 // 신청은 홈페이지가 만들므로 목 시드(`/__mock/seed/applications`)로 넣는다. 픽스처 접두사 fixture-1-w3-(기존) · fixture-u31-(U31 보강).
 // U31 보강(designer §18.3): 참관/상담 탭 → 한 목록 + 유형 pill, 행 끝 동작 버튼 → 행(이름 버튼·xs 카드) 클릭 → 상세 드로어.
-// 기존 승인·거절·단원 등록 흐름은 의미 그대로, 동작 버튼을 드로어 안에서 누르도록 선택자만 바꿨다.
+// (U39 사용자 결정 2026-11-20) 승인·거절을 진행 단계로 합쳤다 — 드로어에는 "단원으로 등록"만, 처리 상태 칸·필터 없음.
 // desktop(lg 한 행 목록)·mobile(xs 카드 · 전체 화면 드로어) 모두 같은 흐름으로 돈다.
 // ----------------------------------------------------------------------
 import {
@@ -67,10 +67,6 @@ async function memberCount(request: APIRequestContext): Promise<number> {
   return res.totalCount;
 }
 
-function confirmDialog(page: Page) {
-  return page.getByRole('alertdialog');
-}
-
 /** 행 열기 — lg 이름 버튼 / xs 카드(카드 전체가 버튼, 이름 포함) */
 async function openDetail(page: Page, name: string) {
   await page
@@ -101,11 +97,11 @@ test.describe('SCR-D06 신청서 관리', () => {
     await expect(page.getByText(/^미처리/)).toHaveCount(0);
   });
 
-  test('참관 승인은 단원을 만들지 않고 행에 "단원으로 등록" 버튼이 생긴다', async ({
+  test('(U39) 상세에 승인·거절 버튼이 없고, 대기 참관 신청을 바로 단원으로 등록할 수 있다', async ({
     page,
     request,
   }) => {
-    await seed(request, [
+    const [app] = await seed(request, [
       {
         performance: { id: 'p1', title: 'fixture-1-w3-공연' },
         preferredDate: '2026-12-01',
@@ -121,39 +117,36 @@ test.describe('SCR-D06 신청서 관리', () => {
 
     await openDetail(page, NAME);
     const detail = page.getByRole('dialog', { name: VISIT_DETAIL });
-    await detail.getByRole('button', { name: '승인', exact: true }).click();
-    await expect(confirmDialog(page)).toContainText(
-      `${NAME}님의 신청을 승인하시겠습니까?`
-    );
-    await confirmDialog(page).getByRole('button', { name: '승인' }).click();
+    await expect(detail.getByRole('button', { name: '승인' })).toHaveCount(0);
+    await expect(detail.getByRole('button', { name: '거절' })).toHaveCount(0);
+    await detail.getByRole('button', { name: '단원으로 등록' }).click();
+    await page
+      .getByRole('dialog', { name: '단원으로 등록' })
+      .getByRole('button', { name: '등록' })
+      .click();
 
-    await expect(
-      detail.getByRole('button', { name: '단원으로 등록' })
-    ).toBeVisible();
-    await expect(page.getByText(/^미처리/)).toHaveCount(0);
-    expect(await memberCount(request)).toBe(0);
+    await expect(page.getByText('단원으로 등록되었습니다.')).toBeVisible();
+    expect(await memberCount(request)).toBe(1);
+    // 참관은 진행 단계를 바꾸지 않고, 서버 호환 상태만 APPROVED
+    const after = await adminApi<{ status: string; progress: string }>(
+      request,
+      'GET',
+      `/admin/applications/${app.id}`
+    );
+    expect(after).toMatchObject({ status: 'APPROVED', progress: 'RECEIVED' });
   });
 
-  test('상담 승인도 단원을 만들지 않고 승인 응답에 member 가 없다', async ({
+  test('(U39) 상담 건을 단원으로 등록하면 진행이 입단(JOINED)으로 바뀐다', async ({
     page,
     request,
   }) => {
-    const [, second] = await seed(request, [
+    await seed(request, [
       {
         appType: 'CONSULTATION',
         consultationMethod: 'PHONE',
         preferredTime: 'WEEKDAY_EVENING',
       },
-      { appType: 'CONSULTATION', applicantName: 'fixture-1-w3-API신청자' },
     ]);
-    // API 수준: 승인 응답은 { application } 만(develop §3.4 "단원 생성 없음")
-    const approved = await adminApi<Record<string, unknown>>(
-      request,
-      'POST',
-      `/admin/applications/${second.id}/approve`
-    );
-    expect(Object.keys(approved)).toEqual(['application']);
-
     await page.goto('/applications');
     await page.getByRole('button', { name: '상담', exact: true }).click();
     await expect(
@@ -161,29 +154,43 @@ test.describe('SCR-D06 신청서 관리', () => {
     ).toBeVisible();
     await openDetail(page, NAME);
     const detail = page.getByRole('dialog', { name: CONSULT_DETAIL });
-    await detail.getByRole('button', { name: '승인', exact: true }).click();
-    await confirmDialog(page).getByRole('button', { name: '승인' }).click();
-    await expect(
-      detail.getByRole('button', { name: '단원으로 등록' })
-    ).toBeVisible();
-    // 두 건 모두 승인(행 처리 상태 Label) — 단원은 0명
-    await expect(
-      page.getByText('승인', { exact: true }).filter({ visible: true })
-    ).toHaveCount(3);
-    expect(await memberCount(request)).toBe(0);
+    await detail.getByRole('button', { name: '단원으로 등록' }).click();
+    await page
+      .getByRole('dialog', { name: '단원으로 등록' })
+      .getByRole('button', { name: '등록' })
+      .click();
+    await expect(page.getByText('단원으로 등록되었습니다.')).toBeVisible();
+    await expect(detail.getByRole('radio', { name: '입단' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    await expect(page.getByText(/^미처리/)).toHaveCount(0);
   });
 
-  test('대기 신청에 단원 등록을 요청하면 409 APP_009', async ({ request }) => {
-    const [pending] = await seed(request, [{}]);
+  test('(U39) 옛 거절 신청은 등록 버튼이 없고 API 는 409 APP_009', async ({
+    page,
+    request,
+  }) => {
+    const [rejected] = await seed(request, [
+      { status: 'REJECTED', progress: 'DROPPED' },
+    ]);
     const response = await request.post(
-      `${API}/admin/applications/${pending.id}/member`,
+      `${API}/admin/applications/${rejected.id}/member`,
       { data: { name: NAME, phone: null, type: 'GENERAL' } }
     );
     expect(response.status()).toBe(409);
     expect(await response.json()).toMatchObject({
       code: 'APP_009',
-      message: '승인된 신청만 단원으로 등록할 수 있습니다.',
+      message: '거절된 신청은 단원으로 등록할 수 없습니다.',
     });
+
+    await page.goto('/applications');
+    await openDetail(page, NAME);
+    const detail = page.getByRole('dialog', { name: VISIT_DETAIL });
+    await expect(
+      detail.getByRole('button', { name: '단원으로 등록' })
+    ).toHaveCount(0);
+    await expect(detail.getByText('거절', { exact: true })).toHaveCount(0);
   });
 
   test('승인된 신청을 단원으로 등록하면 행에 "단원 등록됨", 상세에 단원 이름 링크가 생긴다', async ({
@@ -293,59 +300,34 @@ test.describe('SCR-D06 신청서 관리', () => {
     expect(await memberCount(request)).toBe(1);
   });
 
-  test('거절된 신청을 승인하면 409 APP_007 — 화면은 확인창을 닫고 스낵바', async ({
-    page,
-    request,
-  }) => {
-    const [app] = await seed(request, [{}]);
-    await page.goto('/applications');
-    await expect(page.getByText('미처리 1건')).toBeVisible();
-    // 화면을 연 뒤 다른 곳에서 거절됨
-    await adminApi(request, 'POST', `/admin/applications/${app.id}/reject`);
-    const response = await request.post(
-      `${API}/admin/applications/${app.id}/approve`
-    );
-    expect(response.status()).toBe(409);
-    expect((await response.json()).code).toBe('APP_007');
-
-    await openDetail(page, NAME);
-    await page
-      .getByRole('dialog', { name: VISIT_DETAIL })
-      .getByRole('button', { name: '승인', exact: true })
-      .click();
-    await confirmDialog(page).getByRole('button', { name: '승인' }).click();
-    await expect(page.getByRole('alert')).toContainText(
-      '이미 처리된 신청입니다.'
-    );
-    await expect(confirmDialog(page)).toBeHidden();
-  });
-
-  test('상세에서 거절하면 상태가 거절로 바뀌고 하단 동작이 사라진다', async ({
+  test('(U39) 진행을 불참으로 바꾸면 미처리에서 빠지고, 처리 상태 칸·필터는 없다', async ({
     page,
     request,
   }) => {
     await seed(request, [{ motivation: 'fixture-1-w3-동기', age: 31 }]);
     await page.goto('/applications');
+    await expect(page.getByText('미처리 1건')).toBeVisible();
+    await expect(page.getByRole('combobox', { name: '처리 상태' })).toHaveCount(
+      0
+    );
     await openDetail(page, NAME);
     const detail = page.getByRole('dialog', { name: VISIT_DETAIL });
     await expect(detail.getByText('fixture-1-w3-동기')).toBeVisible();
     await expect(detail.getByText('31세')).toBeVisible();
-    await detail.getByRole('button', { name: '거절' }).click();
-    await expect(confirmDialog(page)).toContainText(
-      `${NAME}님의 신청을 거절하시겠습니까?`
+    await expect(detail.getByText(/처리일/)).toHaveCount(0);
+    await detail.getByRole('radio', { name: '불참' }).click();
+    await expect(detail.getByRole('radio', { name: '불참' })).toHaveAttribute(
+      'aria-checked',
+      'true'
     );
-    await confirmDialog(page).getByRole('button', { name: '거절' }).click();
-    await expect(detail.getByText('거절', { exact: true })).toBeVisible();
-    // U31 드로어 요약 한 줄 "신청일 … · 처리일: …"
+    await expect(page.getByText(/^미처리/)).toHaveCount(0);
+    // 거절과 달리 되돌릴 수 있다(status 는 PENDING 그대로)
     await expect(
-      detail.getByText(/처리일: \d{4}\.\d{2}\.\d{2}$/)
-    ).toBeVisible();
-    // 거절하면 진행은 불참(서버 DROPPED)이고 스텝퍼는 잠긴다
-    await expect(detail.getByRole('radio', { name: '불참' })).toBeDisabled();
-    await expect(detail.getByRole('button', { name: '승인' })).toHaveCount(0);
+      detail.getByRole('radio', { name: '일정 확정' })
+    ).toBeEnabled();
   });
 
-  test('상태 필터 "대기"는 대기 신청만, 21건 이상이면 페이지네이션을 보여 준다', async ({
+  test('진행 필터 "불참·보류"는 그 신청만, 21건 이상이면 페이지네이션을 보여 준다', async ({
     page,
     request,
   }) => {
@@ -357,7 +339,7 @@ test.describe('SCR-D06 신청서 관리', () => {
       }))
     );
     await seed(request, [
-      { status: 'APPROVED', applicantName: 'fixture-1-w3-승인' },
+      { progress: 'DROPPED', applicantName: 'fixture-1-w3-불참' },
     ]);
     await page.goto('/applications');
     await expect(page.getByText('총 22건')).toBeVisible();
@@ -365,10 +347,15 @@ test.describe('SCR-D06 신청서 관리', () => {
       page.getByRole('button', { name: '다음 페이지' })
     ).toBeVisible();
 
-    await page.getByRole('combobox', { name: '처리 상태' }).click();
-    await page.getByRole('option', { name: '대기' }).click();
+    await page.getByRole('combobox', { name: '진행' }).click();
+    await page.getByRole('option', { name: /^불참/ }).click();
+    await expect(page.getByText('총 1건')).toBeVisible();
+    await expect(
+      page.getByText('fixture-1-w3-불참').filter({ visible: true })
+    ).toBeVisible();
+    await page.getByRole('combobox', { name: '진행' }).click();
+    await page.getByRole('option', { name: '접수', exact: true }).click();
     await expect(page.getByText('총 21건')).toBeVisible();
-    await expect(page.getByText('fixture-1-w3-승인')).toHaveCount(0);
     await page.getByRole('button', { name: '2', exact: true }).click();
     await expect(
       page
@@ -444,18 +431,9 @@ test.describe('SCR-D06 U31 보강 — 한 행 목록·드로어', () => {
     await page.goto('/applications');
     await expect(page.getByText('미처리 1건 · 연락 전 1건')).toBeVisible();
     const row = page.getByRole('row').filter({ hasText: name });
-    // 8열 한 줄 — 유형·이름/연락처·작품·희망 일정·연락·진행·처리 상태·접수일
+    // 7열 한 줄(U39 처리 상태 열 없음) — 유형·이름/연락처·작품·희망 일정·연락·진행·접수일
     await expect(page.getByRole('columnheader')).toHaveText(
-      [
-        '유형',
-        '이름 / 연락처',
-        '작품',
-        '희망 일정',
-        '연락',
-        '진행',
-        '처리 상태',
-        '접수일',
-      ],
+      ['유형', '이름 / 연락처', '작품', '희망 일정', '연락', '진행', '접수일'],
       { useInnerText: true }
     );
     // lg 는 칩 2개 + "+2"(md 용 1개 + "+3" 묶음은 숨겨져 있다)
@@ -588,7 +566,7 @@ test.describe('SCR-D06 U31 보강 — 한 행 목록·드로어', () => {
     await expect(detail.getByText('2026.11.20 14:30')).toBeVisible();
   });
 
-  test('AP-12 처리 상태·작품·연락·진행 필터와 정렬이 요청 쿼리로 조합된다', async ({
+  test('AP-12 작품·연락·진행 필터와 정렬이 요청 쿼리로 조합된다(U39 처리 상태 없음)', async ({
     page,
     request,
     isMobile,
@@ -629,7 +607,6 @@ test.describe('SCR-D06 U31 보강 — 한 행 목록·드로어', () => {
       await page.getByRole('combobox', { name: label }).click();
       await page.getByRole('option', { name: option, exact: true }).click();
     };
-    await choose('처리 상태', '대기');
     await choose('작품', work.title);
     await expect(page.getByText('총 2건')).toBeVisible();
     await choose('연락', '연락 전');
@@ -642,13 +619,13 @@ test.describe('SCR-D06 U31 보강 — 한 행 목록·드로어', () => {
     const url = new URL((await last).url());
     expect(Object.fromEntries(url.searchParams)).toMatchObject({
       appType: 'CONSULTATION',
-      status: 'PENDING',
       performanceId: work.id,
       contacted: 'false',
       progress: 'SCHEDULED',
       sort: 'createdAt',
       order: 'desc',
     });
+    expect(url.searchParams.has('status')).toBe(false);
     await expect(page.getByText('총 1건')).toBeVisible();
     await expect(
       page.getByText(`${U31}맞음`).filter({ visible: true })

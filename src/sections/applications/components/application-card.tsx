@@ -13,7 +13,7 @@ import { Typo } from '@/src/components/typo';
 import { ApplicationContactToggle } from '@/src/sections/applications/components/application-contact-toggle';
 import { ApplicationProgressMenu } from '@/src/sections/applications/components/application-progress-menu';
 import { ApplicationScheduleCell } from '@/src/sections/applications/components/application-schedule-cell';
-import { ApplicationStatusLabels } from '@/src/sections/applications/components/application-status-labels';
+import { ApplicationMemberLabel } from '@/src/sections/applications/components/application-member-label';
 import { ApplicationTypeLabel } from '@/src/sections/applications/components/application-type-label';
 import { ApplicationWorkChips } from '@/src/sections/applications/components/application-work-chips';
 import type { ApplicationRow } from '@/src/sections/applications/utils/application-row';
@@ -92,7 +92,7 @@ export function ApplicationCard({
       <div className='flex flex-wrap items-center gap-2'>
         <ApplicationContactToggle contact={row.contact} />
         <ApplicationProgressMenu progress={row.progress} />
-        <ApplicationStatusLabels row={row} />
+        <ApplicationMemberLabel row={row} />
       </div>
     </Box>
   );

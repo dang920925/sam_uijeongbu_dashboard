@@ -1,7 +1,10 @@
 // ----------------------------------------------------------------------
 // 목 신청서(FN-13, D6 승인과 등록 분리) — develop §3.4 "신청서".
 // - 승인·거절은 PENDING 에서만(아니면 409 APP_007), processedAt=now. 승인은 단원을 만들지 않는다.
-// - 단원으로 등록: ① APPROVED 아님 409 APP_009 ② 연결 단원이 살아 있음 409 APP_008 ③ createMemberRecord 로 생성 후 연결.
+//   (U39) 서버처럼 호환용으로 남긴다 — 대시보드는 부르지 않는다.
+// - 단원으로 등록(U39): ① 거절(REJECTED) 409 APP_009 ② 연결 단원이 살아 있음 409 APP_008 ③ createMemberRecord 로 생성 후 연결
+//   (대기 신청이면 호환 상태 APPROVED·처리 시각을 함께 넣는다).
+// - (U39) 대기 = 진행 RECEIVED 이거나 연락 전(JOINED·DROPPED 제외) — pending-count · 대시보드 요약 공통(isWaitingApplication).
 //   연결 단원이 소프트 삭제됐으면 다시 등록할 수 있다(연결 교체). 응답 member 는 미삭제 단원 {id,name} 또는 null.
 // - U31(develop §15·§15.5): performanceId(참관 작품 ∪ 관심 작품)·contacted·progress 필터, sort(createdAt|progress|contactedAt)·order,
 //   PATCH contact(true 면 시각 유지·기록, false 면 NULL·메모 유지, note 생략 = 그대로) · PATCH progress(참관 JOINED·거절 건 409 APP_012),
@@ -40,6 +43,19 @@ import {
 const ID = '(?<id>[^/]+)';
 
 /** 참관 날짜·공연이 '참관 막은 취소 일정'과 맞으면 그 일정(U29 — develop §13.2) */
+/** (U39) 대기 신청 — 진행 RECEIVED 이거나, 끝나지 않은(JOINED·DROPPED 아님) 신청 중 연락 전 */
+export function isWaitingApplication(a: {
+  progress: ApplicationProgress;
+  contactedAt: string | null;
+}): boolean {
+  return (
+    a.progress === 'RECEIVED' ||
+    (a.contactedAt === null &&
+      a.progress !== 'JOINED' &&
+      a.progress !== 'DROPPED')
+  );
+}
+
 function scheduleCancellationOf(
   app: MockApplication
 ): ApplicationItemResponse['scheduleCancellation'] {
@@ -196,7 +212,7 @@ export const applicationRoutes: MockRoute[] = [
     handle: (ctx) => {
       const appType = ctx.query.get('appType');
       const count = getStore().applications.filter(
-        (a) => a.status === 'PENDING' && (!appType || a.appType === appType)
+        (a) => isWaitingApplication(a) && (!appType || a.appType === appType)
       ).length;
       return json({ count });
     },
@@ -229,12 +245,12 @@ export const applicationRoutes: MockRoute[] = [
     handle: (ctx) => {
       const app = findApplication(ctx.params.id);
       if (!app) return notFound(ctx);
-      if (app.status !== 'APPROVED')
+      if (app.status === 'REJECTED')
         return apiError(
           ctx,
           409,
           'APP_009',
-          '승인된 신청만 단원으로 등록할 수 있습니다.'
+          '거절된 신청은 단원으로 등록할 수 없습니다.'
         );
       if (app.memberId && findMember(app.memberId))
         return apiError(
@@ -246,6 +262,10 @@ export const applicationRoutes: MockRoute[] = [
       const created = createMemberRecord(ctx, ctx.body);
       if (created instanceof Response) return created;
       app.memberId = created.id;
+      if (app.status === 'PENDING') {
+        app.status = 'APPROVED';
+        app.processedAt = nowIso();
+      }
       if (app.appType === 'CONSULTATION') {
         app.progress = 'JOINED';
         app.progressUpdatedAt = nowIso();

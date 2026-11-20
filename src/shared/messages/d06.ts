@@ -31,11 +31,9 @@ export const MSG_D06 = {
   /** 빈 상태 — 현행 Applications.tsx:178 */
   EMPTY_OBSERVATION: '참관 신청이 없습니다',
   EMPTY_CONSULTATION: '방문 상담 신청이 없습니다',
-  /** 행 액션 aria-label·title — 현행 title "상세 보기"·"승인"·"거절"(Applications.tsx:426,438,448) */
+  /** 행 액션 aria-label·title — 현행 title "상세 보기"(Applications.tsx:426). (U39) 승인·거절 문구는 없앴다 */
   VIEW: '상세 보기',
-  APPROVE: '승인',
-  REJECT: '거절',
-  /** 사용자 결정 2026-11-19 D6 — 승인된 신청의 별도 동작 · 등록 다이얼로그 제목 */
+  /** 사용자 결정 2026-11-19 D6 — 등록 동작 · 등록 다이얼로그 제목(U39 — 승인 없이 미등록 신청 모두) */
   REGISTER: '단원으로 등록',
   /** 보조 배지 — 사용자 결정 2026-11-19 D6 (neutral) */
   REGISTERED: '단원 등록됨',
@@ -55,10 +53,6 @@ export const MSG_D06 = {
   INFO_MOTIVATION: '신청 동기',
   INFO_QUESTION: '문의사항',
   INFO_CREATED: '신청일',
-  /** 승인 확인 — 사용자 결정 2026-11-19 D6 + 현행 거절 틀(Applications.tsx:110) */
-  CONFIRM_APPROVE: (name: string) => `${name}님의 신청을 승인하시겠습니까?`,
-  /** 거절 확인 — 현행 Applications.tsx:110 */
-  CONFIRM_REJECT: (name: string) => `${name}님의 신청을 거절하시겠습니까?`,
   /** 등록 성공 스낵바 — 사용자 결정 2026-11-19 D6 */
   REGISTERED_SUCCESS: '단원으로 등록되었습니다.',
 
@@ -72,7 +66,6 @@ export const MSG_D06 = {
   TYPE_OBSERVATION: '참관',
   TYPE_CONSULTATION: '상담',
   /** 필터 라벨 — designer §18.3 확인 필요 ⑥(제안) */
-  FILTER_STATUS: '처리 상태',
   FILTER_WORK: '작품',
   FILTER_WORK_ALL: '전체 작품',
   FILTER_CONTACT: '연락',
@@ -89,7 +82,6 @@ export const MSG_D06 = {
   COL_SCHEDULE: '희망 일정',
   COL_CONTACT: '연락',
   COL_PROGRESS: '진행',
-  COL_PROCESS_STATUS: '처리 상태',
   COL_RECEIVED: '접수일',
   /** 정렬 버튼 이름(스크린리더) — "{열} 정렬" */
   SORT_BY: (column: string) => `${column} 정렬`,
@@ -106,7 +98,6 @@ export const MSG_D06 = {
   PROGRESS_LOCKED: (label: string) => `진행 단계 ${label}(거절된 신청)`,
   /** 상세 드로어 — designer §18.3 */
   DRAWER_CREATED: (date: string) => `신청일 ${date}`,
-  DRAWER_PROCESSED: (date: string) => `처리일: ${date}`,
   INFO_OBSERVATION_WORK: '참관 작품',
   INFO_INTEREST_WORK: '관심 작품',
   INFO_HOPE_WORK: '희망 작품',

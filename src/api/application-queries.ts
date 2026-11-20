@@ -7,12 +7,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
-  approveApplication,
   fetchApplication,
   fetchApplications,
   fetchPendingApplicationCount,
   registerMemberFromApplication,
-  rejectApplication,
   updateApplicationContact,
   updateApplicationProgress,
 } from '@/src/api/application';
@@ -64,22 +62,6 @@ function useInvalidateApplications() {
       queryClient.invalidateQueries({ queryKey: ROOT_KEYS.member }),
       queryClient.invalidateQueries({ queryKey: ROOT_KEYS.dashboard }),
     ]);
-}
-
-export function useApproveApplication() {
-  const invalidate = useInvalidateApplications();
-  return useMutation({
-    mutationFn: (id: string) => approveApplication(id),
-    onSuccess: invalidate,
-  });
-}
-
-export function useRejectApplication() {
-  const invalidate = useInvalidateApplications();
-  return useMutation({
-    mutationFn: (id: string) => rejectApplication(id),
-    onSuccess: invalidate,
-  });
 }
 
 export function useRegisterMemberFromApplication() {

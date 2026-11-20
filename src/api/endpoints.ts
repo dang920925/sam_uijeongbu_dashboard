@@ -123,8 +123,6 @@ export const endpoints = {
     list: `${admin}/applications`,
     pendingCount: `${admin}/applications/pending-count`,
     detail: (id: string) => `${admin}/applications/${id}`,
-    approve: (id: string) => `${admin}/applications/${id}/approve`,
-    reject: (id: string) => `${admin}/applications/${id}/reject`,
     member: (id: string) => `${admin}/applications/${id}/member`,
     contact: (id: string) => `${admin}/applications/${id}/contact`,
     progress: (id: string) => `${admin}/applications/${id}/progress`,

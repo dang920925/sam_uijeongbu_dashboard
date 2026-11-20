@@ -50,7 +50,7 @@ describe('build-dashboard-view', () => {
     expect(kpis[0].description).toBe('진행중 3개 · 예정 4개');
     expect(kpis.slice(1).map((k) => k.description)).toEqual([
       '전체 배우 회원',
-      '승인 대기 중 · 연락 전 4건',
+      '대기 중 · 연락 전 4건',
       '전체 일정 수',
     ]);
   });
