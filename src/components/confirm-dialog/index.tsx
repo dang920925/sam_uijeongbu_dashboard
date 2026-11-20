@@ -4,6 +4,7 @@
 // ConfirmDialog — window.confirm 대체(D11). 제목 없이 질문 1줄(= 현행 confirm 문구 그대로) + "취소"·실제 동작.
 // - 기본 포커스 "취소"(파괴 동작 실수 방지), Esc·덮개 클릭 = 취소. role="alertdialog".
 // - 폭 384, xs 에서도 가운데 카드(designer W3 ConfirmDialog 규격, J-D8).
+// - description(선택, R1): 질문 아래 보조 한 줄(예 회차 일시) — aria-describedby.
 // - 확인 중 버튼 로딩. 실패 처리(닫고 스낵바)는 호출 쪽 ViewModel 이 한다.
 // ----------------------------------------------------------------------
 import Button from '@mui/material/Button';
@@ -20,6 +21,8 @@ import { LAYOUT } from '@/src/theme/layout-tokens';
 interface ConfirmDialogProps {
   open: boolean;
   message: string;
+  /** 질문 아래 보조 글(선택) */
+  description?: string | null;
   confirmLabel: string;
   confirmColor?: 'error' | 'primary' | 'success';
   isLoading?: boolean;
@@ -30,6 +33,7 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({
   open,
   message,
+  description = null,
   confirmLabel,
   confirmColor = 'error',
   isLoading = false,
@@ -37,12 +41,14 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const messageId = useId();
+  const descriptionId = useId();
   return (
     <Dialog
       open={open}
       onClose={isLoading ? undefined : onCancel}
       role='alertdialog'
       aria-labelledby={messageId}
+      aria-describedby={description ? descriptionId : undefined}
       slotProps={{
         paper: { sx: { width: '100%', maxWidth: LAYOUT.dialogConfirm, m: 4 } },
       }}
@@ -51,6 +57,16 @@ export function ConfirmDialog({
         <Typo.Body.Semibold component='p' id={messageId}>
           {message}
         </Typo.Body.Semibold>
+        {description ? (
+          <Typo.Badge.Regular
+            component='p'
+            id={descriptionId}
+            color='text.secondary'
+            sx={{ mt: 1 }}
+          >
+            {description}
+          </Typo.Badge.Regular>
+        ) : null}
       </DialogContent>
       <DialogActions
         sx={{
