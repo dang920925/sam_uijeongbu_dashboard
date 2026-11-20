@@ -24,4 +24,6 @@ export const ROOT_KEYS = {
   admission: ['booking', 'admission'] as const,
   inviteCode: ['booking', 'invite-code'] as const,
   account: ['account'] as const,
+  /** U37 새 예매 푸시 — 공개키·내 기기 */
+  push: ['push'] as const,
 };

@@ -14,6 +14,7 @@ import { memberRoutes } from '@/src/_mock/backend/handlers/members';
 import { performanceRoutes } from '@/src/_mock/backend/handlers/performances';
 import { popupRoutes } from '@/src/_mock/backend/handlers/popups';
 import { priceTierRoutes } from '@/src/_mock/backend/handlers/price-tiers';
+import { pushRoutes } from '@/src/_mock/backend/handlers/push';
 import { reservationRoutes } from '@/src/_mock/backend/handlers/reservations';
 import { scheduleRoutes } from '@/src/_mock/backend/handlers/schedules';
 import { showRoutes } from '@/src/_mock/backend/handlers/shows';
@@ -34,6 +35,7 @@ const ROUTES: MockRoute[] = [
   ...dashboardRoutes,
   // R1 예매 묶음 — `members/invite-codes` 가 `members/{id}` 보다 먼저 맞아야 해서 단원 라우트 앞에 둔다
   ...accountRoutes,
+  ...pushRoutes,
   ...inviteCodeRoutes,
   ...showRoutes,
   ...priceTierRoutes,

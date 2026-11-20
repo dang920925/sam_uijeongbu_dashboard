@@ -17,8 +17,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // API·정적 파일·로그인은 제외
+  // API·정적 파일·로그인은 제외. U37: 매니페스트·서비스 워커·홈 화면 아이콘은 로그인 전에도 받아야 한다
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|login).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|manifest.webmanifest|sw.js|icons/|login).*)',
   ],
 };

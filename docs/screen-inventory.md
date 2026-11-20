@@ -16,6 +16,6 @@
 | SCR-D11 | 회차·예매 설정(R1) | `/performances/[id]/shows` | `src/sections/performance-shows` | 공연 상세 탭 · 설정 카드(폼) + 가격 등급 표 + 회차 표(lg)/카드 + Dialog | — |
 | SCR-D12 | 예매 관리(R1) | `/reservations` | `src/sections/reservations` | KPI 4 + 탭(예매·집계·초대 링크) · 표(lg)/카드 + 상세 드로어 | — |
 | SCR-D13 | 입장 체크(R1) | `/admission` | `src/sections/admission` | 휴대폰 우선 리스트(현황·검색 고정, 터치 48) · md 2열 · lg 표 + 현황 패널 | 현장 리스트 정본 |
-| SCR-D15 | 계정 설정(R1) | `/account` | `src/sections/account` | 전체 페이지 폼(카드 1, 최대 480) | — |
+| SCR-D15 | 계정 설정(R1) | `/account` | `src/sections/account` | 전체 페이지 폼(카드 1, 최대 480) + U37 예매 알림 카드(토글·기기 목록·시험 알림·iOS 안내) | — |
 | — | 헤더 예매번호로 찾기(R1) | (전체 헤더) | `src/layouts/admin/quick-search` | 검색 + 결과 목록 + 상세 드로어 | — |
 | — | 404·오류 | `not-found`·`error`·`global-error` | `src/sections/app-state` | 상태 화면 | — |

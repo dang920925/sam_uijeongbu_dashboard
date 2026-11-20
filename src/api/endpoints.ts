@@ -102,4 +102,10 @@ export const endpoints = {
     detail: (id: string) => `${admin}/popups/${id}`,
   },
   uploads: { create: `${admin}/uploads` },
+  /** U37 새 예매 푸시(develop §21) — 공개키 · 내 기기 GET·POST·DELETE · 시험 발송 */
+  push: {
+    publicKey: `${admin}/push/public-key`,
+    subscriptions: `${admin}/push/subscriptions`,
+    test: `${admin}/push/test`,
+  },
 } as const;

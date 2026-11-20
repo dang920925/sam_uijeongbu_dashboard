@@ -91,8 +91,9 @@ export function apiPatch<T>(input: string, body: unknown): Promise<T> {
 export function apiPut<T>(input: string, body: unknown): Promise<T> {
   return apiSend<T>('PUT', input, body);
 }
-export function apiDelete<T = void>(input: string): Promise<T> {
-  return apiSend<T>('DELETE', input);
+/** body 는 본문이 있는 DELETE(U37 푸시 해지 `{ endpoint }`)에만 쓴다 */
+export function apiDelete<T = void>(input: string, body?: unknown): Promise<T> {
+  return apiSend<T>('DELETE', input, body);
 }
 
 /** 쿼리 문자열 — undefined·null·'' 는 뺀다 */
