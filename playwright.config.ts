@@ -45,6 +45,9 @@ const MOCK_ENV = {
   MOCK_ADMIN_USERNAME: 'fixture-admin',
   MOCK_ADMIN_PASSWORD: 'fixture-password',
   NEXT_DIST_DIR: DIST_DIR,
+  // U27 — 홈페이지 재검증 대신 목의 기록 경로로 부른다(e2e-pw/revalidate.spec.ts). 비밀은 목 전용 값(32자 이상).
+  CLIENT_PUBLIC_URL: `${BASE_URL}/api/backend/v1/__mock/client`,
+  REVALIDATE_SECRET: 'fixture-revalidate-secret-0000000000',
 };
 
 export default defineConfig({

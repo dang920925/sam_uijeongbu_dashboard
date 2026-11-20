@@ -14,6 +14,14 @@ import type {
   ActorProfileResponse,
   MemberListItemResponse,
 } from '@/src/types/member';
+import type {
+  BookingPolicyUpsertRequest,
+  CancelReason,
+  ConfirmedBy,
+  ReservationSource,
+  ReservationStatus,
+  ShowStatus,
+} from '@/src/types/booking';
 import type { ClassItemResponse } from '@/src/types/performance-class';
 import type { AdminPerformanceResponse } from '@/src/types/performance';
 
@@ -23,6 +31,57 @@ export type MockApplication = Omit<ApplicationItemResponse, 'member'> & {
   memberId: string | null;
 };
 export type MockPopup = Omit<AdminPopupItemResponse, 'overlapsActive'>;
+
+/** 회차 행(shows — develop §11.2 R1). 좌석·상태 같은 계산 값은 booking-model 이 만든다 */
+export interface MockShow {
+  id: string;
+  performanceId: string;
+  classId: string | null;
+  showDate: string;
+  startTime: string;
+  endTime: string | null;
+  venue: string | null;
+  status: ShowStatus;
+  bookingEnabled: boolean;
+  bookingOpenAt: string | null;
+  totalSeats: number | null;
+  price: number | null;
+  createdAt: string;
+}
+
+/** 예매 행(reservations — develop §11.2 R1) */
+export interface MockReservation {
+  id: string;
+  performanceId: string;
+  showId: string;
+  code: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  bookerName: string;
+  bookerPhone: string;
+  depositorName: string;
+  inviterMemberId: string | null;
+  inviterNote: string | null;
+  status: ReservationStatus;
+  source: ReservationSource;
+  depositDueAt: string;
+  confirmedAt: string | null;
+  confirmedBy: ConfirmedBy | null;
+  cancelledAt: string | null;
+  cancelReason: CancelReason | null;
+  memo: string | null;
+  admittedCount: number;
+  version: number;
+  createdAt: string;
+}
+
+/** 관리자 계정(U25) — null 이면 env MOCK_ADMIN_USERNAME/PASSWORD. sessionVersion 이 토큰 버전과 다르면 401 */
+export interface MockAccount {
+  username: string | null;
+  password: string | null;
+  sessionVersion: number;
+}
 
 export interface MockStore {
   performances: SoftDeleted<AdminPerformanceResponse>[];
@@ -34,6 +93,23 @@ export interface MockStore {
   schedules: SoftDeleted<ScheduleItemResponse>[];
   staff: SoftDeleted<AdminStaffItemResponse>[];
   popups: SoftDeleted<MockPopup>[];
+  shows: MockShow[];
+  bookingPolicies: Map<string, BookingPolicyUpsertRequest>;
+  reservations: MockReservation[];
+  admissionLogs: {
+    id: string;
+    reservationId: string;
+    delta: number;
+    admittedAfter: number;
+    createdAt: string;
+  }[];
+  /** memberId → 초대 코드 */
+  inviteCodes: Map<string, string>;
+  account: MockAccount;
+  /** accessToken → 발급 당시 sessionVersion(U25 다른 기기 로그아웃 흉내) */
+  sessionVersions: Map<string, number>;
+  /** U27 — 홈페이지 재검증 흉내 수신 기록(`__mock/client/api/revalidate`) */
+  revalidateCalls: { tags: string[]; paths: string[]; receivedAt: string }[];
   uploads: Map<
     string,
     { contentType: string; bytes: ArrayBuffer | null; token: string }
@@ -63,6 +139,14 @@ function emptyStore(): MockStore {
     schedules: [],
     staff: [],
     popups: [],
+    shows: [],
+    bookingPolicies: new Map(),
+    reservations: [],
+    admissionLogs: [],
+    inviteCodes: new Map(),
+    account: { username: null, password: null, sessionVersion: 0 },
+    sessionVersions: new Map(),
+    revalidateCalls: [],
     uploads: new Map(),
     sessions: new Map(),
     faults: [],
@@ -79,11 +163,24 @@ export function getStore(): MockStore {
   return globalForMock.__samMockStore;
 }
 
-/** 데이터만 비운다 — 로그인 세션은 남겨 E2E storageState 가 계속 유효하게 */
+/**
+ * 데이터만 비운다 — 로그인 세션은 남겨 E2E storageState 가 계속 유효하게.
+ * 계정(U25)도 env 값·sessionVersion 0 으로 되돌린다 → 계정 변경 테스트가 끊은 기존 세션(버전 0)이 다시 유효해진다.
+ */
 export function resetStoreData(): void {
   const current = getStore();
   globalForMock.__samMockStore = {
     ...emptyStore(),
     sessions: current.sessions,
+    sessionVersions: current.sessionVersions,
+  };
+}
+
+/** 지금 계정의 아이디·비밀번호(변경 전이면 env) */
+export function currentCredentials(): { username: string; password: string } {
+  const { account } = getStore();
+  return {
+    username: account.username ?? process.env.MOCK_ADMIN_USERNAME ?? '',
+    password: account.password ?? process.env.MOCK_ADMIN_PASSWORD ?? '',
   };
 }
