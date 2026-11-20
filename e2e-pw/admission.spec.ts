@@ -182,10 +182,11 @@ test('회차를 고르면 현황과 명단이 그 회차로 바뀌고 주소에 
   await expectSummary(page, { admitted: 1, confirmed: 4, pending: 1 });
   const hong = rowOf(page, isMobile, '홍길동');
   await expect(hong).toContainText('1/4');
-  // 등급별 매수 — 기본 등급은 글자, 링크 전용 등급은 info Label
+  // 등급별 매수 — 기본 등급은 글자, 링크 전용 등급은 info Label + 글자
   await expect(hong.locator('[data-tier-kind=public]')).toHaveText('일반 3');
+  // 할인(링크 전용) 줄은 색만이 아니라 "링크 전용(할인)" 글자를 함께 보인다(지휘자 전달 2026-11-20)
   await expect(hong.locator('[data-tier-kind=discount]')).toHaveText(
-    '스태프 1'
+    '스태프 1링크 전용(할인)'
   );
   await expect(hong).toContainText('연락처 끝 5678');
 

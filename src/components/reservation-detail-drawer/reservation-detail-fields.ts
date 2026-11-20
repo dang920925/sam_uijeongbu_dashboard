@@ -71,7 +71,17 @@ export function toReservationDetailFields(
     {
       key: 'tiers',
       label: MSG_D12.DETAIL_TIERS,
-      value: formatTierBreakdown(r.items) || dash,
+      // 할인(링크 전용) 등급 줄은 이름 뒤에 "(링크 전용(할인))" — 지휘자 표시 표(2026-11-20)
+      value:
+        formatTierBreakdown(
+          r.items.map((line) => ({
+            tierName:
+              line.visibility === 'LINK_ONLY'
+                ? `${line.tierName}(${MSG_D12.LINK_ONLY})`
+                : line.tierName,
+            quantity: line.quantity,
+          }))
+        ) || dash,
       sub: MSG_D12.TOTAL_QTY(r.quantity),
     },
     {

@@ -463,7 +463,8 @@ test.describe('SCR-D12 예매 관리', () => {
     const drawer = page.getByRole('dialog', { name: '예매 2222' });
     await expect(drawer).toBeVisible();
     await expect(drawer).toContainText(`${PREFIX}기한`);
-    await expect(drawer).toContainText(`${PREFIX}스태프 1`);
+    // 할인(링크 전용) 등급은 "(링크 전용(할인))" 글자를 붙인다(지휘자 표시 표 2026-11-20)
+    await expect(drawer).toContainText(`${PREFIX}스태프(링크 전용(할인)) 1`);
     await page.keyboard.press('Escape');
     await expect(drawer).toBeHidden();
     await expect(row(page, '2222')).toHaveAttribute('aria-current', 'true');

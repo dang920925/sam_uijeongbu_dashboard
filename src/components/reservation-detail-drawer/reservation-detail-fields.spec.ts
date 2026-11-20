@@ -97,7 +97,7 @@ describe('toReservationDetailFields', () => {
     expect(byKey.perf.value).toBe('공연 A');
     expect(byKey.show.value).toBe('12.12 (토) 14:00');
     expect(byKey.booker.sub).toBe('연락처 없음');
-    expect(byKey.tiers.value).toBe('일반 2 · 스태프 1');
+    expect(byKey.tiers.value).toBe('일반 2 · 스태프(링크 전용(할인)) 1');
     expect(byKey.tiers.sub).toBe('총 3매');
     expect(byKey.amount.value).toBe('30,000원');
     expect(byKey.confirmed.value).toBe('2099.12.01 14:00');
