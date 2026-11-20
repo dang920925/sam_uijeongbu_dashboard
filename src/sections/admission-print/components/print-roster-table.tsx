@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------
-// 인쇄 명단 표(구역 하나) — 예매번호 · 이름 · 연락처 끝 · 등급별 매수 · 상태 · 메모 · 입장 체크 칸.
+// 인쇄 명단 표(구역 하나) — 예매번호 · 이름 · (U35 좌석) · 연락처 끝 · 등급별 매수 · 상태 · 메모 · 입장 체크 칸.
 // 흰 바탕·검은 글자·가는 테두리(A4 세로). 행이 페이지에서 잘리지 않게 break-inside: avoid.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
@@ -8,11 +8,14 @@ import { Typo } from '@/src/components/typo';
 import { PrintCheckBoxes } from '@/src/sections/admission-print/components/print-check-boxes';
 import type { PrintRow } from '@/src/sections/admission-print/utils/build-print-roster';
 import { MSG_PRINT } from '@/src/shared/messages/admission-print';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 
 interface PrintRosterTableProps {
   title: string;
   statusText: string;
   rows: PrintRow[];
+  /** U35 — 좌석 지정 공연이면 이름 옆 좌석 칸 */
+  hasSeatColumn?: boolean;
 }
 
 const cellSx = {
@@ -24,9 +27,10 @@ const cellSx = {
   verticalAlign: 'top',
 };
 
-const COLUMNS = [
+const columnsOf = (hasSeat: boolean) => [
   MSG_PRINT.COL_CODE,
   MSG_PRINT.COL_NAME,
+  ...(hasSeat ? [MSG_SEAT.COLUMN] : []),
   MSG_PRINT.COL_PHONE,
   MSG_PRINT.COL_TIERS,
   MSG_PRINT.COL_STATUS,
@@ -38,6 +42,7 @@ export function PrintRosterTable({
   title,
   statusText,
   rows,
+  hasSeatColumn = false,
 }: PrintRosterTableProps) {
   return (
     <section className='flex flex-col gap-2'>
@@ -59,7 +64,7 @@ export function PrintRosterTable({
         >
           <thead>
             <tr>
-              {COLUMNS.map((label) => (
+              {columnsOf(hasSeatColumn).map((label) => (
                 <Box component='th' key={label} sx={cellSx}>
                   <Typo.Caption.Bold color='inherit'>{label}</Typo.Caption.Bold>
                 </Box>
@@ -84,6 +89,13 @@ export function PrintRosterTable({
                     {row.bookerName}
                   </Typo.Badge.Semibold>
                 </Box>
+                {hasSeatColumn ? (
+                  <Box component='td' sx={cellSx} data-print-seat>
+                    <Typo.Body.Bold color='inherit'>
+                      {row.seatText ?? ''}
+                    </Typo.Body.Bold>
+                  </Box>
+                ) : null}
                 <Box component='td' sx={cellSx}>
                   <Typo.Badge.Regular color='inherit'>
                     {row.phoneLast4}

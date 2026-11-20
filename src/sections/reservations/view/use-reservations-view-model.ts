@@ -38,6 +38,7 @@ import {
 import { MSG_D12 } from '@/src/shared/messages/d12';
 import type { ReservationStatus } from '@/src/types/booking';
 import { ADMIN_PAGE_SIZE } from '@/src/types/common';
+import { useReservationSeats } from '@/src/sections/reservations/view/use-reservation-seats';
 import { toApiErrorMessage } from '@/src/utils/api-error-message';
 
 export type ReservationTab = 'list' | 'summary' | 'invite';
@@ -107,6 +108,10 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
       );
   const performanceTitle =
     performances.find((p) => p.id === performanceId)?.title ?? null;
+  /** U35 — 고른 공연이 좌석 지정 예매인가(좌석 열·좌석 변경·현황·수동 등록 좌석) */
+  const seatSelection =
+    performances.find((p) => p.id === performanceId)?.seatSelectionEnabled ??
+    false;
 
   const summaryQuery = useReservationSummary(performanceId);
   const tierQuery = useReservationTierOptions(performanceId);
@@ -125,7 +130,10 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
     () => orderWithExactMatch(items, search),
     [items, search]
   );
-  const rows = useMemo(() => ordered.items.map(toReservationRow), [ordered]);
+  const rows = useMemo(
+    () => ordered.items.map((r) => toReservationRow(r, seatSelection)),
+    [ordered, seatSelection]
+  );
 
   const clampedPage = listQuery.data
     ? clampPage(page, listQuery.data.totalPages)
@@ -160,6 +168,20 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
 
   const summary = summaryQuery.data;
   const showOptions = toShowOptions(summary);
+  const seats = useReservationSeats({
+    enabled: seatSelection,
+    findReservation,
+    showLabelOf: (id) => showOptions.find((s) => s.id === id)?.longLabel ?? '',
+    statusShowId: showFilter === ALL ? null : showFilter,
+    defaultManualShowId: showOptions[0]?.id ?? null,
+    onFindBooker: (name) => {
+      clearUrlFocus();
+      setTab('list');
+      setSearchInput(name);
+      setSearch(name);
+      resetList();
+    },
+  });
   const drawerReservation = selected
     ? (items.find((r) => r.id === selected.id) ?? selected)
     : null;
@@ -204,6 +226,8 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
     hasFilter:
       showFilter !== ALL || status !== ALL || overdueOnly || search !== '',
     rows,
+    seatSelection,
+    seats,
     matchId: ordered.matchId,
     countText: listQuery.data
       ? ordered.matchId && ordered.code
@@ -217,7 +241,9 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
     isListError: listQuery.isError && !listQuery.data,
     listErrorMessage: listError ? toApiErrorMessage(listError) : '',
     drawerReservation,
-    drawerRow: drawerReservation ? toReservationRow(drawerReservation) : null,
+    drawerRow: drawerReservation
+      ? toReservationRow(drawerReservation, seatSelection)
+      : null,
     actions,
     invite,
     onRetryPerformances: () => void performancesQuery.refetch(),

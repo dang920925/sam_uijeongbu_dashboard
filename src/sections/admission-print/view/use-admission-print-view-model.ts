@@ -8,6 +8,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAdmissionPrintBoard } from '@/src/api/admission-queries';
+import { useAdminSeatMap } from '@/src/api/seat-map-queries';
 import {
   buildPrintRoster,
   toRosterSort,
@@ -24,13 +25,16 @@ export function useAdmissionPrintViewModel(showId: string) {
   const pathname = usePathname();
   const sort = toRosterSort(useSearchParams().get('sort'));
   const query = useAdmissionPrintBoard(showId);
-  const board = query.data ?? null;
+  // U35 — 좌석 지정 여부는 회차 좌석 지도(배치 없음·꺼짐 = 좌석 칸 없음). 받은 뒤에 그리고 인쇄한다
+  const seatQuery = useAdminSeatMap(showId);
+  const seatSelection = seatQuery.data?.seatSelectionEnabled ?? false;
+  const board = seatQuery.isPending ? null : (query.data ?? null);
   const [printedAt] = useState(() => new Date().toISOString());
   const hasPrinted = useRef(false);
 
   const roster = useMemo(
-    () => (board ? buildPrintRoster(board, sort) : null),
-    [board, sort]
+    () => (board ? buildPrintRoster(board, sort, seatSelection) : null),
+    [board, sort, seatSelection]
   );
 
   // 그려진 다음 프레임에 인쇄 창을 연다 — 브라우저의 "PDF로 저장"으로 파일을 받는다

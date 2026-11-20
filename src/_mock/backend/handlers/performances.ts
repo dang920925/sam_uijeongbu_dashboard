@@ -37,8 +37,26 @@ function findPerformance(id: string) {
 }
 
 function toListItem(p: AdminPerformanceResponse) {
-  const { id, title, type, status, isVisible, posterImageUrl, createdAt } = p;
-  return { id, title, type, status, isVisible, posterImageUrl, createdAt };
+  const {
+    id,
+    title,
+    type,
+    status,
+    isVisible,
+    posterImageUrl,
+    createdAt,
+    seatSelectionEnabled,
+  } = p;
+  return {
+    id,
+    title,
+    type,
+    status,
+    isVisible,
+    posterImageUrl,
+    createdAt,
+    seatSelectionEnabled: seatSelectionEnabled ?? false,
+  };
 }
 
 function toDetail(
@@ -85,6 +103,12 @@ function applyPerformance(
     target.detailImageUrls = urls as string[];
   }
   if ('isVisible' in b) target.isVisible = b.isVisible === true;
+  // U35 좌석 지정 스위치(boolean 만)
+  if ('seatSelectionEnabled' in b) {
+    if (typeof b.seatSelectionEnabled !== 'boolean')
+      return validationError(ctx);
+    target.seatSelectionEnabled = b.seatSelectionEnabled;
+  }
   return null;
 }
 
@@ -184,6 +208,7 @@ export const performanceRoutes: MockRoute[] = [
         posterImageUrl: null,
         detailImageUrls: [],
         isVisible: true,
+        seatSelectionEnabled: false,
       };
       const invalid = applyPerformance(ctx, draft, true);
       if (invalid) return invalid;

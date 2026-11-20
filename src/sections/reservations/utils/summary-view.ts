@@ -8,6 +8,7 @@ import { formatShowSlot, formatWon } from '@/src/api/reservation-mapper';
 import type { DashboardKpiTone } from '@/src/sections/dashboard/utils/build-dashboard-view';
 import { MSG_BOOKING } from '@/src/shared/messages/booking';
 import { MSG_COMMON } from '@/src/shared/messages/common';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 import { MSG_D12 } from '@/src/shared/messages/d12';
 import type {
   ReservationSummaryBoardResponse,
@@ -213,11 +214,17 @@ export function toTierSummaryTable(
 export function toInviterSummaryTable(
   summary: ReservationSummaryBoardResponse
 ): SummaryTable {
+  // 서버 묶음 순서(back-end §16): 단원 → 임원·스태프 및 관계자(U36, memberId null + 그 이름) → 직접 입력 → 초대 없음
   const rank = (memberId: string | null, name: string | null) =>
-    memberId ? 0 : name ? 1 : 2;
+    memberId ? 0 : name === MSG_SEAT.INVITER_STAFF ? 1 : name ? 2 : 3;
   const sorted = [...summary.inviters].sort(
     (a, b) => rank(a.memberId, a.name) - rank(b.memberId, b.name)
   );
+  const LABEL: Record<number, string> = {
+    1: MSG_SEAT.INVITER_STAFF,
+    2: MSG_D12.SUM_INV_NOTE,
+    3: MSG_D12.SUM_INV_NONE,
+  };
   return {
     columns: [
       MSG_D12.SUM_INV_COL,
@@ -226,16 +233,15 @@ export function toInviterSummaryTable(
     ],
     rows: sorted.map((row, index) => {
       const r = rank(row.memberId, row.name);
-      const name =
-        r === 0
-          ? (row.name ?? dash)
-          : r === 1
-            ? MSG_D12.SUM_INV_NOTE
-            : MSG_D12.SUM_INV_NONE;
       return {
         key: row.memberId ?? `group-${r}-${index}`,
-        cells: [name, qty(row.pendingQty), qty(row.confirmedQty)],
-        isMuted: r > 0,
+        cells: [
+          r === 0 ? (row.name ?? dash) : LABEL[r],
+          qty(row.pendingQty),
+          qty(row.confirmedQty),
+        ],
+        // 임원·스태프 묶음은 실제 초대 집계라 흐리게 두지 않는다
+        isMuted: r > 1,
       };
     }),
   };

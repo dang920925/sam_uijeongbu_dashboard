@@ -21,6 +21,8 @@ export interface ReservationRowHandlers {
   onRequestItems: (id: string) => void;
   onRequestMemo: (id: string) => void;
   onOpenDetail: (id: string) => void;
+  /** U35 좌석 변경 — 좌석 지정 공연일 때만 */
+  onRequestSeats?: (id: string) => void;
 }
 
 interface ReservationActionButtonsProps {

@@ -45,6 +45,8 @@ const BASE: Reservation = {
   depositorName: null,
   inviter: null,
   inviterNote: null,
+  inviterCategory: null,
+  seats: [],
   status: 'CONFIRMED',
   source: 'ADMIN',
   depositDueAt: null,

@@ -17,6 +17,8 @@ import type {
 import type {
   BookingPolicyUpsertRequest,
   CancelReason,
+  InviterCategory,
+  SeatKind,
   ConfirmedBy,
   PriceTierVisibility,
   ReservationLineResponse,
@@ -83,6 +85,10 @@ export interface MockReservation {
   depositorName: string | null;
   inviterMemberId: string | null;
   inviterNote: string | null;
+  /** U36 — 초대 구분(null = 기존·없음) */
+  inviterCategory?: InviterCategory | null;
+  /** U35 — 잡은 좌석 id(취소돼도 기록은 남고, 살아 있는 예매만 좌석을 막는다) */
+  seatIds?: string[];
   status: ReservationStatus;
   source: ReservationSource;
   depositDueAt: string | null;
@@ -94,6 +100,23 @@ export interface MockReservation {
   admittedCount: number;
   version: number;
   createdAt: string;
+}
+
+/** 좌석 배치 칸(U35 — show_seats). VOID 칸은 두지 않는다 */
+export interface MockSeatCell {
+  id: string;
+  rowIndex: number;
+  colIndex: number;
+  kind: Exclude<SeatKind, 'VOID'>;
+  rowLabel: string | null;
+  seatNumber: number | null;
+}
+
+/** 회차 좌석 배치(show_seat_layouts + show_seats) */
+export interface MockSeatLayout {
+  rowCount: number;
+  colCount: number;
+  cells: MockSeatCell[];
 }
 
 /** 관리자 계정(U25) — null 이면 env MOCK_ADMIN_USERNAME/PASSWORD. sessionVersion 이 토큰 버전과 다르면 401 */
@@ -117,6 +140,8 @@ export interface MockStore {
   priceTiers: MockPriceTier[];
   bookingPolicies: Map<string, BookingPolicyUpsertRequest>;
   reservations: MockReservation[];
+  /** U35 showId → 배치 */
+  seatLayouts: Map<string, MockSeatLayout>;
   admissionLogs: {
     id: string;
     reservationId: string;
@@ -176,6 +201,7 @@ function emptyStore(): MockStore {
     priceTiers: [],
     bookingPolicies: new Map(),
     reservations: [],
+    seatLayouts: new Map(),
     admissionLogs: [],
     inviteCodes: new Map(),
     account: { username: null, password: null, sessionVersion: 0 },

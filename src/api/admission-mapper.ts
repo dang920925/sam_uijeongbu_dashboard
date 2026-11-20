@@ -7,6 +7,7 @@
 //   번호 = 검색어 — 화면이 검색어로 쓴다. integration 2026-11-20 실측).
 // ----------------------------------------------------------------------
 import type {
+  ReservationSeatResponse,
   AdminShowWithTitleResponse,
   AdmissionBoardResponse,
   AdmissionItemResponse,
@@ -51,6 +52,8 @@ export interface AdmissionItem {
   deadlinePassed: boolean;
   memo: string | null;
   version: number;
+  /** U35 — 좌석(좌석 미정·꺼짐이면 []) */
+  seats: ReservationSeatResponse[];
 }
 
 export type AdmissionSummary = AdmissionSummaryResponse;
@@ -125,6 +128,7 @@ export function fromAdmissionItemResponse(
     deadlinePassed: res.deadlinePassed === true,
     memo: res.memo || null,
     version: res.version,
+    seats: res.seats ?? [],
   };
 }
 

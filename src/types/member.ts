@@ -10,6 +10,8 @@ export interface MemberListItemResponse {
   joinedAt: string | null;
   createdAt: string;
   profileImageUrl: string | null;
+  /** U36 예매 초대자 목록에 표시(back-end §16 — 기본 true, J-107 대체) */
+  inviterListed: boolean;
 }
 
 export interface MemberCreateRequest {
@@ -23,6 +25,8 @@ export interface MemberUpdateRequest {
   phone?: string | null;
   type?: MemberType;
   isVisible?: boolean;
+  /** U36 */
+  inviterListed?: boolean;
 }
 
 export interface MemberListQuery {
@@ -66,6 +70,8 @@ export interface Member {
   joinedAt: string | null;
   createdAt: string;
   profileImageUrl: string | null;
+  /** U36 — 응답에 없으면 true(J-107 대체 기본값) */
+  inviterListed: boolean;
 }
 
 export interface Filmography {

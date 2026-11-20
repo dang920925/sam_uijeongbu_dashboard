@@ -58,6 +58,7 @@ export function createMemberRecord(
     type,
     phone,
     isVisible: false,
+    inviterListed: true,
     joinedAt: todayKst(),
     createdAt: nowIso(),
     profileImageUrl: null,
@@ -140,6 +141,11 @@ export const memberRoutes: MockRoute[] = [
       if ('type' in b && ['GENERAL', 'ACTOR'].includes(b.type as string))
         m.type = b.type as MemberType;
       if ('isVisible' in b) m.isVisible = b.isVisible === true;
+      // U36 예매 초대자 목록 표시
+      if ('inviterListed' in b) {
+        if (typeof b.inviterListed !== 'boolean') return validationError(ctx);
+        m.inviterListed = b.inviterListed;
+      }
       return json(toMemberItem(m));
     },
   },

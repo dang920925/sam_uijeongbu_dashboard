@@ -19,6 +19,8 @@ import {
 } from '@/src/components/reservation-detail-drawer/reservation-detail-fields';
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_D12 } from '@/src/shared/messages/d12';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
+import { toSeatText } from '@/src/api/seat-map-mapper';
 import { CANCEL_REASON_LABEL } from '@/src/types/codes';
 import { formatKstDateTime } from '@/src/utils/kst-date-format';
 import { formatPhone } from '@/src/utils/phone-format';
@@ -47,6 +49,10 @@ export interface ReservationRow {
   statusNote: string | null;
   admissionText: string;
   inviterText: string;
+  /** U35 좌석 "B3·B4" · 좌석 지정 공연인데 없으면 "좌석 미정" · 아니면 null(칸 '-') */
+  seatText: string | null;
+  /** 좌석 변경 가능(좌석 지정 공연 · 취소 아님) */
+  canChangeSeats: boolean;
   hasMemo: boolean;
   /** 입장 인원 있는 확정 건 — 확인 취소·취소 비활성 */
   isLocked: boolean;
@@ -59,7 +65,10 @@ function shortDue(iso: string | null): string | null {
   return text === dash ? null : text.slice(5);
 }
 
-export function toReservationRow(r: Reservation): ReservationRow {
+export function toReservationRow(
+  r: Reservation,
+  seatSelection: boolean | null = null
+): ReservationRow {
   let statusNote: string | null = null;
   if (r.status === 'PENDING' && !r.deadlinePassed) {
     const due = shortDue(r.depositDueAt);
@@ -87,6 +96,8 @@ export function toReservationRow(r: Reservation): ReservationRow {
     statusNote,
     admissionText: admissionTextOf(r),
     inviterText: inviterTextOf(r),
+    seatText: toSeatText(r.seats, seatSelection, MSG_SEAT.UNASSIGNED),
+    canChangeSeats: seatSelection === true && r.status !== 'CANCELLED',
     hasMemo: Boolean(r.memo),
     isLocked: r.status === 'CONFIRMED' && r.admittedCount > 0,
     canEditItems: r.status !== 'CANCELLED',

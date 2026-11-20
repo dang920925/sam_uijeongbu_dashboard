@@ -10,6 +10,8 @@ import {
 import { formatTierBreakdown } from '@/src/api/reservation-mapper';
 import { MSG_BOOKING } from '@/src/shared/messages/booking';
 import { MSG_D13 } from '@/src/shared/messages/d13';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
+import { toSeatText } from '@/src/api/seat-map-mapper';
 
 export type AdmissionRowKind = 'confirmed' | 'done' | 'pending';
 
@@ -19,6 +21,9 @@ export interface AdmissionRowModel {
   codeText: string;
   /** 연락처가 없으면 null — 칸을 통째로 숨긴다 */
   phoneText: string | null;
+  /** U35 좌석 "B3·B4" · 좌석 지정 공연인데 없으면 "좌석 미정" · 아니면 null(숨김) */
+  seatText: string | null;
+  isSeatUnassigned: boolean;
   /** 등급 줄이 없으면(옛 예매) 매수 한 줄로 */
   lines: AdmissionLine[];
   tiersAria: string;
@@ -68,8 +73,18 @@ export function linesOf(item: AdmissionItem): AdmissionLine[] {
 
 export function toAdmissionRowModel(
   item: AdmissionItem,
-  state: { busyIds: string[]; flashId: string | null }
+  state: {
+    busyIds: string[];
+    flashId: string | null;
+    /** U35 — 공연이 좌석 지정 예매인가(모르면 null — 좌석이 있을 때만 보인다) */
+    seatSelection?: boolean | null;
+  }
 ): AdmissionRowModel {
+  const seatText = toSeatText(
+    item.seats,
+    state.seatSelection ?? null,
+    MSG_SEAT.UNASSIGNED
+  );
   const remaining = remainingOf(item);
   const kind: AdmissionRowKind =
     item.status === 'PENDING'
@@ -83,6 +98,8 @@ export function toAdmissionRowModel(
     bookerName: item.bookerName,
     codeText: MSG_D13.META_CODE(item.code),
     phoneText: item.phoneLast4 ? MSG_D13.META_PHONE(item.phoneLast4) : null,
+    seatText,
+    isSeatUnassigned: seatText === MSG_SEAT.UNASSIGNED,
     lines,
     tiersAria: tiersAriaOf(lines),
     countText: MSG_D13.COUNT(item.admittedCount, item.quantity),

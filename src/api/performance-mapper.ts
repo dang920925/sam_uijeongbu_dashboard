@@ -33,6 +33,7 @@ export function fromPerformanceListItemResponse(
     isVisible: res.isVisible,
     posterImageUrl: res.posterImageUrl ?? null,
     createdAt: res.createdAt,
+    seatSelectionEnabled: res.seatSelectionEnabled === true,
   };
 }
 

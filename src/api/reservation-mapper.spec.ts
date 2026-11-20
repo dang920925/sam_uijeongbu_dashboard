@@ -5,6 +5,7 @@ import {
   formatTierBreakdown,
   formatWon,
   fromAdminReservationItemResponse,
+  INVITER_STAFF_VALUE,
   previewLinesAmount,
   toReservationItemsRequest,
   toReservationLinesFormInput,
@@ -129,6 +130,8 @@ describe('fromAdminReservationItemResponse', () => {
       depositorName: null,
       inviter: null,
       inviterNote: null,
+      inviterCategory: null,
+      seats: [],
       status: 'CONFIRMED',
       source: 'ADMIN',
       depositDueAt: null,
@@ -249,5 +252,43 @@ describe('previewLinesAmount', () => {
         priceOf
       ).amount
     ).toBe(0);
+  });
+});
+
+describe('toManualReservationRequest — U35·U36', () => {
+  const base = {
+    showId: 's1',
+    bookerName: '홍길동',
+    bookerPhone: '',
+    inviterMemberId: null,
+    memo: '',
+    status: 'PENDING' as const,
+    admitNow: '',
+    tierQuantities: { t1: '2' },
+    useCustom: false,
+    customLabel: '',
+    customQuantity: '',
+    customAmount: '',
+    useAmountOverride: false,
+    amountOverride: '',
+  };
+
+  it('임원·스태프 및 관계자는 inviterCategory STAFF_RELATED 로 보내고 단원 id 는 null', () => {
+    const req = toManualReservationRequest({
+      ...base,
+      inviterMemberId: INVITER_STAFF_VALUE,
+    });
+    expect(req).toMatchObject({
+      inviterMemberId: null,
+      inviterCategory: 'STAFF_RELATED',
+    });
+  });
+
+  it('고른 좌석이 있으면 seatIds 를 싣고, 없으면 키를 뺀다(좌석 미정 — J-104)', () => {
+    expect(
+      toManualReservationRequest({ ...base, seatIds: ['a', 'b'] }).seatIds
+    ).toEqual(['a', 'b']);
+    expect('seatIds' in toManualReservationRequest(base)).toBe(false);
+    expect('inviterCategory' in toManualReservationRequest(base)).toBe(false);
   });
 });

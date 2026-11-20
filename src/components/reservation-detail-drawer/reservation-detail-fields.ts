@@ -3,6 +3,7 @@
 // 무료 = 확정 + 0원(지휘자 결정 2026-11-20 — 0원 확정 건 보조 "무료"), 관리자 등록 = source ADMIN,
 // 금액 덮어쓴 건 = amountOverridden("직접 입력"), 초대 = 단원 이름 / "{메모} (직접 입력)" / '-'.
 // ----------------------------------------------------------------------
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 import {
   formatShowSlot,
   formatTierBreakdown,
@@ -22,9 +23,12 @@ export function isFreeReservation(r: Pick<Reservation, 'status' | 'amount'>) {
 }
 
 export function inviterTextOf(
-  r: Pick<Reservation, 'inviter' | 'inviterNote'>
+  r: Pick<Reservation, 'inviter' | 'inviterNote'> &
+    Partial<Pick<Reservation, 'inviterCategory'>>
 ): string {
   if (r.inviter) return r.inviter.name;
+  // U36 — 임원·스태프 및 관계자(단원 없음)
+  if (r.inviterCategory === 'STAFF_RELATED') return MSG_SEAT.INVITER_STAFF;
   if (r.inviterNote) return MSG_D12.INVITER_NOTE(r.inviterNote);
   return dash;
 }

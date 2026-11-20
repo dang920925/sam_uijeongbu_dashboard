@@ -70,6 +70,8 @@ export const MSG_D11 = {
     refundPolicyText: '취소·환불 규정',
     /** develop §11.10 publicTier(사용 중 PUBLIC 등급 없음) — design §6.1b(제안) */
     publicTier: '누구나 고를 수 있는 가격 등급',
+    /** U35 — 좌석 지정 공연인데 회차 좌석 배치 없음(develop §19.2 missingFields seatMap) */
+    seatMap: '좌석 배치',
     totalSeats: '좌석 수',
     bookingOpenAt: '예매 오픈 시각',
   } as Record<string, string>,
@@ -77,6 +79,8 @@ export const MSG_D11 = {
   ROW_MISSING_LABEL: {
     totalSeats: '좌석 수',
     bookingOpenAt: '오픈 시각',
+    /** U35 */
+    seatMap: '좌석 배치',
   } as Record<string, string>,
   ROW_MISSING: (items: string) => `빈 칸: ${items}`,
 

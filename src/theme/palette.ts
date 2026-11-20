@@ -45,6 +45,10 @@ export const RAW = {
   // KPI 아이콘 타일 글자색 계열(--kpi-*-fg) — 타일 바탕은 ALPHA
   kpiRose: '#f39aa4',
   kpiViolet: '#c4b0ff',
+  // U35 좌석 지도(T-SEAT) — 선택 칸은 홈페이지 좌석 선택색과 같은 주황(흰 숫자 5.18:1), 내 예매는 파랑(흰 글자 6.7:1).
+  //   U30 다크 테마 위에서도 그대로 쓰는 강조색이라 RAW 에 둔다(v1.3.0 합치기).
+  orange700: '#c2410c',
+  blue700: '#1d4ed8',
 } as const;
 
 /** 반투명 역할 색(tokens-A.css 의 rgb(… / a) 값 그대로) */

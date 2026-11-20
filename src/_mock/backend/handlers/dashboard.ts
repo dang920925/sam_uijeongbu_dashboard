@@ -93,6 +93,7 @@ function seed(ctx: MockContext): Response {
       type: m.type === 'ACTOR' ? 'ACTOR' : ('GENERAL' as MemberType),
       phone: null,
       isVisible: true,
+      inviterListed: m.inviterListed !== false,
       joinedAt: null,
       createdAt: nextCreatedAt(),
       profileImageUrl: null,

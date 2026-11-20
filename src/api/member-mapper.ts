@@ -23,6 +23,7 @@ export function fromMemberListItemResponse(
     joinedAt: res.joinedAt ?? null,
     createdAt: res.createdAt,
     profileImageUrl: res.profileImageUrl ?? null,
+    inviterListed: res.inviterListed !== false,
   };
 }
 

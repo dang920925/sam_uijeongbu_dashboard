@@ -22,6 +22,7 @@ const member: Member = {
   joinedAt: '2026-11-19',
   createdAt: '2026-11-18T16:00:00.000Z',
   profileImageUrl: null,
+  inviterListed: true,
 };
 
 const profile: ActorProfile = {

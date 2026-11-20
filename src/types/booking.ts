@@ -132,6 +132,66 @@ export interface ReservationCustomLineRequest {
   amount: number;
 }
 
+// ─── 좌석(U35 — develop §19 · back-end §16) ────────────────────────
+export type SeatKind = 'SEAT' | 'AISLE' | 'VOID';
+
+/** 초대 구분(U36) — null = 기존 예매·초대 없음 */
+export type InviterCategory = 'MEMBER' | 'STAFF_RELATED';
+
+/** 예매 좌석 — 좌석 지정이 꺼졌거나 좌석 미정이면 [] */
+export interface ReservationSeatResponse {
+  rowLabel: string;
+  seatNumber: number;
+}
+
+/** 관리 좌석 지도 칸 — 공개 칸 + reservationId·bookerName(현황) + rowLabel(편집) */
+export interface AdminSeatMapCellResponse {
+  seatId: string | null;
+  kind: SeatKind;
+  rowLabel: string | null;
+  seatNumber: number | null;
+  sold: boolean;
+  reservationId: string | null;
+  bookerName: string | null;
+}
+
+export interface AdminSeatMapRowResponse {
+  label: string | null;
+  cells: AdminSeatMapCellResponse[];
+}
+
+/** `GET·PUT /admin/shows/{id}/seat-map` — 첫 행이 무대 쪽, 위치 0부터. 배치 없으면 404 SEAT_003 */
+export interface AdminSeatMapResponse {
+  seatSelectionEnabled: boolean;
+  rowCount: number;
+  colCount: number;
+  rows: AdminSeatMapRowResponse[];
+  total: number;
+  remaining: number;
+}
+
+/** 배치 저장 칸 — VOID 는 보내지 않는다(보내지 않은 칸 = VOID) */
+export interface SeatMapCellRequest {
+  rowIndex: number;
+  colIndex: number;
+  kind: 'SEAT' | 'AISLE';
+  rowLabel?: string;
+  seatNumber?: number;
+}
+
+/** `PUT /admin/shows/{id}/seat-map` 통째 교체(행 1~40 · 열 1~60). 예매된 좌석을 지우거나 바꾸면 409 SEAT_004 */
+export interface SaveSeatMapRequest {
+  rowCount: number;
+  colCount: number;
+  cells: SeatMapCellRequest[];
+}
+
+/** `PUT /admin/reservations/{id}/seats` — 개수 = 매수 */
+export interface ReplaceReservationSeatsRequest {
+  seatIds: string[];
+  version: number;
+}
+
 // ─── 예매(FN-33·34) ─────────────────────────────────────────────────
 
 export interface ReservationListQuery {
@@ -172,6 +232,10 @@ export interface AdminReservationItemResponse {
   depositorName: string | null;
   inviter: { memberId: string; name: string } | null;
   inviterNote: string | null;
+  /** U36 — MEMBER · STAFF_RELATED · null(기존·초대 없음) */
+  inviterCategory: InviterCategory | null;
+  /** U35 — 좌석(좌석 미정·꺼짐이면 []) */
+  seats: ReservationSeatResponse[];
   status: ReservationStatus;
   /** ADMIN = '관리자 등록' 표시 */
   source: ReservationSource;
@@ -203,6 +267,10 @@ export interface ManualReservationRequest {
   /** ≤500 */
   memo?: string | null;
   inviterMemberId?: string | null;
+  /** U36 — STAFF_RELATED 면 inviterMemberId 없이 */
+  inviterCategory?: InviterCategory | null;
+  /** U35 — 선택(비우면 좌석 미정, J-104). 보내면 개수 = 합계 매수 */
+  seatIds?: string[];
   /** 0~매수, CONFIRMED 일 때만 */
   admitNow?: number;
 }
@@ -325,6 +393,8 @@ export interface AdmissionItemResponse {
   deadlinePassed: boolean;
   memo: string | null;
   version: number;
+  /** U35 — 좌석(좌석 미정·꺼짐이면 []) */
+  seats: ReservationSeatResponse[];
 }
 
 export interface AdmissionSummaryResponse {

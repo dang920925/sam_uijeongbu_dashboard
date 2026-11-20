@@ -6,6 +6,8 @@
 // 회차* · 이름* · 연락처(선택) · 입력 방식 "등급별 수량 / 직접 입력"(이름 기본 "직접 입력" + 매수 + 금액) ·
 // "금액 직접 정하기"(0원 허용) · 상태 "입금 대기 / 확정" · 초대 단원(선택) · 메모 · (확정이면) 입장 인원.
 // 남은 좌석보다 많으면 저장 불가. D13 은 입장 인원을 상태 바로 아래에 둔다(designer §13.11 남은 확인 6).
+// U35: seatPicker 를 주면(좌석 지정 공연) 매수 아래 "좌석(선택)" — 고르면 매수만큼, 비우면 좌석 미정(J-104).
+// U36: 초대 선택지 맨 위 "임원·스태프 및 관계자"(INVITER_STAFF_VALUE).
 // props 계약은 리드가 고정(W3·W4 가 같은 props 로 쓴다). 검증은 validate-manual-reservation.ts(+spec).
 // ----------------------------------------------------------------------
 import Button from '@mui/material/Button';
@@ -17,9 +19,20 @@ import { useId, useState } from 'react';
 
 import {
   formatWon,
+  INVITER_STAFF_VALUE,
   previewLinesAmount,
   type ManualReservationFormInput,
 } from '@/src/api/reservation-mapper';
+import type { AdminSeatMap } from '@/src/api/seat-map-mapper';
+import { SeatPickerField } from '@/src/components/manual-reservation-dialog/seat-picker-field';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
+import {
+  findSeatCell,
+  pickedLabels,
+  resolvePicked,
+  toggleSeatPick,
+  toPickerRows,
+} from '@/src/utils/seat-grid-view';
 import { AdminDialog } from '@/src/components/admin-dialog';
 import { FormField } from '@/src/components/form-field';
 import { AmountOverrideField } from '@/src/components/manual-reservation-dialog/amount-override-field';
@@ -63,13 +76,21 @@ export interface ManualReservationInviterOption {
   name: string;
 }
 
+/** U35 좌석 고르기 — 고른 회차의 지도(VM 이 회차 바뀜을 받아 불러온다) */
+export interface ManualReservationSeatPicker {
+  status: 'loading' | 'error' | 'ready';
+  map: AdminSeatMap | null;
+  onShowChange: (showId: string) => void;
+  onRetry: () => void;
+}
+
 export interface ManualReservationDialogProps {
   open: boolean;
   /** 회차 선택지 — fixedShowId 가 있으면 선택 칸 대신 그 회차를 읽기 전용으로 보인다 */
   showOptions: ManualReservationShowOption[];
   /** D13: 고른 회차 고정 */
   fixedShowId?: string | null;
-  /** 초대 단원 선택지 — 비거나 없으면 칸을 숨긴다 */
+  /** 초대 단원 선택지 — 주지 않으면(undefined) 칸을 숨긴다. 비어 있어도 "임원·스태프 및 관계자"·"없음/모름"은 고를 수 있다(U36) */
   inviterOptions?: ManualReservationInviterOption[];
   /** 등급 선택지 — 비면 "직접 입력" 방식만 보인다 */
   tierOptions: ManualReservationTierOption[];
@@ -77,6 +98,8 @@ export interface ManualReservationDialogProps {
   defaultStatus: 'PENDING' | 'CONFIRMED';
   /** 입장 인원 칸 — D13 'afterStatus'(확정이면 상태 바로 아래, 기본 = 매수) · 'bottom'(맨 아래) · D12 'none'(칸 없음, 늘 0 — R1-002 사용자 결정) */
   admitNowPlacement: 'afterStatus' | 'bottom' | 'none';
+  /** U35 — 좌석 지정 공연일 때만(없으면 좌석 칸 없음) */
+  seatPicker?: ManualReservationSeatPicker | null;
   /** 현장 터치 하한(px) — D13 은 48(S24 · qa-r1 R1-004). 없으면 대시보드 기본 */
   minTouch?: number;
   isSubmitting: boolean;
@@ -106,10 +129,11 @@ function ManualReservationDialogBody({
   open,
   showOptions,
   fixedShowId = null,
-  inviterOptions = [],
+  inviterOptions,
   tierOptions,
   defaultStatus,
   admitNowPlacement,
+  seatPicker = null,
   minTouch,
   isSubmitting,
   errorMessage,
@@ -137,6 +161,8 @@ function ManualReservationDialogBody({
   );
   const [isAdmitTouched, setIsAdmitTouched] = useState(false);
   const [errors, setErrors] = useState<ManualReservationErrors | null>(null);
+  const [seatIds, setSeatIds] = useState<string[]>([]);
+  const [isSeatOpen, setIsSeatOpen] = useState(false);
   const showId = useId();
   const showLabelId = useId();
   const nameId = useId();
@@ -164,12 +190,18 @@ function ManualReservationDialogBody({
     show?.remainingSeats ?? null
   );
   const shown = errors ?? null;
+  const seatMap = seatPicker?.status === 'ready' ? seatPicker.map : null;
+  const pickedSeats = resolvePicked(seatMap, seatIds, preview.quantity);
+  const seatPickError =
+    pickedSeats.length > 0 && pickedSeats.length !== preview.quantity
+      ? MSG_SEAT.MANUAL_SEAT_NEED(preview.quantity)
+      : null;
 
   const handleSubmit = () => {
     const next = validateManualReservation(input);
     setErrors(next);
-    if (hasErrors(next) || seatsMessage) return;
-    onSubmit(input);
+    if (hasErrors(next) || seatsMessage || seatPickError) return;
+    onSubmit({ ...input, seatIds: pickedSeats });
   };
 
   const admitField = (
@@ -249,7 +281,11 @@ function ManualReservationDialogBody({
             select
             value={form.showId}
             error={Boolean(shown?.showId)}
-            onChange={(event) => patch({ showId: event.target.value })}
+            onChange={(event) => {
+              patch({ showId: event.target.value });
+              setSeatIds([]);
+              seatPicker?.onShowChange(event.target.value);
+            }}
             fullWidth
             slotProps={{
               select: {
@@ -376,6 +412,45 @@ function ManualReservationDialogBody({
           formatWon(preview.lineAmount)
         )}
       />
+      {seatPicker && seatPicker.map !== null ? (
+        <SeatPickerField
+          status={seatPicker.status}
+          isOpen={isSeatOpen}
+          rows={
+            seatMap ? toPickerRows(seatMap, pickedSeats, preview.quantity) : []
+          }
+          pickedText={MSG_SEAT.PICKED(
+            pickedLabels(seatMap, pickedSeats),
+            pickedSeats.length,
+            preview.quantity
+          )}
+          hasQuantity={preview.quantity > 0}
+          error={seatPickError}
+          onOpen={() => setIsSeatOpen(true)}
+          onClear={() => setSeatIds([])}
+          onCellClick={(key) => {
+            const cell = findSeatCell(seatMap, key);
+            if (cell?.seatId)
+              setSeatIds(
+                toggleSeatPick(pickedSeats, cell.seatId, preview.quantity)
+              );
+          }}
+          onRetry={seatPicker.onRetry}
+        />
+      ) : seatPicker && seatPicker.status !== 'ready' ? (
+        <SeatPickerField
+          status={seatPicker.status}
+          isOpen={isSeatOpen}
+          rows={[]}
+          pickedText=''
+          hasQuantity={preview.quantity > 0}
+          error={null}
+          onOpen={() => setIsSeatOpen(true)}
+          onClear={() => setSeatIds([])}
+          onCellClick={() => undefined}
+          onRetry={seatPicker.onRetry}
+        />
+      ) : null}
       <AmountOverrideField
         checked={form.useAmountOverride}
         value={form.amountOverride}
@@ -401,7 +476,7 @@ function ManualReservationDialogBody({
         />
       </FormField>
       {isConfirmed && admitNowPlacement === 'afterStatus' ? admitField : null}
-      {inviterOptions.length > 0 ? (
+      {inviterOptions ? (
         <FormField
           label={MSG_D12.MANUAL_INVITER}
           htmlFor={inviterId}
@@ -423,12 +498,15 @@ function ManualReservationDialogBody({
               },
             }}
           >
-            <MenuItem value=''>{MSG_D12.MANUAL_INVITER_NONE}</MenuItem>
+            <MenuItem value={INVITER_STAFF_VALUE}>
+              {MSG_SEAT.INVITER_STAFF}
+            </MenuItem>
             {inviterOptions.map((option) => (
               <MenuItem key={option.memberId} value={option.memberId}>
                 {option.name}
               </MenuItem>
             ))}
+            <MenuItem value=''>{MSG_SEAT.INVITER_NONE}</MenuItem>
           </TextField>
         </FormField>
       ) : null}

@@ -18,6 +18,7 @@ const RESPONSE: AdminPerformanceResponse = {
   isVisible: true,
   posterImageUrl: null,
   createdAt: '2026-11-19T01:00:00.000Z',
+  seatSelectionEnabled: false,
   description: null,
   detailImageUrls: [],
   updatedAt: '2026-11-19T01:00:00.000Z',

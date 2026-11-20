@@ -28,6 +28,9 @@ import { ReservationCancelDialog } from '@/src/sections/reservations/components/
 import { ReservationFilterBar } from '@/src/sections/reservations/components/reservation-filter-bar';
 import { ReservationIconActions } from '@/src/sections/reservations/components/reservation-icon-actions';
 import { ReservationItemsDialog } from '@/src/sections/reservations/components/reservation-items-dialog';
+import { ReservationSeatsDialog } from '@/src/sections/reservations/components/reservation-seats-dialog';
+import { SeatStatusDialog } from '@/src/sections/reservations/components/seat-status-dialog';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 import { ReservationKpiRow } from '@/src/sections/reservations/components/reservation-kpi-row';
 import { ReservationMemoDialog } from '@/src/sections/reservations/components/reservation-memo-dialog';
 import { ReservationSummaryTab } from '@/src/sections/reservations/components/reservation-summary-tab';
@@ -55,6 +58,7 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
     onRequestItems: actions.onRequestItems,
     onRequestMemo: actions.onRequestMemo,
     onOpenDetail: vm.onOpenDetail,
+    onRequestSeats: vm.seats.onRequestSeats,
   };
   return (
     <PageContainer>
@@ -66,6 +70,22 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
             gate ? null : (
               <>
                 <RosterPrintButton showId={vm.printShowId} />
+                {vm.seatSelection ? (
+                  <Button
+                    variant='outlined'
+                    color='inherit'
+                    startIcon={<Iconify icon='solar:armchair-linear' />}
+                    disabled={!vm.seats.canOpenStatus}
+                    title={
+                      vm.seats.canOpenStatus
+                        ? undefined
+                        : MSG_SEAT.STATUS_PICK_SHOW
+                    }
+                    onClick={vm.seats.onOpenStatus}
+                  >
+                    {MSG_SEAT.STATUS_BUTTON}
+                  </Button>
+                ) : null}
                 <Button
                   variant='outlined'
                   color='inherit'
@@ -79,7 +99,10 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
                   variant='contained'
                   startIcon={<Iconify icon='solar:add-circle-linear' />}
                   disabled={vm.manualShowOptions.length === 0}
-                  onClick={actions.onOpenManual}
+                  onClick={() => {
+                    vm.seats.resetManualShow();
+                    actions.onOpenManual();
+                  }}
                 >
                   {MSG_D12.BTN_ADD}
                 </Button>
@@ -189,6 +212,7 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
         defaultStatus='PENDING'
         // R1-002 사용자 결정 "0명으로 시작" — 사전 등록이라 입장 인원 칸 없이 0(입장은 D13 에서)
         admitNowPlacement='none'
+        seatPicker={vm.seats.manualSeatPicker}
         isSubmitting={actions.isManualSubmitting}
         errorMessage={actions.manualError}
         onSubmit={actions.onSubmitManual}
@@ -208,6 +232,8 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
         onSubmit={actions.onSubmitMemo}
         onClose={actions.onCloseDialog}
       />
+      <ReservationSeatsDialog {...vm.seats.change} />
+      <SeatStatusDialog {...vm.seats.status} />
       <ReservationItemsDialog
         reservation={actions.itemsTarget}
         tierOptions={vm.tierOptions}

@@ -13,12 +13,17 @@ import { MembersPanel } from '@/src/sections/members/components/members-panel';
 import type { MemberPanelViewModel } from '@/src/sections/members/view/use-member-panel-view-model';
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_D05 } from '@/src/shared/messages/d05';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
+import { SwitchField } from '@/src/components/switch-field';
+import { Typo } from '@/src/components/typo';
 
 interface MemberPanelViewProps {
   title: string;
   onClose: () => void;
   canDelete: boolean;
   deleteConfirm: MemberPanelViewModel['deleteConfirm'];
+  /** U36 — 배우만 */
+  inviterSwitch?: MemberPanelViewModel['inviterSwitch'];
   children: ReactNode;
 }
 
@@ -27,11 +32,28 @@ export function MemberPanelView({
   onClose,
   canDelete,
   deleteConfirm,
+  inviterSwitch = null,
   children,
 }: MemberPanelViewProps) {
   return (
     <MembersPanel open title={title} onClose={onClose}>
       {children}
+      {inviterSwitch ? (
+        <>
+          <Divider />
+          <div className='flex flex-col gap-1'>
+            <SwitchField
+              label={MSG_SEAT.INVITER_LISTED}
+              checked={inviterSwitch.checked}
+              disabled={inviterSwitch.disabled}
+              onChange={inviterSwitch.onChange}
+            />
+            <Typo.Caption.Regular color='text.secondary'>
+              {MSG_SEAT.INVITER_LISTED_HELP}
+            </Typo.Caption.Regular>
+          </div>
+        </>
+      ) : null}
       {canDelete ? (
         <>
           <Divider />

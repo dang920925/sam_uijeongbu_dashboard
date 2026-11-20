@@ -64,3 +64,12 @@ describe('booking-readiness', () => {
     ]);
   });
 });
+
+describe('U35 seatMap 빈 칸', () => {
+  it('좌석 배치가 없는 회차는 "좌석 배치"로 적는다', () => {
+    expect(toRowMissingText(['seatMap'])).toBe('빈 칸: 좌석 배치');
+    expect(buildReadinessNotice([], [['seatMap'], []], false)?.message).toBe(
+      '예매를 열려면 다음 항목을 채워주세요: 좌석 배치(회차 1개)'
+    );
+  });
+});

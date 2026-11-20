@@ -45,6 +45,7 @@ export function MemberPanelContainer({
       onClose={vm.onClose}
       canDelete={Boolean(vm.member) && !vm.isLoading}
       deleteConfirm={vm.deleteConfirm}
+      inviterSwitch={vm.isLoading ? null : vm.inviterSwitch}
     >
       {content}
     </MemberPanelView>

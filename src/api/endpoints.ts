@@ -52,6 +52,9 @@ export const endpoints = {
     detail: (id: string) => `${admin}/shows/${id}`,
     /** FN-36 입장 명단 `GET ?q=` */
     admission: (id: string) => `${admin}/shows/${id}/admission`,
+    /** U35 좌석 배치·현황(GET·PUT) */
+    seatMap: (id: string) => `${admin}/shows/${id}/seat-map`,
+    seatMapCopy: (id: string) => `${admin}/shows/${id}/seat-map/copy-from`,
   },
   /** FN-33·34 예매 관리(develop §11.4) */
   reservations: {
@@ -64,6 +67,8 @@ export const endpoints = {
     restore: (id: string) => `${admin}/reservations/${id}/restore`,
     /** 등급 줄 교체(develop §11.10) `{ items?, customLine?, amountOverride?, version }` */
     items: (id: string) => `${admin}/reservations/${id}/items`,
+    /** U35 좌석 변경 */
+    seats: (id: string) => `${admin}/reservations/${id}/seats`,
     cancelOverdue: `${admin}/reservations/cancel-overdue`,
     /** FN-36 입장 증감 `{ delta }` */
     admission: (id: string) => `${admin}/reservations/${id}/admission`,

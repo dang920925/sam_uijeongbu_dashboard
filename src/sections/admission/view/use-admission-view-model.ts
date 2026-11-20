@@ -53,6 +53,7 @@ import { useAdmissionStore } from '@/src/stores/admission-store';
 import { RESERVATION_STATUS_LABEL } from '@/src/types/codes';
 import { toApiErrorMessage } from '@/src/utils/api-error-message';
 import { todayKst } from '@/src/utils/kst-date-format';
+import { useAdminSeatMap } from '@/src/api/seat-map-queries';
 import { useOnlineStatus } from '@/src/hooks/use-online-status';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -133,8 +134,11 @@ export function useAdmissionViewModel() {
     () => filterAdmissionItems(board?.items ?? [], search),
     [board, search]
   );
+  // U35 — 좌석 지정 여부는 회차 좌석 지도(배치 없음·꺼짐이면 좌석 줄 없음)
+  const seatMapQuery = useAdminSeatMap(showId || null);
+  const seatSelection = seatMapQuery.data?.seatSelectionEnabled ?? null;
   const rows = items.map((item) =>
-    toAdmissionRowModel(item, { busyIds, flashId })
+    toAdmissionRowModel(item, { busyIds, flashId, seatSelection })
   );
 
   // 다른 회차 안내(§6.1a) — 서버가 이 검색어로 답한 뒤 0건일 때만

@@ -17,6 +17,7 @@ import { priceTierRoutes } from '@/src/_mock/backend/handlers/price-tiers';
 import { pushRoutes } from '@/src/_mock/backend/handlers/push';
 import { reservationRoutes } from '@/src/_mock/backend/handlers/reservations';
 import { scheduleRoutes } from '@/src/_mock/backend/handlers/schedules';
+import { seatMapRoutes } from '@/src/_mock/backend/handlers/seat-maps';
 import { showRoutes } from '@/src/_mock/backend/handlers/shows';
 import { staffRoutes } from '@/src/_mock/backend/handlers/staff';
 import { systemRoutes } from '@/src/_mock/backend/handlers/system';
@@ -38,6 +39,7 @@ const ROUTES: MockRoute[] = [
   ...accountRoutes,
   ...pushRoutes,
   ...inviteCodeRoutes,
+  ...seatMapRoutes,
   ...showRoutes,
   ...priceTierRoutes,
   ...reservationRoutes,

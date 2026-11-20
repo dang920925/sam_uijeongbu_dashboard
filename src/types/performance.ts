@@ -9,6 +9,8 @@ export interface AdminPerformanceListItemResponse {
   isVisible: boolean;
   posterImageUrl: string | null;
   createdAt: string;
+  /** U35 좌석 지정 예매 스위치(back-end §16 — 관리 공연 목록·상세) */
+  seatSelectionEnabled: boolean;
 }
 
 export interface AdminPerformanceResponse extends AdminPerformanceListItemResponse {
@@ -43,6 +45,8 @@ export interface PerformanceSummary {
   isVisible: boolean;
   posterImageUrl: string | null;
   createdAt: string;
+  /** U35 — 응답에 없으면 false */
+  seatSelectionEnabled: boolean;
 }
 
 /** 화면 모델 — 상세 */

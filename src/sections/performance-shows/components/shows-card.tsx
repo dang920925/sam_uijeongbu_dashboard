@@ -4,6 +4,7 @@
 // "회차 관리" 카드(design §6 SCR-D11 콘텐츠 3·4) — lg 표 / md·xs 카드(D08 규칙: 열 많은 표는 md 도 카드).
 // 표: 날짜·시각·장소·좌석 예매/확정/남은(+총 n석)·오픈 시각·예매 상태(+빈 칸)·예매 중지 스위치·수정/삭제.
 // 빈 회차 "등록된 회차가 없습니다", 바닥 안내(일정 자동 연동 없음). props 만으로 렌더.
+// (U35) 좌석 지정이 켜진 공연은 행 동작에 "좌석 배치"(의자 아이콘).
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -20,6 +21,7 @@ import { Typo } from '@/src/components/typo';
 import { ShowsSectionCard } from '@/src/sections/performance-shows/components/shows-section-card';
 import type { ShowRowDisplay } from '@/src/sections/performance-shows/utils/show-row';
 import { MSG_D11 } from '@/src/shared/messages/d11';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 import { LAYOUT } from '@/src/theme/layout-tokens';
 
 interface ShowsCardProps {
@@ -29,6 +31,8 @@ interface ShowsCardProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleStop: (id: string, isStopped: boolean) => void;
+  /** U35 — 좌석 지정 공연일 때만 */
+  onSeatLayout?: (id: string) => void;
 }
 
 const ICON_BUTTON_SX = { width: LAYOUT.controlSm, height: LAYOUT.controlSm };
@@ -40,11 +44,22 @@ export function ShowsCard({
   onEdit,
   onDelete,
   onToggleStop,
+  onSeatLayout,
 }: ShowsCardProps) {
   const titleId = useId();
 
   const actions = (row: ShowRowDisplay) => (
     <div className='flex justify-end gap-1'>
+      {onSeatLayout ? (
+        <IconButton
+          aria-label={MSG_SEAT.LAYOUT_BUTTON_ARIA(row.titleText)}
+          title={MSG_SEAT.LAYOUT_BUTTON}
+          onClick={() => onSeatLayout(row.id)}
+          sx={{ ...ICON_BUTTON_SX, color: 'primary.main' }}
+        >
+          <Iconify icon='solar:armchair-linear' />
+        </IconButton>
+      ) : null}
       <IconButton
         aria-label={`${MSG_D11.EDIT_ARIA} ${row.titleText}`}
         onClick={() => onEdit(row.id)}

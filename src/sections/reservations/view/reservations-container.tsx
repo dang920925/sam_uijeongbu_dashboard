@@ -58,7 +58,12 @@ export function ReservationsContainer({
         rows={vm.rows}
         matchId={vm.matchId}
         busyId={vm.actions.busyId}
-        handlers={{ ...vm.actions, onOpenDetail: vm.onOpenDetail }}
+        handlers={{
+          ...vm.actions,
+          onOpenDetail: vm.onOpenDetail,
+          onRequestSeats: vm.seats.onRequestSeats,
+        }}
+        showSeatColumn={vm.seatSelection}
       />
     );
 

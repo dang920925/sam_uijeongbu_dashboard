@@ -8,6 +8,8 @@
 // - 가격 등급 카드: use-price-tier-section(develop §11.10). clientPublicUrl = 서버 env CLIENT_PUBLIC_URL(page.tsx 가 넘김).
 // - 예매 중지 스위치: 바로 PATCH bookingEnabled, 진행 중에는 바뀔 값을 미리 보여 준다. 실패는 스낵바.
 // - 회차 삭제: ConfirmDialog → 실패(SHW_004 등)는 닫고 스낵바(designer 시안 snackbar-shw004).
+// - (U35) 좌석 지정 스위치: 공연 PATCH seatSelectionEnabled(진행 중엔 바뀔 값을 미리 보임). 켜져 있으면 회차 행에
+//   "좌석 배치" → 배치 편집기(use-seat-layout-editor).
 // ----------------------------------------------------------------------
 import { useState } from 'react';
 
@@ -21,13 +23,16 @@ import {
   usePerformanceShows,
   useSaveShowBookingEnabled,
 } from '@/src/api/show-queries';
+import { useSaveSeatSelectionEnabled } from '@/src/api/seat-map-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
 import { useErrorSnackbar } from '@/src/hooks/use-error-snackbar';
 import { buildReadinessNotice } from '@/src/sections/performance-shows/utils/booking-readiness';
 import { toShowRowDisplay } from '@/src/sections/performance-shows/utils/show-row';
 import { useBookingPolicyForm } from '@/src/sections/performance-shows/view/use-booking-policy-form';
 import { usePriceTierSection } from '@/src/sections/performance-shows/view/use-price-tier-section';
+import { useSeatLayoutEditor } from '@/src/sections/performance-shows/view/use-seat-layout-editor';
 import { useShowDialog } from '@/src/sections/performance-shows/view/use-show-dialog';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 import {
   isNotFoundError,
   toApiErrorMessage,
@@ -54,6 +59,9 @@ export function usePerformanceShowsViewModel(
   const showDialog = useShowDialog(performanceId);
   const tierSection = usePriceTierSection(performanceId, clientPublicUrl);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const seatSwitch = useSaveSeatSelectionEnabled(performanceId);
+  /** 마지막으로 바꾼 값(실패하면 지운다) — 공연을 다시 받기 전에도 스위치가 되돌아가지 않게 */
+  const [seatSet, setSeatSet] = useState<boolean | null>(null);
 
   const status: PerformanceShowsStatus = performanceQuery.isError
     ? isNotFoundError(performanceQuery.error)
@@ -90,6 +98,9 @@ export function usePerformanceShowsViewModel(
       : row;
   });
   const deleteTarget = rows.find((row) => row.id === deleteTargetId) ?? null;
+  const seatLayout = useSeatLayoutEditor(rows);
+  const seatSelectionEnabled =
+    seatSet ?? performanceQuery.data?.seatSelectionEnabled ?? false;
 
   const handleToggle = (id: string, isStopped: boolean) => {
     if (toggle.isPending) return;
@@ -129,8 +140,28 @@ export function usePerformanceShowsViewModel(
     ),
     policyForm,
     tierSection,
+    seatSelection: {
+      enabled: seatSelectionEnabled,
+      isSaving: seatSwitch.isPending,
+      onToggle: (enabled: boolean) => {
+        if (seatSwitch.isPending) return;
+        setSeatSet(enabled);
+        seatSwitch.mutate(enabled, {
+          onSuccess: () =>
+            snackbar.success(
+              enabled ? MSG_SEAT.SWITCH_SAVED_ON : MSG_SEAT.SWITCH_SAVED_OFF
+            ),
+          onError: (error) => {
+            setSeatSet(null);
+            snackbar.error(toApiErrorMessage(error));
+          },
+        });
+      },
+    },
+    seatLayout,
     showsSection: {
       rows,
+      onSeatLayout: seatSelectionEnabled ? seatLayout.onOpen : undefined,
       togglingId: pendingToggle?.id ?? null,
       onAdd: showDialog.onOpenCreate,
       onEdit: (id: string) => {
