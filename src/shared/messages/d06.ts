@@ -61,4 +61,61 @@ export const MSG_D06 = {
   CONFIRM_REJECT: (name: string) => `${name}님의 신청을 거절하시겠습니까?`,
   /** 등록 성공 스낵바 — 사용자 결정 2026-11-19 D6 */
   REGISTERED_SUCCESS: '단원으로 등록되었습니다.',
+
+  // ── U31 보강(design §10·§10.1 · designer §18.3 "제안") — 한 행 목록·상세 드로어 ──
+  /** 머리 상자 — designer §18.3 "미처리 [n]건 · 연락 전 [n]건" */
+  PENDING_UNCONTACTED: (pending: number, uncontacted: number) =>
+    `미처리 ${pending}건 · 연락 전 ${uncontacted}건`,
+  /** 유형 pill·유형 열 — designer §18.3 */
+  TYPE_GROUP: '유형',
+  TYPE_ALL: '전체',
+  TYPE_OBSERVATION: '참관',
+  TYPE_CONSULTATION: '상담',
+  /** 필터 라벨 — designer §18.3 확인 필요 ⑥(제안) */
+  FILTER_STATUS: '처리 상태',
+  FILTER_WORK: '작품',
+  FILTER_WORK_ALL: '전체 작품',
+  FILTER_CONTACT: '연락',
+  FILTER_PROGRESS: '진행',
+  CONTACT_BEFORE: '연락 전',
+  CONTACT_DONE: '연락 완료',
+  /** 결과 없음 — designer §18.3 */
+  EMPTY_FILTERED: '조건에 맞는 신청이 없습니다',
+  /** 열 머리 — designer §18.3 확인 필요 ⑥(제안) */
+  COL_TYPE: '유형',
+  COL_NAME_PHONE: '이름 / 연락처',
+  COL_NAME: '이름',
+  COL_WORK: '작품',
+  COL_SCHEDULE: '희망 일정',
+  COL_CONTACT: '연락',
+  COL_PROGRESS: '진행',
+  COL_PROCESS_STATUS: '처리 상태',
+  COL_RECEIVED: '접수일',
+  /** 정렬 버튼 이름(스크린리더) — "{열} 정렬" */
+  SORT_BY: (column: string) => `${column} 정렬`,
+  /** 작품 칸 — design §10 "참관 {작품명}" · 넘침 "+n" · 상담 "아직 모르겠어요" */
+  WORK_OBSERVATION: (title: string) => `참관 ${title}`,
+  WORK_MORE: (count: number) => `+${count}`,
+  WORK_MORE_LABEL: (count: number) => `작품 ${count}개 더`,
+  WORK_UNDECIDED: '아직 모르겠어요',
+  /** U29 — design §8 "일정 취소됨"·"사유: {사유}"(제안) */
+  SCHEDULE_CANCELLED: '일정 취소됨',
+  CANCEL_REASON: (reason: string) => `사유: ${reason}`,
+  /** 진행 Label 버튼 이름 — designer §18.3 시안 aria-label */
+  PROGRESS_CHANGE: (label: string) => `진행 단계 ${label}, 바꾸기`,
+  PROGRESS_LOCKED: (label: string) => `진행 단계 ${label}(거절된 신청)`,
+  /** 상세 드로어 — designer §18.3 */
+  DRAWER_CREATED: (date: string) => `신청일 ${date}`,
+  DRAWER_PROCESSED: (date: string) => `처리일: ${date}`,
+  INFO_OBSERVATION_WORK: '참관 작품',
+  INFO_INTEREST_WORK: '관심 작품',
+  INFO_HOPE_WORK: '희망 작품',
+  INFO_METHOD_TIME: '상담 방법 · 희망 시간',
+  SEC_CONTACT: '연락',
+  SEC_PROGRESS: '진행 단계',
+  MEMO: '메모',
+  MEMO_PLACEHOLDER: '예: 12/6 참관 안내 문자 보냄',
+  MEMO_MAX: 200,
+  MEMO_COUNT: (length: number) => `${length}/200`,
+  PHONE_CALL: (phone: string) => `${phone} 전화 걸기`,
 } as const;

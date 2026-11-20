@@ -167,4 +167,36 @@ test.describe('SCR-D02 요약', () => {
     // Assert
     await expect(page.getByText('등록된 공연이 없습니다')).toBeVisible();
   });
+
+  test('U31 대기 신청서 설명 줄에 연락 전 수를 보인다(D02 "승인 대기 중 · 연락 전 n건")', async ({
+    page,
+    request,
+  }) => {
+    // Arrange — 대기 3(연락 완료 1) · 승인 1(연락 전이어도 제외)
+    const seeded = await request.post('/api/backend/v1/__mock/seed/dashboard', {
+      data: {
+        applications: [
+          { applicantName: 'fixture-u31-대기1', phone: '010-0000-0000' },
+          { applicantName: 'fixture-u31-대기2', phone: '010-0000-0000' },
+          {
+            applicantName: 'fixture-u31-대기연락',
+            phone: '010-0000-0000',
+            contacted: true,
+          },
+          {
+            applicantName: 'fixture-u31-승인',
+            phone: '010-0000-0000',
+            status: 'APPROVED',
+          },
+        ],
+      },
+    });
+    expect(seeded.status()).toBe(204);
+    // Act
+    await page.goto('/');
+    // Assert
+    const card = kpiCard(page, '대기 신청서');
+    await expect(card.getByText('3', { exact: true })).toBeVisible();
+    await expect(card.getByText('승인 대기 중 · 연락 전 2건')).toBeVisible();
+  });
 });

@@ -11,6 +11,7 @@ const SUMMARY: DashboardSummary = {
   performances: { total: 25, ongoing: 3, upcoming: 4 },
   actorCount: 2,
   pendingApplicationCount: 6,
+  uncontactedPendingCount: 4,
   scheduleCount: 7,
   recentPerformances: [
     { id: 'p1', title: 'fixture-1-w1-가', type: 'MUSICAL', status: 'ONGOING' },
@@ -36,7 +37,7 @@ const SUMMARY: DashboardSummary = {
 };
 
 describe('build-dashboard-view', () => {
-  it('KPI 4개를 현행 순서·문구·색으로 만들고 전체 공연 설명에 진행·예정 수를 넣는다', () => {
+  it('KPI 4개를 현행 순서·문구·색으로 만들고 전체 공연 설명에 진행·예정 수, 대기 신청서 설명에 연락 전 수를 넣는다', () => {
     // Act
     const kpis = toDashboardKpis(SUMMARY);
     // Assert
@@ -49,7 +50,7 @@ describe('build-dashboard-view', () => {
     expect(kpis[0].description).toBe('진행중 3개 · 예정 4개');
     expect(kpis.slice(1).map((k) => k.description)).toEqual([
       '전체 배우 회원',
-      '승인 대기 중',
+      '승인 대기 중 · 연락 전 4건',
       '전체 일정 수',
     ]);
   });

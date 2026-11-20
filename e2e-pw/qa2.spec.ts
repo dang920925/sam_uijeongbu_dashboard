@@ -28,24 +28,25 @@ test.describe('qa2 수정 확인', () => {
     }
   });
 
-  test('QA2-004 신청서 탭에 키보드로 포커스하면 링이 탭 안쪽에 그려진다', async ({
+  // U31 보강: 신청서 참관/상담 탭이 유형 pill(SegmentPill)로 바뀌어 같은 뜻(키보드 포커스 링이 보인다)을 pill 로 확인한다.
+  // pill 은 공용 SegmentPill 규칙대로 링이 바깥(offset 2px)에 그려진다(탭처럼 잘리는 부모가 없다).
+  test('QA2-004 신청서 유형 pill 에 키보드로 포커스하면 링이 그려진다', async ({
     page,
     isMobile,
   }) => {
     test.skip(isMobile, '키보드 포커스는 데스크톱에서 확인');
     await page.goto('/applications');
-    const tab = page.getByRole('tab', { name: '🎭 작품 참관' });
-    await expect(tab).toBeVisible();
-    await tab.focus();
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowLeft');
-    await expect(tab).toBeFocused();
-    const style = await tab.evaluate((el) => {
+    const pill = page.getByRole('button', { name: '참관', exact: true });
+    await expect(pill).toBeVisible();
+    await page.getByRole('button', { name: '전체', exact: true }).focus();
+    await page.keyboard.press('Tab');
+    await expect(pill).toBeFocused();
+    const style = await pill.evaluate((el) => {
       const s = getComputedStyle(el);
       return { outline: s.outlineStyle, offset: s.outlineOffset };
     });
     expect(style.outline).not.toBe('none');
-    expect(style.offset).toBe('-2px');
+    expect(style.offset).toBe('2px');
   });
 
   test('QA1-022 신청 상세 다이얼로그 이름은 제목만이다', async ({
@@ -56,7 +57,12 @@ test.describe('qa2 수정 확인', () => {
       data: [{ applicantName: `${P}신청`, phone: '010-0000-0000' }],
     });
     await page.goto('/applications');
-    await page.getByRole('button', { name: '상세 보기' }).first().click();
+    // U31: 행 끝 "상세 보기" 버튼 → 이름 버튼(lg)·카드(xs)로 드로어를 연다
+    await page
+      .getByRole('button', { name: `${P}신청` })
+      .filter({ visible: true })
+      .first()
+      .click();
     await expect(
       page.getByRole('dialog', { name: '🎭 작품 참관 신청 상세', exact: true })
     ).toBeVisible();

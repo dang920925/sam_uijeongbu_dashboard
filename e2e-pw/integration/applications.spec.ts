@@ -1,7 +1,9 @@
 // ----------------------------------------------------------------------
 // 연동 SCR-D06 신청서 관리(FN-13, 사용자 결정 2026-11-19 D6 "승인과 등록 분리") — 실서버 /admin/applications*.
 // 신청은 홈페이지가 만들므로 공개 신청 API(relayApplication — 중계 비밀)로 접수한다. 참관은 진행중·노출 공연이 필요.
-// - 현재 상태: 탭별 빈 문구(서버 빈 페이지 totalPages=0 이어도 오류 없이), "미처리" 없음.
+// U31 보강(designer §18.3): 참관/상담 탭 → 유형 pill, 행 끝 동작·"상세 보기" → 이름 버튼으로 드로어를 열고 그 안에서 승인·거절·등록
+// (흐름의 뜻은 그대로, 선택자만 바꿈). 이 연동 E2E 는 서버가 U31 보강 필드를 내려야 돈다.
+// - 현재 상태: 유형별 빈 문구(서버 빈 페이지 totalPages=0 이어도 오류 없이), "미처리" 없음.
 // - 채운 상태: 참관·상담 승인은 상태만 바꾸고 단원을 만들지 않음(관리 API 로 단원 수 확인),
 //   대기 신청 /member → 409 APP_009, 승인 신청 "단원으로 등록" → 201 + "단원 등록됨" + 상세 단원 링크,
 //   다시 등록 → APP_008 스낵바(다이얼로그 유지), 연결 단원 삭제 후 재등록, 거절된 신청 승인 → APP_007 스낵바,
@@ -35,6 +37,15 @@ interface ApplicationItem {
   member: { id: string; name: string } | null;
   processedAt: string | null;
   createdAt: string;
+}
+
+/** U31 — 행 이름 버튼(lg)으로 상세 드로어 열기 */
+async function openDetail(page: Page, name: string = NAME) {
+  await page
+    .getByRole('button', { name, exact: true })
+    .filter({ visible: true })
+    .first()
+    .click();
 }
 
 let phoneSeq = 0;
@@ -125,9 +136,11 @@ test.describe('연동 SCR-D06 신청서 관리 — 현재 상태', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: '참관 신청 관리' })
     ).toBeVisible();
-    await expect(page.getByText('참관 신청이 없습니다')).toBeVisible();
+    await expect(page.getByText('조건에 맞는 신청이 없습니다')).toBeVisible();
     await expect(page.getByText('총 0건')).toBeVisible();
-    await page.getByRole('tab', { name: '💬 방문 상담' }).click();
+    await page.getByRole('button', { name: '참관', exact: true }).click();
+    await expect(page.getByText('참관 신청이 없습니다')).toBeVisible();
+    await page.getByRole('button', { name: '상담', exact: true }).click();
     await expect(page.getByText('방문 상담 신청이 없습니다')).toBeVisible();
     await expect(page.getByText(/^미처리/)).toHaveCount(0);
     expect(errors).toEqual([]);
@@ -152,7 +165,11 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     await expect(row).toContainText(kstDateOf(app.createdAt));
     await expect(row).toContainText('대기');
     // Act
-    await page.getByRole('button', { name: '승인', exact: true }).click();
+    await openDetail(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: '승인', exact: true })
+      .click();
     await expect(confirmDialog(page)).toContainText(
       `${NAME}님의 신청을 승인하시겠습니까?`
     );
@@ -178,12 +195,16 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     // Arrange
     await consult();
     await page.goto('/applications');
-    await page.getByRole('tab', { name: '💬 방문 상담' }).click();
+    await page.getByRole('button', { name: '상담', exact: true }).click();
     const row = page.getByRole('row').filter({ hasText: NAME });
     await expect(row).toContainText('전화');
     await expect(row).toContainText('평일 저녁 (18~21시)');
     // Act
-    await page.getByRole('button', { name: '승인', exact: true }).click();
+    await openDetail(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: '승인', exact: true })
+      .click();
     await confirmDialog(page).getByRole('button', { name: '승인' }).click();
     // Assert
     await expect(
@@ -215,7 +236,11 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     // Arrange
     const app = await approvedObservation();
     await page.goto('/applications');
-    await page.getByRole('button', { name: '단원으로 등록' }).click();
+    await openDetail(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: '단원으로 등록' })
+      .click();
     const dialog = page.getByRole('dialog', { name: '단원으로 등록' });
     await expect(dialog.getByLabel('이름')).toHaveValue(NAME);
     await expect(dialog.getByLabel('연락처')).toHaveValue(/^010-8\d{3}-0000$/);
@@ -240,13 +265,13 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     await expect(page.getByText('단원으로 등록되었습니다.')).toBeVisible();
     await expect(dialog).toBeHidden();
     await expect(
-      page.getByText('단원 등록됨').filter({ visible: true })
+      page.getByText('단원 등록됨').filter({ visible: true }).first()
     ).toBeVisible();
     await expect(
       page.getByRole('button', { name: '단원으로 등록' })
     ).toHaveCount(0);
     expect(await memberCount()).toBe(1);
-    await page.getByRole('button', { name: '상세 보기' }).click();
+    await openDetail(page);
     const detail = page.getByRole('dialog', { name: '🎭 작품 참관 신청 상세' });
     const link = detail.getByRole('link', { name: `${PREFIX}새단원` });
     await expect(link).toHaveAttribute(
@@ -269,7 +294,11 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     // Arrange
     const app = await approvedObservation();
     await page.goto('/applications');
-    await page.getByRole('button', { name: '단원으로 등록' }).click();
+    await openDetail(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: '단원으로 등록' })
+      .click();
     const dialog = page.getByRole('dialog', { name: '단원으로 등록' });
     await expect(dialog).toBeVisible();
     // 다른 곳에서 먼저 등록됨
@@ -306,7 +335,11 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     // Act — 삭제된 단원은 member null → 다시 "단원으로 등록"
     await page.goto('/applications');
     await expect(page.getByText('단원 등록됨')).toHaveCount(0);
-    await page.getByRole('button', { name: '단원으로 등록' }).click();
+    await openDetail(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: '단원으로 등록' })
+      .click();
     await page
       .getByRole('dialog', { name: '단원으로 등록' })
       .getByRole('button', { name: '등록' })
@@ -328,11 +361,15 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     // Arrange
     const app = await consult();
     await page.goto('/applications');
-    await page.getByRole('tab', { name: '💬 방문 상담' }).click();
+    await page.getByRole('button', { name: '상담', exact: true }).click();
     await expect(page.getByText('미처리 1건')).toBeVisible();
     await adminApi('POST', `/admin/applications/${app.id}/reject`);
     // Act
-    await page.getByRole('button', { name: '승인', exact: true }).click();
+    await openDetail(page);
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: '승인', exact: true })
+      .click();
     const approve = page.waitForResponse(
       `**/admin/applications/${app.id}/approve`
     );
@@ -352,7 +389,7 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     const performance = await createOngoingPerformance(`${PREFIX}거절 공연`);
     const app = await observe(performance.id, { motivation: `${PREFIX}동기` });
     await page.goto('/applications');
-    await page.getByRole('button', { name: '상세 보기' }).click();
+    await openDetail(page);
     const detail = page.getByRole('dialog', { name: '🎭 작품 참관 신청 상세' });
     await expect(detail.getByText(`${PREFIX}동기`)).toBeVisible();
     await expect(detail.getByText(`${PREFIX}거절 공연`)).toBeVisible();
@@ -384,14 +421,14 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     const approved = await consult({ applicantName: `${PREFIX}승인` });
     await adminApi('POST', `/admin/applications/${approved.id}/approve`);
     await page.goto('/applications');
-    await page.getByRole('tab', { name: '💬 방문 상담' }).click();
+    await page.getByRole('button', { name: '상담', exact: true }).click();
     await expect(page.getByText('총 22건')).toBeVisible();
     await expect(page.getByText('미처리 21건')).toBeVisible();
     await expect(
       page.getByRole('button', { name: '다음 페이지' })
     ).toBeVisible();
     // Act
-    await page.getByRole('combobox', { name: '상태 필터:' }).click();
+    await page.getByRole('combobox', { name: '처리 상태' }).click();
     await page.getByRole('option', { name: '대기' }).click();
     // Assert
     await expect(page.getByText('총 21건')).toBeVisible();
@@ -425,7 +462,7 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     expect(detail.performance).toEqual({ id: performance.id, title });
     const row = page.getByRole('row').filter({ hasText: NAME });
     await expect(row).toContainText(title);
-    await page.getByRole('button', { name: '상세 보기' }).click();
+    await openDetail(page);
     await expect(
       page
         .getByRole('dialog', { name: '🎭 작품 참관 신청 상세' })
