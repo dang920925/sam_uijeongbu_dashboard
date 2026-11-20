@@ -51,7 +51,7 @@ describe('toManualReservationRequest', () => {
     });
   });
 
-  it('직접 입력 줄과 0원 금액 덮어쓰기를 보내고 입금 대기면 admitNow 를 뺀다', () => {
+  it('직접 입력 줄과 0원 금액 덮어쓰기를 보내고, 등급 줄이 없으면 items 키를 빼고(서버 빈 배열 400 RSV_012) 입금 대기면 admitNow 를 뺀다', () => {
     // Act
     const req = toManualReservationRequest({
       ...BASE_FORM,
@@ -66,7 +66,7 @@ describe('toManualReservationRequest', () => {
       memo: '초대 — 연출 지인',
     });
     // Assert
-    expect(req.items).toEqual([]);
+    expect(req).not.toHaveProperty('items');
     expect(req.customLine).toEqual({ quantity: 2, amount: 0 });
     expect(req.amountOverride).toBe(0);
     expect(req).not.toHaveProperty('admitNow');
@@ -99,11 +99,13 @@ describe('toReservationCode', () => {
 });
 
 describe('fromAdminReservationItemResponse', () => {
-  it('공연 id·제목이 없으면 null, 빈 연락처·입금자명은 null 로 채운다', () => {
-    // Arrange
+  it('서버가 항상 주는 공연 id·제목을 옮기고, 빈 연락처·입금자명은 null 로 채운다', () => {
+    // Arrange — 서버 AdminReservationItemResponseDto 모양(performanceId·performanceTitle 항상 — back-end §14.4 #1)
     const res = {
       id: 'r-1',
       code: '1234',
+      performanceId: 'p-1',
+      performanceTitle: '공연',
       showId: 's-1',
       showDate: '2026-12-12',
       startTime: '14:00',
@@ -143,8 +145,8 @@ describe('fromAdminReservationItemResponse', () => {
     // Act
     const model = fromAdminReservationItemResponse(res);
     // Assert
-    expect(model.performanceId).toBeNull();
-    expect(model.performanceTitle).toBeNull();
+    expect(model.performanceId).toBe('p-1');
+    expect(model.performanceTitle).toBe('공연');
     expect(model.bookerPhone).toBeNull();
     expect(model.items).toHaveLength(1);
   });
@@ -201,6 +203,28 @@ describe('toReservationLinesFormInput · toReservationItemsRequest', () => {
       customLine: { label: '초대', quantity: 2, amount: 0 },
       amountOverride: 5000,
       version: 3,
+    });
+  });
+
+  it('직접 입력 줄만 남기면 items 키 없이 보낸다(서버 빈 배열 400 RSV_012), 덮어쓰기를 끄면 null', () => {
+    // Act
+    const request = toReservationItemsRequest(
+      {
+        tierQuantities: { 't-1': '0' },
+        useCustom: true,
+        customLabel: '초대',
+        customQuantity: '1',
+        customAmount: '5000',
+        useAmountOverride: false,
+        amountOverride: '',
+      },
+      2
+    );
+    // Assert
+    expect(request).toEqual({
+      customLine: { label: '초대', quantity: 1, amount: 5000 },
+      amountOverride: null,
+      version: 2,
     });
   });
 });

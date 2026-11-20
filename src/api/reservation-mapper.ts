@@ -103,6 +103,20 @@ export function totalQuantityOf(input: ReservationLinesFormInput): number {
   );
 }
 
+/**
+ * 요청 본문용 줄 — 등급 줄이 하나도 없으면 items 키를 뺀다.
+ * 서버 ReservationLinesRequestDto 는 items 가 오면 1~10줄(@ArrayMinSize(1))이라 빈 배열은 400 RSV_012 —
+ * 직접 입력 줄만 있는 수동 등록·등급 수정이 막혔다(integration 실측 2026-11-20).
+ */
+function toRequestLines(input: ReservationLinesFormInput): {
+  items?: ReservationTierLineRequest[];
+  customLine: ReservationCustomLineRequest | null;
+  amountOverride: number | null;
+} {
+  const { items, ...rest } = toReservationLines(input);
+  return items.length > 0 ? { items, ...rest } : rest;
+}
+
 export function toManualReservationRequest(
   input: ManualReservationFormInput
 ): ManualReservationRequest {
@@ -112,7 +126,7 @@ export function toManualReservationRequest(
     showId: input.showId,
     bookerName: input.bookerName.trim(),
     bookerPhone: phone === '' ? null : phone,
-    ...toReservationLines(input),
+    ...toRequestLines(input),
     status: input.status,
     memo: memo === '' ? null : memo,
     inviterMemberId: input.inviterMemberId || null,
@@ -169,8 +183,7 @@ export function toReservationItemsRequest(
   input: ReservationLinesFormInput,
   version: number
 ): ReservationItemsRequest {
-  const { items, customLine, amountOverride } = toReservationLines(input);
-  return { items, customLine, amountOverride, version };
+  return { ...toRequestLines(input), version };
 }
 
 /** 기존 예매 → 등급 수정 폼 초기값(등급 줄 수량 · 직접 입력 줄 · 덮어쓴 금액) */
