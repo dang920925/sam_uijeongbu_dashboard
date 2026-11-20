@@ -21,7 +21,7 @@ function team(overrides: Partial<TeamAccount>): TeamAccount {
 }
 
 describe('toTeamCopyAll (PR-8)', () => {
-  it('사용 중 계정만 라벨 순으로 "A - 아이디: Dear-A, 비밀번호 xxxx / B - …" 형식이다', () => {
+  it('사용 중 계정만 라벨 순으로 팀마다 한 줄 "A - 아이디: Dear-A, 비밀번호: xxxx" 형식이다', () => {
     expect(
       toTeamCopyAll([
         team({ id: 'b', label: 'B', username: 'Dear-B', password: 'yyyy' }),
@@ -29,7 +29,7 @@ describe('toTeamCopyAll (PR-8)', () => {
         team({}),
       ])
     ).toBe(
-      'A - 아이디: Dear-A, 비밀번호 xxxx / B - 아이디: Dear-B, 비밀번호 yyyy'
+      'A - 아이디: Dear-A, 비밀번호: xxxx\nB - 아이디: Dear-B, 비밀번호: yyyy'
     );
   });
 
@@ -40,12 +40,14 @@ describe('toTeamCopyAll (PR-8)', () => {
         team({ label: 'Z', username: 'D-Z' }),
         team({ label: 'B', username: 'D-B', password: null }),
       ])
-    ).toBe('Z - 아이디: D-Z, 비밀번호 xxxx / AA - 아이디: D-AA, 비밀번호 xxxx');
+    ).toBe(
+      'Z - 아이디: D-Z, 비밀번호: xxxx\nAA - 아이디: D-AA, 비밀번호: xxxx'
+    );
     expect(toTeamCopyAll([])).toBe('');
   });
 
   it('한 줄 복사도 같은 형식이다', () => {
-    expect(toTeamCopyLine(team({}))).toBe('A - 아이디: Dear-A, 비밀번호 xxxx');
+    expect(toTeamCopyLine(team({}))).toBe('A - 아이디: Dear-A, 비밀번호: xxxx');
   });
 });
 
