@@ -4,10 +4,11 @@
 // U31 보강(designer §18.3): 참관/상담 탭 → 유형 pill, 행 끝 동작·"상세 보기" → 이름 버튼으로 드로어를 열고 그 안에서 승인·거절·등록
 // (흐름의 뜻은 그대로, 선택자만 바꿈). 이 연동 E2E 는 서버가 U31 보강 필드를 내려야 돈다.
 // - 현재 상태: 유형별 빈 문구(서버 빈 페이지 totalPages=0 이어도 오류 없이), "미처리" 없음.
-// - 채운 상태: 참관·상담 승인은 상태만 바꾸고 단원을 만들지 않음(관리 API 로 단원 수 확인),
-//   대기 신청 /member → 409 APP_009, 승인 신청 "단원으로 등록" → 201 + "단원 등록됨" + 상세 단원 링크,
-//   다시 등록 → APP_008 스낵바(다이얼로그 유지), 연결 단원 삭제 후 재등록, 거절된 신청 승인 → APP_007 스낵바,
-//   상세에서 거절 → 처리일(KST), 상태 필터 "대기" + 21건부터 페이지네이션,
+// - (U39, v1.3.0) 승인·거절을 진행 단계로 합침: 상세에 승인·거절 없음, 대기 신청을 바로 "단원으로 등록"
+//   (참관 → 호환 상태 APPROVED · 진행 그대로 / 상담 → 진행 JOINED), 옛 거절 신청 /member → 409 APP_009,
+//   등록 → 201 + "단원 등록됨" + 상세 단원 링크, 다시 등록 → APP_008 스낵바(다이얼로그 유지), 연결 단원 삭제 후 재등록,
+//   진행 불참(DROPPED) → 미처리·대기 수에서 빠지고 되돌릴 수 있음(처리 상태 칸·처리일 없음),
+//   진행 필터 "불참·보류"·"접수" + 21건부터 페이지네이션,
 //   (확인 필요 Q4) 신청 공연을 소프트 삭제한 뒤 목록·상세의 연결 공연 표시.
 // ----------------------------------------------------------------------
 import { expect, test, type Page } from '@playwright/test';
@@ -115,11 +116,10 @@ async function consult(extra: Record<string, unknown> = {}): Promise<Created> {
   return res.body as Created;
 }
 
-async function approvedObservation(): Promise<Created> {
+/** (U39) 승인 단계가 없어져 대기 참관 신청을 바로 단원으로 등록한다 */
+async function pendingObservation(): Promise<Created> {
   const performance = await createOngoingPerformance(`${PREFIX}공연`);
-  const app = await observe(performance.id);
-  await adminApi('POST', `/admin/applications/${app.id}/approve`);
-  return app;
+  return observe(performance.id);
 }
 
 async function memberCount(): Promise<number> {
@@ -127,7 +127,6 @@ async function memberCount(): Promise<number> {
     .totalCount;
 }
 
-const confirmDialog = (page: Page) => page.getByRole('alertdialog');
 /** 스낵바(notistack) — Next 경로 안내도 role=alert 라 문구로 고른다 */
 const snackbar = (page: Page, text: string) =>
   page.getByRole('alert').filter({ hasText: text });
@@ -165,7 +164,7 @@ test.describe('연동 SCR-D06 신청서 관리 — 현재 상태', () => {
 test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
   test.afterEach(() => cleanupFixtures(FIXTURE_BASE));
 
-  test('참관 신청은 공연·희망 날짜·신청일(KST)을 보이고, 승인해도 단원을 만들지 않는다', async ({
+  test('(U39) 참관 신청은 공연·희망 날짜·신청일(KST)을 보이고, 상세에 승인·거절 없이 대기 신청을 바로 단원으로 등록한다', async ({
     page,
   }) => {
     // Arrange
@@ -178,37 +177,31 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     await expect(row).toContainText(`${PREFIX}참관 공연`);
     await expect(row).toContainText('2030.12.01');
     await expect(row).toContainText(kstDateOf(app.createdAt));
-    await expect(row).toContainText('대기');
     // Act
     await openDetail(page);
+    const detail = page.getByRole('dialog', { name: '🎭 작품 참관 신청 상세' });
+    await expect(detail.getByRole('button', { name: '승인' })).toHaveCount(0);
+    await expect(detail.getByRole('button', { name: '거절' })).toHaveCount(0);
+    await detail.getByRole('button', { name: '단원으로 등록' }).click();
     await page
-      .getByRole('dialog')
-      .getByRole('button', { name: '승인', exact: true })
+      .getByRole('dialog', { name: '단원으로 등록' })
+      .getByRole('button', { name: '등록' })
       .click();
-    await expect(confirmDialog(page)).toContainText(
-      `${NAME}님의 신청을 승인하시겠습니까?`
+    // Assert — 참관은 진행 단계를 바꾸지 않고 서버 호환 상태만 APPROVED
+    await expect(page.getByText('단원으로 등록되었습니다.')).toBeVisible();
+    expect(await memberCount()).toBe(1);
+    const after = await adminApi<ApplicationItem & { progress: string }>(
+      'GET',
+      `/admin/applications/${app.id}`
     );
-    const approve = page.waitForResponse(
-      `**/admin/applications/${app.id}/approve`
-    );
-    await confirmDialog(page).getByRole('button', { name: '승인' }).click();
-    // Assert — 응답은 { application } 만(단원 없음)
-    const response = await approve;
-    expect(response.status()).toBe(200);
-    expect(Object.keys((await response.json()) as object)).toEqual([
-      'application',
-    ]);
-    await expect(
-      page.getByRole('button', { name: '단원으로 등록' })
-    ).toBeVisible();
-    await expect(row).toContainText('승인');
-    await expect(page.getByText(/^미처리/)).toHaveCount(0);
-    expect(await memberCount()).toBe(0);
+    expect(after).toMatchObject({ status: 'APPROVED', progress: 'RECEIVED' });
   });
 
-  test('상담 승인도 단원을 만들지 않는다', async ({ page }) => {
+  test('(U39) 상담 건을 단원으로 등록하면 진행이 입단(JOINED)으로 바뀌고 미처리에서 빠진다', async ({
+    page,
+  }) => {
     // Arrange
-    await consult();
+    const app = await consult();
     await page.goto('/applications');
     await page.getByRole('button', { name: '상담', exact: true }).click();
     const row = page.getByRole('row').filter({ hasText: NAME });
@@ -218,19 +211,28 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     await openDetail(page);
     await page
       .getByRole('dialog')
-      .getByRole('button', { name: '승인', exact: true })
+      .getByRole('button', { name: '단원으로 등록' })
       .click();
-    await confirmDialog(page).getByRole('button', { name: '승인' }).click();
+    await page
+      .getByRole('dialog', { name: '단원으로 등록' })
+      .getByRole('button', { name: '등록' })
+      .click();
     // Assert
-    await expect(
-      page.getByRole('button', { name: '단원으로 등록' })
-    ).toBeVisible();
-    expect(await memberCount()).toBe(0);
+    await expect(page.getByText('단원으로 등록되었습니다.')).toBeVisible();
+    const after = await adminApi<{ progress: string }>(
+      'GET',
+      `/admin/applications/${app.id}`
+    );
+    expect(after.progress).toBe('JOINED');
+    expect(await memberCount()).toBe(1);
   });
 
-  test('대기 신청에 단원 등록을 요청하면 409 APP_009', async ({ page }) => {
-    // Arrange
+  test('(U39) 옛 거절 신청에 단원 등록을 요청하면 409 APP_009', async ({
+    page,
+  }) => {
+    // Arrange — 거절 API 는 호환용으로 남아 있다(대시보드는 부르지 않음)
     const app = await consult();
+    await adminApi('POST', `/admin/applications/${app.id}/reject`);
     // Act
     const response = await page.request.post(
       `${API}/admin/applications/${app.id}/member`,
@@ -240,16 +242,16 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     expect(response.status()).toBe(409);
     expect(await response.json()).toMatchObject({
       code: 'APP_009',
-      message: '승인된 신청만 단원으로 등록할 수 있습니다.',
+      message: '거절된 신청은 단원으로 등록할 수 없습니다.',
     });
     expect(await memberCount()).toBe(0);
   });
 
-  test('승인된 신청을 단원으로 등록하면 201, "단원 등록됨", 상세에 단원 링크가 생긴다', async ({
+  test('(U39) 대기 신청을 단원으로 등록하면 201, "단원 등록됨", 상세에 단원 링크가 생긴다', async ({
     page,
   }) => {
     // Arrange
-    const app = await approvedObservation();
+    const app = await pendingObservation();
     await page.goto('/applications');
     await openDetail(page);
     await page
@@ -307,7 +309,7 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     page,
   }) => {
     // Arrange
-    const app = await approvedObservation();
+    const app = await pendingObservation();
     await page.goto('/applications');
     await openDetail(page);
     await page
@@ -340,7 +342,7 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     page,
   }) => {
     // Arrange
-    const app = await approvedObservation();
+    const app = await pendingObservation();
     const first = await adminApi<{ member: { id: string } }>(
       'POST',
       `/admin/applications/${app.id}/member`,
@@ -370,71 +372,65 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     expect(await memberCount()).toBe(1);
   });
 
-  test('화면을 연 뒤 거절된 신청을 승인하면 409 APP_007 — 확인창을 닫고 스낵바', async ({
+  test('(U39) 진행을 불참으로 바꾸면 미처리·대기 수에서 빠지고 처리 상태 칸·처리일은 없으며 되돌릴 수 있다', async ({
     page,
   }) => {
     // Arrange
-    const app = await consult();
-    await page.goto('/applications');
-    await page.getByRole('button', { name: '상담', exact: true }).click();
-    await expect(page.getByText('미처리 1건')).toBeVisible();
-    await adminApi('POST', `/admin/applications/${app.id}/reject`);
-    // Act
-    await openDetail(page);
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: '승인', exact: true })
-      .click();
-    const approve = page.waitForResponse(
-      `**/admin/applications/${app.id}/approve`
-    );
-    await confirmDialog(page).getByRole('button', { name: '승인' }).click();
-    // Assert
-    const response = await approve;
-    expect(response.status()).toBe(409);
-    expect(((await response.json()) as { code: string }).code).toBe('APP_007');
-    await expect(snackbar(page, '이미 처리된 신청입니다.')).toBeVisible();
-    await expect(confirmDialog(page)).toBeHidden();
-  });
-
-  test('상세에서 거절하면 상태가 거절·처리일(KST)로 바뀌고 하단 동작이 사라진다', async ({
-    page,
-  }) => {
-    // Arrange
-    const performance = await createOngoingPerformance(`${PREFIX}거절 공연`);
+    const performance = await createOngoingPerformance(`${PREFIX}불참 공연`);
     const app = await observe(performance.id, { motivation: `${PREFIX}동기` });
+    const before = await adminApi<{ count: number }>(
+      'GET',
+      '/admin/applications/pending-count'
+    );
     await page.goto('/applications');
+    await expect(page.getByText('미처리 1건')).toBeVisible();
+    await expect(page.getByRole('combobox', { name: '처리 상태' })).toHaveCount(
+      0
+    );
     await openDetail(page);
     const detail = page.getByRole('dialog', { name: '🎭 작품 참관 신청 상세' });
     await expect(detail.getByText(`${PREFIX}동기`)).toBeVisible();
-    await expect(detail.getByText(`${PREFIX}거절 공연`)).toBeVisible();
+    await expect(detail.getByText(/처리일/)).toHaveCount(0);
     // Act
-    await detail.getByRole('button', { name: '거절' }).click();
-    await expect(confirmDialog(page)).toContainText(
-      `${NAME}님의 신청을 거절하시겠습니까?`
+    const saved = page.waitForResponse(
+      `**/admin/applications/${app.id}/progress`
     );
-    await confirmDialog(page).getByRole('button', { name: '거절' }).click();
+    await detail.getByRole('radio', { name: '불참' }).click();
+    expect((await saved).status()).toBe(200);
     // Assert
-    await expect(detail.getByText('거절', { exact: true })).toBeVisible();
-    const saved = await adminApi<ApplicationItem>(
+    await expect(detail.getByRole('radio', { name: '불참' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    await expect(page.getByText(/^미처리/)).toHaveCount(0);
+    const after = await adminApi<{ status: string; progress: string }>(
       'GET',
       `/admin/applications/${app.id}`
     );
-    expect(saved.status).toBe('REJECTED');
+    expect(after).toMatchObject({ status: 'PENDING', progress: 'DROPPED' });
+    expect(
+      (
+        await adminApi<{ count: number }>(
+          'GET',
+          '/admin/applications/pending-count'
+        )
+      ).count
+    ).toBe(before.count - 1);
     await expect(
-      detail.getByText(`처리일: ${kstDateOf(saved.processedAt ?? '')}`)
-    ).toBeVisible();
-    await expect(detail.getByRole('button', { name: '승인' })).toHaveCount(0);
+      detail.getByRole('radio', { name: '일정 확정' })
+    ).toBeEnabled();
   });
 
-  test('상태 필터 "대기"는 대기 신청만, 21건 이상이면 페이지네이션을 보인다', async ({
+  test('진행 필터 불참·보류(상담 "보류")는 그 신청만, "접수" 21건이면 페이지네이션을 보인다', async ({
     page,
   }) => {
-    // Arrange — 대기 21 + 승인 1(상담)
+    // Arrange — 접수 21 + 불참 1(상담)
     for (let i = 0; i < 21; i += 1)
       await consult({ applicantName: `${PREFIX}신청자-${i}` });
-    const approved = await consult({ applicantName: `${PREFIX}승인` });
-    await adminApi('POST', `/admin/applications/${approved.id}/approve`);
+    const dropped = await consult({ applicantName: `${PREFIX}불참` });
+    await adminApi('PATCH', `/admin/applications/${dropped.id}/progress`, {
+      progress: 'DROPPED',
+    });
     await page.goto('/applications');
     await page.getByRole('button', { name: '상담', exact: true }).click();
     await expect(page.getByText('총 22건')).toBeVisible();
@@ -442,21 +438,24 @@ test.describe('연동 SCR-D06 신청서 관리 — 채운 상태', () => {
     await expect(
       page.getByRole('button', { name: '다음 페이지' })
     ).toBeVisible();
-    // Act
-    await page.getByRole('combobox', { name: '처리 상태' }).click();
-    await page.getByRole('option', { name: '대기' }).click();
-    // Assert
+    // Act + Assert — 상담의 DROPPED 라벨은 '보류'(참관은 '불참')
+    await page.getByRole('combobox', { name: '진행' }).click();
+    await page.getByRole('option', { name: /^(불참|보류)/ }).click();
+    await expect(page.getByText('총 1건')).toBeVisible();
+    await expect(
+      page.getByText(`${PREFIX}불참`).filter({ visible: true }).first()
+    ).toBeVisible();
+    // Act + Assert — 접수
+    await page.getByRole('combobox', { name: '진행' }).click();
+    await page.getByRole('option', { name: '접수', exact: true }).click();
     await expect(page.getByText('총 21건')).toBeVisible();
-    await expect(page.getByText(`${PREFIX}승인`)).toHaveCount(0);
+    await expect(page.getByText(`${PREFIX}불참`)).toHaveCount(0);
     await page.getByRole('button', { name: '2', exact: true }).click();
     await expect(
       page
         .getByText(`${PREFIX}신청자-0`, { exact: true })
         .filter({ visible: true })
     ).toBeVisible();
-    await expect(page.getByRole('row').filter({ hasText: PREFIX })).toHaveCount(
-      1
-    );
   });
 
   test('(Q4) 신청한 공연을 소프트 삭제해도 목록·상세에 공연 제목이 그대로 보인다', async ({

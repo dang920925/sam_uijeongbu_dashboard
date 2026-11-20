@@ -114,7 +114,8 @@ test.describe('연동 SCR-D05 단원 관리 — 채운 상태', () => {
     const actorRow = page.getByRole('row').filter({ hasText: `${PREFIX}배우` });
     await expect(actorRow).toContainText('배우');
     await expect(actorRow).toContainText(todayKst().replaceAll('-', '.'));
-    await expect(actorRow.getByText('-', { exact: true })).toBeVisible();
+    // 연락처 없음 '-' + (U39) 공개 동의일 미입력 '-'
+    await expect(actorRow.getByText('-', { exact: true })).toHaveCount(2);
     const generalRow = page
       .getByRole('row')
       .filter({ hasText: `${PREFIX}일반` });

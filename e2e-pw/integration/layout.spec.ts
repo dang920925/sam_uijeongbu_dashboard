@@ -22,6 +22,8 @@ const MENU = [
   '신청서 관리',
   '갤러리',
   '일정 관리',
+  // (U34·v1.3.0) 연습실 예약 목록
+  '연습실 예약',
   '연출진 관리',
   '팝업 관리',
 ];
@@ -51,7 +53,7 @@ async function sessionContext(browser: Browser, baseURL: string | undefined) {
 test.describe('연동 SCR-D00 대시보드 공용', () => {
   test.beforeAll(() => resetFixtureAdminLocks());
 
-  test('메뉴 10개(R1)를 순서대로 보여 주고 이동하면 활성 메뉴가 바뀐다', async ({
+  test('메뉴 11개(R1 + v1.3.0 연습실 예약)를 순서대로 보여 주고 이동하면 활성 메뉴가 바뀐다', async ({
     page,
   }) => {
     // Arrange
