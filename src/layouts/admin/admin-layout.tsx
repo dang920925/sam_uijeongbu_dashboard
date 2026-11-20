@@ -4,6 +4,7 @@
 // AdminLayout(SCR-D00) — lg 사이드바 240 / md 아이콘 레일 72 / xs 햄버거 → 왼쪽 드로어 240(D11).
 // 헤더 64 "SAM 의정부 관리자 대시보드"(xs "SAM 의정부", h1 아님) + 오른쪽 '예매번호로 찾기'(quick-search, §6.1a). 본문 여백 xs 16 / md↑ 24.
 // 랜드마크: nav(사이드바) · header · main.
+// U30 안 A: 사이드바·레일·드로어 = 버건디 벨벳(semantic.nav.bgImage), 로고 골드, 헤더 반투명 + 블러.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -17,6 +18,7 @@ import { QuickSearch } from '@/src/layouts/admin/quick-search/quick-search';
 import { useAdminLayout } from '@/src/layouts/admin/use-admin-layout';
 import { MSG_D00 } from '@/src/shared/messages/d00';
 import { LAYOUT, SHADOW } from '@/src/theme/layout-tokens';
+import { SEMANTIC } from '@/src/theme/semantic';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -29,8 +31,14 @@ const logoSx = {
   flexShrink: 0,
   borderBottom: 1,
   borderColor: 'semantic.nav.border',
-  color: 'semantic.nav.itemActive',
+  color: 'semantic.nav.brand',
   letterSpacing: '0.025em',
+};
+
+/** 버건디 벨벳 바탕 — bgcolor(단색)는 그라디언트를 못 받아 backgroundImage 로 덮는다 */
+const navSurfaceSx = {
+  bgcolor: 'semantic.nav.bg',
+  backgroundImage: SEMANTIC.nav.bgImage,
 };
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -52,7 +60,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           flexDirection: 'column',
           width: LAYOUT.sidebar,
           flexShrink: 0,
-          bgcolor: 'semantic.nav.bg',
+          ...navSurfaceSx,
           position: 'sticky',
           top: 0,
           height: '100dvh',
@@ -76,7 +84,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           alignItems: 'center',
           width: LAYOUT.rail,
           flexShrink: 0,
-          bgcolor: 'semantic.nav.bg',
+          ...navSurfaceSx,
           position: 'sticky',
           top: 0,
           height: '100dvh',
@@ -100,7 +108,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           paper: {
             sx: {
               width: LAYOUT.sidebar,
-              bgcolor: 'semantic.nav.bg',
+              ...navSurfaceSx,
               boxShadow: SHADOW.drawer,
               border: 0,
             },
@@ -131,9 +139,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             alignItems: 'center',
             gap: 3,
             px: { xs: 4, md: 6 },
-            bgcolor: 'background.paper',
+            bgcolor: 'semantic.header.bg',
+            backdropFilter: 'blur(12px)',
             borderBottom: 1,
-            borderColor: 'divider',
+            borderColor: 'semantic.header.border',
             color: 'semantic.text.header',
             position: 'sticky',
             top: 0,

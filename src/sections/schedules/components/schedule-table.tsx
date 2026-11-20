@@ -2,12 +2,14 @@
 
 // ----------------------------------------------------------------------
 // 일정 표 — 제목·타입·시작 시간·종료 시간·장소·액션(현행 Schedules.tsx:189-194). lg 미만은 카드(cardBelow 'lg').
+// U29: 취소 행은 제목 취소선 + 아래 "취소 · {사유}", 타입 옆 "취소" Label(시안 cancelled-list).
 // ----------------------------------------------------------------------
 import { DataTable, type DataTableColumn } from '@/src/components/data-table';
-import { Label } from '@/src/components/label';
 import { Typo } from '@/src/components/typo';
 import { ScheduleCard } from '@/src/sections/schedules/components/schedule-card';
 import { ScheduleRowActions } from '@/src/sections/schedules/components/schedule-row-actions';
+import { ScheduleTitleCell } from '@/src/sections/schedules/components/schedule-title-cell';
+import { ScheduleTypeLabels } from '@/src/sections/schedules/components/schedule-type-labels';
 import type {
   ScheduleRow,
   ScheduleRowHandlers,
@@ -30,16 +32,12 @@ export function ScheduleTable({ rows, handlers }: ScheduleTableProps) {
     {
       key: 'title',
       header: MSG_D08.COL_TITLE,
-      render: (row) => <Typo.Body.Semibold>{row.title}</Typo.Body.Semibold>,
+      render: (row) => <ScheduleTitleCell row={row} />,
     },
     {
       key: 'type',
       header: MSG_D08.COL_TYPE,
-      render: (row) => (
-        <Label tone={row.typeTone} variant={row.typeVariant}>
-          {row.typeLabel}
-        </Label>
-      ),
+      render: (row) => <ScheduleTypeLabels row={row} />,
     },
     {
       key: 'start',

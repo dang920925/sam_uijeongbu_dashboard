@@ -36,6 +36,8 @@ async function consult(name: string, phone: string): Promise<Created> {
     phone,
     agreedToPrivacy: true,
     consultationMethod: 'PHONE',
+    // U31: 상담은 참가 희망 작품 또는 '아직 모르겠어요' 필수(APP_010)
+    interestUndecided: true,
   });
   expect(res.status).toBe(201);
   return res.body as Created;

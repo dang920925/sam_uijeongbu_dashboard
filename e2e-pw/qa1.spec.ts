@@ -201,6 +201,16 @@ test.describe('qa1 수정 확인', () => {
     });
     await adminApi(request, 'DELETE', `/admin/performances/${perf.id}`);
     await page.goto('/schedules');
+    // U23 보강 — 기본 보기가 월이라 목록 보기로 바꾼다(develop E-16). 하이드레이션 전 클릭은 무시되므로 눌릴 때까지
+    const list = page
+      .getByRole('group', { name: '보기 방식' })
+      .getByRole('button', { name: '목록' });
+    await expect(async () => {
+      await list.click();
+      await expect(list).toHaveAttribute('aria-pressed', 'true', {
+        timeout: 1_000,
+      });
+    }).toPass();
     await entryOf(page, isMobile, `${P}일정`)
       .getByRole('button', { name: '일정 수정' })
       .click();
@@ -225,7 +235,12 @@ test.describe('qa1 수정 확인', () => {
     );
     const { items } = (await seeded.json()) as { items: { id: string }[] };
     await page.goto('/applications');
-    await page.getByRole('button', { name: '상세 보기' }).first().click();
+    // U31: 행 끝 "상세 보기" 버튼 → 이름 버튼(lg)·카드(xs)로 드로어를 연다
+    await page
+      .getByRole('button', { name: `${P}신청` })
+      .filter({ visible: true })
+      .first()
+      .click();
     const detail = page.getByRole('dialog', { name: '🎭 작품 참관 신청 상세' });
     await expect(detail.getByRole('button', { name: '승인' })).toBeVisible();
     await adminApi(

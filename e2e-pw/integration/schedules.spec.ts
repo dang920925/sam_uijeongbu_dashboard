@@ -57,13 +57,16 @@ async function createPerformance(title: string) {
   });
 }
 
+/** U23: 기본 보기가 월 캘린더가 되어, 이 스펙(표 기준)은 목록 보기 URL 로 연다(view=list — calendar-nav parseView) */
+const LIST_URL = '/schedules?view=list';
+
 test.beforeAll(() => cleanupFixtures(FIXTURE_BASE));
 test.afterAll(() => cleanupFixtures(FIXTURE_BASE));
 
 test.describe('SCR-D08 일정 관리 — 현재 상태(빈 DB)', () => {
   test('일정이 없으면 빈 문구를 보인다', async ({ page }) => {
     // Act
-    await page.goto('/schedules');
+    await page.goto(LIST_URL);
     // Assert
     await expect(
       page.getByRole('heading', { level: 1, name: '일정 관리' })
@@ -85,7 +88,7 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
       { name: `${PREFIX}토요반`, daysOfWeek: ['SAT'], status: 'ACTIVE' }
     );
     const title = `${PREFIX}정기 공연`;
-    await page.goto('/schedules');
+    await page.goto(LIST_URL);
     await page.getByRole('button', { name: '일정 추가' }).click();
     const dialog = page.getByRole('dialog', { name: '일정 추가' });
     await dialog.getByLabel('제목').fill(title);
@@ -156,7 +159,7 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
   }) => {
     // Arrange
     const title = `${PREFIX}순서 오류`;
-    await page.goto('/schedules');
+    await page.goto(LIST_URL);
     await page.getByRole('button', { name: '일정 추가' }).click();
     const dialog = page.getByRole('dialog', { name: '일정 추가' });
     // Act — 빈 제출
@@ -198,7 +201,7 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
     const performanceTitle = `${PREFIX}곧 삭제될 공연`;
     const performance = await createPerformance(performanceTitle);
     const title = `${PREFIX}삭제 공연 연결`;
-    await page.goto('/schedules');
+    await page.goto(LIST_URL);
     await page.getByRole('button', { name: '일정 추가' }).click();
     const dialog = page.getByRole('dialog', { name: '일정 추가' });
     await dialog.getByLabel('제목').fill(title);
@@ -230,7 +233,7 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
     expect(
       (await listSchedules()).find((s) => s.id === created.id)?.performanceId
     ).toBeNull();
-    await page.goto('/schedules');
+    await page.goto(LIST_URL);
     const row = rowOf(page, title);
     await row.getByRole('button', { name: '일정 수정' }).click();
     const dialog = page.getByRole('dialog', { name: '일정 수정' });
@@ -257,7 +260,7 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
       startAt: '2026-11-30T15:00:00Z',
       location: '연습실',
     });
-    await page.goto('/schedules');
+    await page.goto(LIST_URL);
     const row = rowOf(page, title);
     await expect(row).toContainText('2026.12.01 00:00');
     // Act — 수정
@@ -304,7 +307,7 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
       type: 'EVENT',
       startAt: '2026-12-11T10:00:00+09:00',
     });
-    await page.goto('/schedules');
+    await page.goto(LIST_URL);
     await expect(rowOf(page, `${PREFIX}필터 연습`)).toBeVisible();
     const filtered = page.waitForRequest((r) =>
       r.url().includes('/api/backend/v1/admin/schedules?type=EVENT')
@@ -340,7 +343,7 @@ test.describe('SCR-D08 일정 관리 — 채운 상태(실서버)', () => {
       })
     );
     // Act
-    await page.goto('/schedules');
+    await page.goto(LIST_URL);
     // Assert
     await expect(page.getByText(SERVER_ERROR).first()).toBeVisible();
     await expect(page.getByRole('button', { name: '다시 시도' })).toBeVisible();

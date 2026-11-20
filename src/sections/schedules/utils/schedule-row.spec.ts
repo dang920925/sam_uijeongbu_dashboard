@@ -13,6 +13,9 @@ const SCHEDULE: Schedule = {
   description: null,
   classId: null,
   performanceId: null,
+  status: 'ACTIVE',
+  cancelReason: null,
+  observationClosed: null,
 };
 
 describe('schedule-row', () => {
@@ -34,6 +37,23 @@ describe('schedule-row', () => {
       typeLabel: '공연',
       typeTone: 'info',
       typeVariant: 'soft',
+    });
+  });
+
+  it('취소 일정은 취소 표시와 "취소 · {사유}" 를 갖는다', () => {
+    // Act
+    const active = toScheduleRow(SCHEDULE);
+    const cancelled = toScheduleRow({
+      ...SCHEDULE,
+      status: 'CANCELLED',
+      cancelReason: '공연 단체관람',
+      observationClosed: true,
+    });
+    // Assert
+    expect(active).toMatchObject({ isCancelled: false, cancelText: null });
+    expect(cancelled).toMatchObject({
+      isCancelled: true,
+      cancelText: '취소 · 공연 단체관람',
     });
   });
 });

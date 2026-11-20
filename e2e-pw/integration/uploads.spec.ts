@@ -118,7 +118,7 @@ test.describe('FN-18 공용 업로드 — D03 포스터·상세 이미지', () =
     );
   });
 
-  test('svg 포스터는 UPL_001, 6MB 포스터는 UPL_002 문구를 보이고 서버 발급을 부르지 않는다', async ({
+  test('svg 포스터는 UPL_001 문구로 서버 발급 없이 막고, 6MB 포스터는 브라우저가 줄여 실서버에 올린다(W5 자동 압축)', async ({
     page,
   }) => {
     // Arrange
@@ -137,14 +137,18 @@ test.describe('FN-18 공용 업로드 — D03 포스터·상세 이미지', () =
     await expect(
       dialog.getByText('지원하지 않는 파일 형식입니다.')
     ).toBeVisible();
-    // Act — 6MB png(포스터 상한 5MB)
+    expect(uploadCalls).toBe(0);
+    // Act — 6MB png(포스터 상한 5MB) — 사용자 요청(2026-11-20 "포스터 15MB 화질 낮추기")으로 화면이 먼저 줄여 올린다
     await poster.setInputFiles({
       ...PNG('large.png'),
       buffer: Buffer.concat([TINY_PNG, Buffer.alloc(6 * MB)]),
     });
-    // Assert
-    await expect(dialog.getByText('파일 크기가 초과되었습니다.')).toBeVisible();
-    expect(uploadCalls).toBe(0);
+    // Assert — 줄인 크기 안내 + 실서버 발급 1회(서버 UPL_002 는 다음 시험이 직접 확인)
+    await expect(dialog.getByText(/줄여 올렸습니다/)).toBeVisible();
+    await expect(dialog.getByText('파일 크기가 초과되었습니다.')).toHaveCount(
+      0
+    );
+    expect(uploadCalls).toBe(1);
   });
 
   test('서버 POST /admin/uploads 도 svg 는 UPL_001, 포스터 6MB 는 UPL_002 로 거절한다', async ({

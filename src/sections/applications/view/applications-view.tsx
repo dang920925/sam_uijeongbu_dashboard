@@ -2,11 +2,10 @@
 
 // ----------------------------------------------------------------------
 // SCR-D06 신청서 관리 View — props 만으로 그린다. 목록 칸(표·스켈레톤·빈·오류)은 Container 가 골라 list 로 준다.
-// 순서(design SCR-D06): 머리("미처리 {n}건" 오른쪽) → 탭 → 상태 필터·총 건수 → 카드(표/카드 리스트) → 페이지네이션.
+// 순서(designer §18.3 SCR-D06-U31B): 머리("미처리 n건 · 연락 전 n건" 오른쪽) → 유형 pill → 필터·총 건수 →
+// 카드(한 행 목록 / xs 카드) → 페이지네이션. 행 클릭 → 상세 드로어.
 // ----------------------------------------------------------------------
 import Card from '@mui/material/Card';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
 import type { ReactNode } from 'react';
 
 import { ConfirmDialog } from '@/src/components/confirm-dialog';
@@ -15,13 +14,12 @@ import { PageContainer } from '@/src/components/page-container';
 import { PageHead } from '@/src/components/page-head';
 import { Pagination } from '@/src/components/pagination';
 import { SectionStack } from '@/src/components/section-stack';
-import { ApplicationDetailDialog } from '@/src/sections/applications/components/application-detail-dialog';
+import { ApplicationDetailDrawer } from '@/src/sections/applications/components/application-detail-drawer';
 import { ApplicationFilterBar } from '@/src/sections/applications/components/application-filter-bar';
 import { ApplicationPendingAlert } from '@/src/sections/applications/components/application-pending-alert';
 import type { ApplicationsViewModel } from '@/src/sections/applications/view/use-applications-view-model';
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_D06 } from '@/src/shared/messages/d06';
-import type { ApplicationType } from '@/src/types/codes';
 
 interface ApplicationsViewProps {
   vm: ApplicationsViewModel;
@@ -39,23 +37,23 @@ export function ApplicationsView({ vm, list }: ApplicationsViewProps) {
           subtitle={MSG_D06.SUBTITLE}
           actions={
             vm.pendingCount > 0 ? (
-              <ApplicationPendingAlert count={vm.pendingCount} />
+              <ApplicationPendingAlert
+                count={vm.pendingCount}
+                uncontactedCount={vm.uncontactedCount}
+              />
             ) : null
           }
         />
-        <Tabs
-          value={vm.appType}
-          onChange={(_, value: ApplicationType) => vm.onTabChange(value)}
-          variant='scrollable'
-          scrollButtons={false}
-        >
-          <Tab value='WORK_OBSERVATION' label={MSG_D06.TAB_OBSERVATION} />
-          <Tab value='CONSULTATION' label={MSG_D06.TAB_CONSULTATION} />
-        </Tabs>
         <ApplicationFilterBar
-          status={vm.status}
+          filters={vm.filters}
           totalCount={vm.isLoading ? null : vm.totalCount}
+          workOptions={vm.workOptions}
+          progressOptions={vm.progressOptions}
+          onAppTypeChange={vm.onAppTypeChange}
           onStatusChange={vm.onStatusChange}
+          onWorkChange={vm.onWorkChange}
+          onContactChange={vm.onContactFilterChange}
+          onProgressChange={vm.onProgressFilterChange}
         />
         <div className='flex flex-col gap-4'>
           <Card>{list}</Card>
@@ -66,9 +64,15 @@ export function ApplicationsView({ vm, list }: ApplicationsViewProps) {
           />
         </div>
       </SectionStack>
-      <ApplicationDetailDialog
+      <ApplicationDetailDrawer
         detail={vm.detail}
+        memo={vm.memo}
+        isSavingMemo={vm.isSavingMemo}
         handlers={{
+          onToggleContact: vm.onToggleContact,
+          onChangeProgress: vm.onChangeProgress,
+          onMemoChange: vm.onMemoChange,
+          onSaveMemo: vm.onSaveMemo,
           onRequestApprove: vm.onRequestApprove,
           onRequestReject: vm.onRequestReject,
           onRequestRegister: vm.onRequestRegister,

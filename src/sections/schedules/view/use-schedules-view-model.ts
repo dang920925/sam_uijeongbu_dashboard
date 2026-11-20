@@ -1,42 +1,35 @@
 'use client';
 
 // ----------------------------------------------------------------------
-// SCR-D08 일정 관리 ViewModel(FN-15). JSX 없음.
-// - 타입 필터·페이지 → 목록(startAt desc, 20건).
-// - 다이얼로그 폼 상태를 여기서 들고 있다: "연결 반" 선택지가 고른 공연에 따라 바뀌어(usePerformanceClasses)
-//   폼 값이 조회 조건이 되기 때문. 공연을 바꾸면 연결 반은 비운다(D5 연결 반/공연).
-// - 저장 실패(SCH_002·PERF_001 등)는 다이얼로그 안 문구, 저장 성공은 닫고 스낵바 "저장되었습니다".
-//   삭제 실패는 확인창을 닫고 스낵바(designer 스낵바 규격).
+// SCR-D08 일정 관리 ViewModel(FN-15 · U23 보강 · U29). JSX 없음.
+// - 보기 월(기본)·주·목록(URL `?view`), 타입 필터는 세 보기 모두에 적용.
+// - 목록 = 현행(startAt desc, 20건, 페이지). 월·주 = 보이는 범위가 걸치는 달마다 조회(use-schedule-calendar).
+// - 칩·블록·아젠다 행 → 상세(md↑ 팝오버 / xs 아래 시트) → 수정·삭제·일정 취소·취소 해제.
+// - 추가 기본값: 머리 버튼 = 빈 값(J-63), 월 빈 자리 = 그 날 00:00(J-19), 주 빈 칸 = 그 칸 + 1시간(J-60).
+// - 저장 성공 → 저장된 일정 날짜로 이동(J-23). 삭제 실패는 확인창을 닫고 스낵바.
 // ----------------------------------------------------------------------
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { useEffect, useMemo, useState } from 'react';
 
-import {
-  usePerformanceClasses,
-  usePerformances,
-} from '@/src/api/performance-queries';
-import {
-  EMPTY_SCHEDULE_FORM,
-  toScheduleFormInput,
-  type ScheduleFormInput,
-} from '@/src/api/schedule-mapper';
-import { normalizeScheduleLink } from '@/src/sections/schedules/utils/normalize-schedule-link';
-import {
-  useCreateSchedule,
-  useDeleteSchedule,
-  useSaveSchedule,
-  useSchedules,
-} from '@/src/api/schedule-queries';
+import { useAllClasses, usePerformances } from '@/src/api/performance-queries';
+import { toScheduleFormInput } from '@/src/api/schedule-mapper';
+import { useDeleteSchedule, useSchedules } from '@/src/api/schedule-queries';
 import type { SegmentOption } from '@/src/components/segment-pill';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
-import { toScheduleRow } from '@/src/sections/schedules/utils/schedule-row';
-import { toApiErrorMessage as toErrorMessage } from '@/src/utils/api-error-message';
+import type { CalendarView } from '@/src/sections/schedules/utils/calendar-nav';
+import { toKstMoment } from '@/src/sections/schedules/utils/kst-calendar';
+import { normalizeScheduleLink } from '@/src/sections/schedules/utils/normalize-schedule-link';
 import {
-  hasScheduleFormErrors,
-  NO_SCHEDULE_FORM_ERRORS,
-  validateScheduleForm,
-  type ScheduleFormErrors,
-} from '@/src/sections/schedules/utils/validate-schedule-form';
-import { MSG_COMMON } from '@/src/shared/messages/common';
+  emptyAddForm,
+  monthAddForm,
+  weekAddForm,
+} from '@/src/sections/schedules/utils/schedule-add-default';
+import { toScheduleDetail } from '@/src/sections/schedules/utils/schedule-detail';
+import { toScheduleRow } from '@/src/sections/schedules/utils/schedule-row';
+import { useScheduleCalendar } from '@/src/sections/schedules/view/use-schedule-calendar';
+import { useScheduleCancel } from '@/src/sections/schedules/view/use-schedule-cancel';
+import { useScheduleForm } from '@/src/sections/schedules/view/use-schedule-form';
 import { MSG_D08 } from '@/src/shared/messages/d08';
 import {
   SCHEDULE_TYPE_LABEL,
@@ -45,13 +38,9 @@ import {
 } from '@/src/types/codes';
 import { ADMIN_MAX_PAGE_SIZE, ADMIN_PAGE_SIZE } from '@/src/types/common';
 import type { Schedule } from '@/src/types/content';
+import { toApiErrorMessage as toErrorMessage } from '@/src/utils/api-error-message';
 
-export type ScheduleTypeFilter = ScheduleType | 'ALL';
-
-export interface SelectOption {
-  value: string;
-  label: string;
-}
+type ScheduleTypeFilter = ScheduleType | 'ALL';
 
 const FILTER_OPTIONS: SegmentOption<ScheduleTypeFilter>[] = [
   { value: 'ALL', label: MSG_D08.FILTER_ALL },
@@ -61,42 +50,53 @@ const FILTER_OPTIONS: SegmentOption<ScheduleTypeFilter>[] = [
   })),
 ];
 
-const TYPE_OPTIONS: SelectOption[] = SCHEDULE_TYPES.map((type) => ({
+const TYPE_OPTIONS = SCHEDULE_TYPES.map((type) => ({
   value: type,
   label: SCHEDULE_TYPE_LABEL[type],
 }));
 
-/** null = 닫힘, editingId null = 추가 */
-interface DialogState {
-  editingId: string | null;
+const VIEW_OPTIONS: SegmentOption<CalendarView>[] = [
+  { value: 'month', label: MSG_D08.VIEW_MONTH },
+  { value: 'week', label: MSG_D08.VIEW_WEEK },
+  { value: 'list', label: MSG_D08.VIEW_LIST },
+];
+const VIEW_OPTIONS_XS = VIEW_OPTIONS.filter((o) => o.value !== 'week');
+
+interface Anchored<T> {
+  value: T;
+  anchor: HTMLElement | null;
 }
 
-export function useSchedulesViewModel() {
+export function useSchedulesViewModel(today: string) {
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.down('md'));
+  const isLg = useMediaQuery(theme.breakpoints.up('lg'));
   const snackbar = useAppSnackbar();
   const [typeFilter, setTypeFilter] = useState<ScheduleTypeFilter>('ALL');
   const [page, setPage] = useState(1);
-  const [dialog, setDialog] = useState<DialogState | null>(null);
-  const [form, setForm] = useState<ScheduleFormInput>(EMPTY_SCHEDULE_FORM);
-  const [errors, setErrors] = useState<ScheduleFormErrors>(
-    NO_SCHEDULE_FORM_ERRORS
-  );
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Schedule | null>(null);
+  const [detail, setDetail] = useState<Anchored<string> | null>(null);
+  const [more, setMore] = useState<Anchored<string> | null>(null);
+  const type = typeFilter === 'ALL' ? undefined : typeFilter;
 
-  const listQuery = useSchedules({
-    type: typeFilter === 'ALL' ? undefined : typeFilter,
-    page,
-    size: ADMIN_PAGE_SIZE,
-  });
+  const calendar = useScheduleCalendar({ today, type, isXs, isLg });
+  const isList = calendar.view === 'list';
+  const listQuery = useSchedules({ type, page, size: ADMIN_PAGE_SIZE }, isList);
   const performancesQuery = usePerformances({ size: ADMIN_MAX_PAGE_SIZE });
-  const classesQuery = usePerformanceClasses(form.performanceId || null);
-  const create = useCreateSchedule();
-  const save = useSaveSchedule();
+  const classesQuery = useAllClasses();
   const remove = useDeleteSchedule();
+  const cancel = useScheduleCancel(snackbar);
+  const form = useScheduleForm(snackbar, (saved) => {
+    const moment = toKstMoment(saved.startAt);
+    if (moment) calendar.goToDate(moment.date);
+  });
 
-  const items = useMemo(() => listQuery.data?.items ?? [], [listQuery.data]);
-  const rows = useMemo(() => items.map(toScheduleRow), [items]);
-  const performanceOptions = useMemo<SelectOption[]>(
+  const listItems = useMemo(
+    () => listQuery.data?.items ?? [],
+    [listQuery.data]
+  );
+  const rows = useMemo(() => listItems.map(toScheduleRow), [listItems]);
+  const performanceOptions = useMemo(
     () =>
       (performancesQuery.data?.items ?? []).map((p) => ({
         value: p.id,
@@ -104,73 +104,52 @@ export function useSchedulesViewModel() {
       })),
     [performancesQuery.data]
   );
-  const classOptions = useMemo<SelectOption[]>(
-    () =>
-      (form.performanceId ? (classesQuery.data ?? []) : []).map((c) => ({
-        value: c.id,
-        label: c.name,
-      })),
-    [classesQuery.data, form.performanceId]
+  const names = useMemo(
+    () => ({
+      performances: new Map(performanceOptions.map((o) => [o.value, o.label])),
+      classes: new Map((classesQuery.data ?? []).map((c) => [c.id, c.name])),
+    }),
+    [performanceOptions, classesQuery.data]
   );
 
-  // 처리 후 마지막 쪽이 비면 앞 쪽으로 — 렌더 중 파생 상태 조정(React 문서 'adjusting state when a prop changes').
-  // 실서버는 0건이면 totalPages 0 을 준다(PaginatedResponseDto) → page 0 요청(400 COMMON_001)이 되지 않게 1 아래로 내리지 않는다.
+  const findSchedule = (id: string) =>
+    calendar.items.find((s) => s.id === id) ??
+    listItems.find((s) => s.id === id) ??
+    null;
+  const detailSchedule = detail ? findSchedule(detail.value) : null;
+  const moreCell = more
+    ? (calendar.monthWeeks.flat().find((c) => c.date === more.value) ?? null)
+    : null;
+
+  // 처리 후 마지막 쪽이 비면 앞 쪽으로 — 렌더 중 파생 상태 조정. 0건이면 totalPages 0 → 1 아래로 내리지 않는다.
   const lastPage = Math.max(1, listQuery.data?.totalPages ?? 1);
   if (listQuery.data && page > lastPage) setPage(lastPage);
 
-  const listError = listQuery.isError ? listQuery.error : null;
+  const listError = isList && listQuery.isError ? listQuery.error : null;
+  const calendarError = !isList && calendar.isError ? calendar.error : null;
+  const shownError = listError ?? calendarError;
   useEffect(() => {
-    if (listError) snackbar.error(toErrorMessage(listError));
-  }, [listError, snackbar]);
+    if (shownError) snackbar.error(toErrorMessage(shownError));
+  }, [shownError, snackbar]);
 
-  const openDialog = (editingId: string | null, value: ScheduleFormInput) => {
-    setForm(value);
-    setErrors(NO_SCHEDULE_FORM_ERRORS);
-    setSubmitError(null);
-    setDialog({ editingId });
-  };
+  /** 상세·더보기를 닫고 schedule 로 동작 */
+  const withSchedule =
+    (action: (schedule: Schedule) => void) => (id: string) => {
+      const schedule = findSchedule(id);
+      setDetail(null);
+      setMore(null);
+      if (schedule) action(schedule);
+    };
 
-  const handleOpenEdit = (id: string) => {
-    const schedule = items.find((s) => s.id === id);
-    if (!schedule) return;
+  const handleOpenEdit = withSchedule((schedule) => {
     const performanceIds = performancesQuery.data
       ? new Set(performancesQuery.data.items.map((p) => p.id))
       : null;
-    openDialog(
-      id,
+    form.open(
+      schedule.id,
       normalizeScheduleLink(toScheduleFormInput(schedule), performanceIds)
     );
-  };
-
-  const handleFieldChange = <K extends keyof ScheduleFormInput>(
-    field: K,
-    value: ScheduleFormInput[K]
-  ) => {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-      ...(field === 'performanceId' ? { classId: '' } : {}),
-    }));
-    if (field in errors)
-      setErrors((current) => ({ ...current, [field]: null }));
-  };
-
-  const handleSubmit = () => {
-    const next = validateScheduleForm(form);
-    setErrors(next);
-    if (hasScheduleFormErrors(next) || !dialog) return;
-    setSubmitError(null);
-    const callbacks = {
-      onSuccess: () => {
-        setDialog(null);
-        snackbar.success(MSG_COMMON.SAVED);
-      },
-      onError: (error: unknown) => setSubmitError(toErrorMessage(error)),
-    };
-    if (dialog.editingId)
-      save.mutate({ id: dialog.editingId, input: form }, callbacks);
-    else create.mutate(form, callbacks);
-  };
+  });
 
   const handleConfirmDelete = () => {
     if (!deleteTarget) return;
@@ -183,9 +162,28 @@ export function useSchedulesViewModel() {
     });
   };
 
-  const isEditing = Boolean(dialog?.editingId);
+  const openDetail = (id: string, anchor: HTMLElement | null) => {
+    // 더보기 팝오버 안 칩이면 더보기 단추에 붙인다(팝오버가 닫히며 칩이 사라지므로)
+    setDetail({ value: id, anchor: more?.anchor ?? anchor });
+    setMore(null);
+  };
+  const addOnDate = (date: string) => form.open(null, monthAddForm(date));
+  const addAtSlot = (date: string, minutes: number) =>
+    form.open(null, weekAddForm(date, minutes));
+  const openMore = (date: string, anchor: HTMLElement) =>
+    setMore({ value: date, anchor });
+
+  const rowHandlers = {
+    onEdit: handleOpenEdit,
+    onDelete: withSchedule(setDeleteTarget),
+    onCancel: withSchedule(cancel.openCancel),
+    onRestore: withSchedule(cancel.openRestore),
+  };
 
   return {
+    isXs,
+    calendar,
+    viewOptions: isXs ? VIEW_OPTIONS_XS : VIEW_OPTIONS,
     filterOptions: FILTER_OPTIONS,
     typeFilter,
     page,
@@ -193,36 +191,62 @@ export function useSchedulesViewModel() {
     rows,
     isLoading: listQuery.isPending,
     isError: listQuery.isError && !listQuery.data,
-    errorMessage: listError ? toErrorMessage(listError) : '',
-    isDialogOpen: dialog !== null,
-    dialogTitle: isEditing ? MSG_D08.DIALOG_EDIT : MSG_D08.DIALOG_ADD,
-    submitLabel: isEditing ? MSG_COMMON.SAVE : MSG_COMMON.ADD,
+    errorMessage: shownError ? toErrorMessage(shownError) : '',
+    isCalendarError: calendar.isError,
     form,
-    errors,
-    submitError,
-    isSubmitting: create.isPending || save.isPending,
     typeOptions: TYPE_OPTIONS,
     performanceOptions,
-    classOptions,
     isDeleteOpen: deleteTarget !== null,
     isDeleting: remove.isPending,
+    cancel,
+    detail:
+      detail && detailSchedule ? toScheduleDetail(detailSchedule, names) : null,
+    detailAnchor: detail?.anchor ?? null,
+    moreCell,
+    moreAnchor: more?.anchor ?? null,
+    rowHandlers,
     onFilterChange: (next: ScheduleTypeFilter) => {
       setTypeFilter(next);
       setPage(1);
     },
+    onViewChange: (next: CalendarView) => {
+      setPage(1);
+      calendar.onViewChange(next);
+    },
     onPageChange: setPage,
-    onRetry: () => void listQuery.refetch(),
-    onOpenAdd: () => openDialog(null, EMPTY_SCHEDULE_FORM),
-    onOpenEdit: handleOpenEdit,
-    onCloseDialog: () => setDialog(null),
-    onFieldChange: handleFieldChange,
-    onSubmit: handleSubmit,
-    onRequestDelete: (id: string) =>
-      setDeleteTarget(items.find((s) => s.id === id) ?? null),
+    onRetry: () => void (isList ? listQuery.refetch() : calendar.refetch()),
+    onOpenAdd: () => form.open(null, emptyAddForm()),
+    onOpenDetail: openDetail,
+    onCloseDetail: () => setDetail(null),
+    onCloseMore: () => setMore(null),
+    /** 보기별 본문 props(Container 가 그대로 펼친다) */
+    monthGridProps: {
+      ariaLabel: calendar.rangeTitle,
+      weeks: calendar.monthWeeks,
+      isPending: calendar.isPending,
+      activeMoreDate: more?.value ?? null,
+      onAdd: addOnDate,
+      onOpenEvent: openDetail,
+      onOpenMore: openMore,
+    },
+    weekGridProps: {
+      rangeKey: calendar.rangeKey,
+      isPending: calendar.isPending,
+      days: calendar.weekDays,
+      scrollMinutes: calendar.weekScrollMinutes,
+      nowMinutes: calendar.nowMinutes,
+      onAdd: addAtSlot,
+      onOpenEvent: openDetail,
+    },
+    agendaProps: { days: calendar.agendaDays, onOpenEvent: openDetail },
+    frameProps: {
+      rangeKey: calendar.rangeKey,
+      direction: calendar.direction,
+      isFetching: calendar.isFetching,
+    },
     onConfirmDelete: handleConfirmDelete,
     onCancelDelete: () => setDeleteTarget(null),
   };
 }
 
 export type SchedulesViewModel = ReturnType<typeof useSchedulesViewModel>;
-export type ScheduleFieldChange = SchedulesViewModel['onFieldChange'];

@@ -41,6 +41,8 @@ function buildSummary(): DashboardSummaryResponse {
       (m) => m.type === 'ACTOR' && m.deletedAt === null
     ).length,
     pendingApplicationCount: pending.length,
+    uncontactedPendingCount: pending.filter((a) => a.contactedAt === null)
+      .length,
     scheduleCount: store.schedules.filter((s) => s.deletedAt === null).length,
     recentPerformances: [...performances]
       .sort(byCreatedThenIdDesc)
@@ -118,6 +120,12 @@ function seed(ctx: MockContext): Response {
       processedAt: null,
       createdAt: nextCreatedAt(),
       memberId: null,
+      interestedPerformances: [],
+      interestUndecided: null,
+      contactedAt: a.contacted === true ? nextCreatedAt() : null,
+      contactNote: null,
+      progress: a.status === 'REJECTED' ? 'DROPPED' : 'RECEIVED',
+      progressUpdatedAt: null,
     });
   }
   for (const s of schedules) {
@@ -132,6 +140,9 @@ function seed(ctx: MockContext): Response {
       description: null,
       classId: null,
       performanceId: null,
+      status: 'ACTIVE',
+      cancelReason: null,
+      observationClosed: null,
       deletedAt: s.deleted === true ? createdAt : null,
     });
   }

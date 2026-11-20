@@ -1,6 +1,10 @@
 // 갤러리·일정·연출진·팝업(FN-14~17) — develop §3.4.
 // 정본: server src/admin/{galleries,staff,popups}/dto/*-response.dto.ts · src/domain/schedules/dto/schedule-item-response.dto.ts
-import type { GalleryCategory, ScheduleType } from '@/src/types/codes';
+import type {
+  GalleryCategory,
+  ScheduleStatus,
+  ScheduleType,
+} from '@/src/types/codes';
 
 export interface GalleryItemResponse {
   id: string;
@@ -26,6 +30,10 @@ export interface ScheduleItemResponse {
   classId: string | null;
   /** 일정의 연결 공연 ?? 연결 반의 공연(서버 ScheduleItemResponseDto — B8) */
   performanceId: string | null;
+  /** U29 — 취소 상태·사유·참관 받지 않음(취소일 때만 값) */
+  status: ScheduleStatus;
+  cancelReason: string | null;
+  observationClosed: boolean | null;
 }
 export interface ScheduleUpsertRequest {
   title: string;
@@ -39,11 +47,30 @@ export interface ScheduleUpsertRequest {
 }
 export interface ScheduleListQuery {
   type?: ScheduleType;
+  status?: ScheduleStatus;
   year?: number;
   month?: number;
   page?: number;
   size?: number;
 }
+/** U29 `POST /admin/schedules/{id}/cancel` */
+export interface ScheduleCancelRequest {
+  reason: string;
+  observationClosed: boolean;
+}
+/** U29 `GET /admin/schedules/{id}/cancel-impact` — 그 날·그 공연 참관 신청(PENDING·APPROVED) */
+export interface ScheduleCancelImpactResponse {
+  observationApplications: {
+    count: number;
+    items: {
+      id: string;
+      applicantName: string;
+      phone: string;
+      status: 'PENDING' | 'APPROVED';
+    }[];
+  };
+}
+export type ScheduleCancelImpact = ScheduleCancelImpactResponse;
 
 export interface AdminStaffItemResponse {
   id: string;

@@ -1,7 +1,7 @@
 'use client';
 
 // ----------------------------------------------------------------------
-// SCR-D06 신청서 관리 Container — 목록 칸 상태 분기(로딩 스켈레톤 · 오류 다시 시도 · 빈 · 표)만 한다.
+// SCR-D06 신청서 관리 Container — 목록 칸 상태 분기(로딩 스켈레톤 · 오류 다시 시도 · 빈 · 한 행 목록)만 한다.
 // ----------------------------------------------------------------------
 import { EmptyContent } from '@/src/components/empty-content';
 import { ErrorRetry } from '@/src/components/error-retry';
@@ -14,26 +14,24 @@ export function ApplicationsContainer() {
   const vm = useApplicationsViewModel();
 
   let list;
-  if (vm.isLoading) list = <TableSkeleton cardBelow='lg' />;
+  if (vm.isLoading) list = <TableSkeleton cardBelow='md' />;
   else if (vm.isError)
     list = <ErrorRetry message={vm.errorMessage} onRetry={vm.onRetry} />;
   else if (vm.rows.length === 0)
     list = (
-      <EmptyContent
-        message={vm.emptyMessage}
-        icon='solar:document-text-linear'
-      />
+      <EmptyContent message={vm.emptyMessage} icon='solar:magnifier-linear' />
     );
   else
     list = (
       <ApplicationTable
-        appType={vm.appType}
         rows={vm.rows}
+        selectedId={vm.selectedId}
+        sortState={vm.sortState}
+        onSort={vm.onSort}
         handlers={{
           onView: vm.onView,
-          onRequestApprove: vm.onRequestApprove,
-          onRequestReject: vm.onRequestReject,
-          onRequestRegister: vm.onRequestRegister,
+          onToggleContact: vm.onToggleContact,
+          onChangeProgress: vm.onChangeProgress,
         }}
       />
     );

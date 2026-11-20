@@ -29,7 +29,11 @@ import type { AdminPerformanceResponse } from '@/src/types/performance';
 
 export type SoftDeleted<T> = T & { deletedAt: string | null };
 
-export type MockApplication = Omit<ApplicationItemResponse, 'member'> & {
+/** scheduleCancellation 은 일정에서 계산한다(U29 — develop §13.2) */
+export type MockApplication = Omit<
+  ApplicationItemResponse,
+  'member' | 'scheduleCancellation'
+> & {
   memberId: string | null;
 };
 export type MockPopup = Omit<AdminPopupItemResponse, 'overlapsActive'>;
@@ -143,6 +147,18 @@ export interface MockStore {
   loginFailures: number;
   lockedUntil: number;
   seq: number;
+  /** U37 새 예매 푸시 — 목 계정은 하나라 계정 구분 없이 기기 목록 하나 */
+  pushDevices: {
+    id: string;
+    endpoint: string;
+    userAgent: string | null;
+    createdAt: string;
+    lastSuccessAt: string | null;
+  }[];
+  /** U37 — false 면 서버 VAPID 키 없음 흉내(공개키 null · 등록·시험 503 PUSH_001) */
+  pushEnabled: boolean;
+  /** U37 — 시험 알림 발송 기록(E2E 확인용) */
+  pushTestCalls: number;
 }
 
 function emptyStore(): MockStore {
@@ -171,6 +187,9 @@ function emptyStore(): MockStore {
     loginFailures: 0,
     lockedUntil: 0,
     seq: 0,
+    pushDevices: [],
+    pushEnabled: true,
+    pushTestCalls: 0,
   };
 }
 

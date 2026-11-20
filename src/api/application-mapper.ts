@@ -3,6 +3,7 @@
 // ----------------------------------------------------------------------
 import type {
   Application,
+  ApplicationContactRequest,
   ApplicationItemResponse,
   RegisterMemberFromApplicationRequest,
 } from '@/src/types/application';
@@ -30,7 +31,33 @@ export function fromApplicationItemResponse(
     processedAt: res.processedAt ?? null,
     createdAt: res.createdAt,
     member: res.member ? { id: res.member.id, name: res.member.name } : null,
+    // U31·U29 — 옛 응답(필드 없음)은 빈 값으로(배포 순서가 어긋나도 화면이 깨지지 않게)
+    interestedPerformances: (res.interestedPerformances ?? []).map((p) => ({
+      id: p.id,
+      title: p.title,
+    })),
+    interestUndecided: res.interestUndecided ?? null,
+    contactedAt: res.contactedAt ?? null,
+    contactNote: res.contactNote ?? null,
+    progress: res.progress ?? 'RECEIVED',
+    progressUpdatedAt: res.progressUpdatedAt ?? null,
+    scheduleCancellation: res.scheduleCancellation
+      ? {
+          scheduleId: res.scheduleCancellation.scheduleId,
+          reason: res.scheduleCancellation.reason,
+        }
+      : null,
   };
+}
+
+/** 연락 토글·메모 저장 요청(U31 보강). note 를 넘기지 않으면 메모는 그대로, 빈 값이면 지움(null) */
+export function toApplicationContactRequest(
+  contacted: boolean,
+  note?: string
+): ApplicationContactRequest {
+  if (note === undefined) return { contacted };
+  const trimmed = note.trim();
+  return { contacted, note: trimmed === '' ? null : trimmed };
 }
 
 export function toRegisterMemberFromApplicationRequest(

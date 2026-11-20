@@ -13,7 +13,9 @@ export const MSG_D02 = {
   KPI_ACTORS: '등록 배우',
   KPI_ACTORS_DESC: '전체 배우 회원',
   KPI_PENDING: '대기 신청서',
-  KPI_PENDING_DESC: '승인 대기 중',
+  /** 현행 "승인 대기 중" + U31 보강 연락 전 수(design §10.1 제안) */
+  KPI_PENDING_DESC_UNCONTACTED: (count: number) =>
+    `승인 대기 중 · 연락 전 ${count}건`,
   KPI_SCHEDULES: '등록 일정',
   KPI_SCHEDULES_DESC: '전체 일정 수',
   /** 카드 제목 — Dashboard.tsx:115,148 */

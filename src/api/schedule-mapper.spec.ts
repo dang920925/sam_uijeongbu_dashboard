@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   EMPTY_SCHEDULE_FORM,
   fromScheduleItemResponse,
+  toScheduleCancelRequest,
   toScheduleFormInput,
   toScheduleUpsertRequest,
 } from '@/src/api/schedule-mapper';
@@ -18,6 +19,9 @@ const RES: ScheduleItemResponse = {
   description: null,
   classId: null,
   performanceId: 'p1',
+  status: 'ACTIVE',
+  cancelReason: null,
+  observationClosed: null,
 };
 
 describe('schedule-mapper', () => {
@@ -89,5 +93,39 @@ describe('schedule-mapper', () => {
     // Assert
     expect(schedule.endAt).toBeNull();
     expect(schedule.performanceId).toBeNull();
+  });
+
+  it('U29 취소 필드가 없는 옛 응답은 진행 일정(ACTIVE)으로 맞춘다', () => {
+    // Arrange
+    const old = { ...RES } as Partial<ScheduleItemResponse>;
+    delete old.status;
+    delete old.cancelReason;
+    delete old.observationClosed;
+    // Act
+    const schedule = fromScheduleItemResponse(old as ScheduleItemResponse);
+    // Assert
+    expect(schedule.status).toBe('ACTIVE');
+    expect(schedule.cancelReason).toBeNull();
+    expect(schedule.observationClosed).toBeNull();
+  });
+
+  it('취소 요청은 사유를 trim 하고, 연습·공연만 참관 받지 않음 값을 보낸다', () => {
+    // Act
+    const practice = toScheduleCancelRequest({
+      reason: '  공연 단체관람 ',
+      observationClosed: true,
+      type: 'PRACTICE',
+    });
+    const event = toScheduleCancelRequest({
+      reason: '우천',
+      observationClosed: true,
+      type: 'EVENT',
+    });
+    // Assert
+    expect(practice).toEqual({
+      reason: '공연 단체관람',
+      observationClosed: true,
+    });
+    expect(event).toEqual({ reason: '우천', observationClosed: false });
   });
 });

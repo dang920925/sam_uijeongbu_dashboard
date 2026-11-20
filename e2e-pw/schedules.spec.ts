@@ -1,8 +1,14 @@
 // ----------------------------------------------------------------------
 // SCR-D08 일정 관리(FN-15) — 추가·수정·삭제·필터, 종료<시작 SCH_002 문구, KST 표시(B12), 연결 공연/반(D5).
 // 픽스처 접두사 fixture-1-w3-. desktop(lg 표)·mobile(카드) 모두 같은 흐름.
+// U23 보강 뒤 기본 보기가 월이라 목록 보기로 바꾸는 단계만 더했다(기대값 그대로 — develop E-16).
 // ----------------------------------------------------------------------
-import { expect, test, type APIRequestContext } from '@playwright/test';
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from '@playwright/test';
 
 import { adminApi, resetMock } from '@/e2e-pw/support/mock-api';
 
@@ -24,6 +30,21 @@ async function createSchedule(
   return adminApi<ScheduleItem>(request, 'POST', '/admin/schedules', body);
 }
 
+/** U23 보강 — 기본 보기가 월이 되어 목록 보기로 바꾸는 단계를 더한다(develop E-6·E-16) */
+async function gotoList(page: Page) {
+  await page.goto('/schedules');
+  const list = page
+    .getByRole('group', { name: '보기 방식' })
+    .getByRole('button', { name: '목록' });
+  // 하이드레이션 전 클릭은 무시되므로 눌림 상태가 될 때까지 다시 누른다
+  await expect(async () => {
+    await list.click();
+    await expect(list).toHaveAttribute('aria-pressed', 'true', {
+      timeout: 1_000,
+    });
+  }).toPass();
+}
+
 async function listSchedules(request: APIRequestContext) {
   return adminApi<{ items: ScheduleItem[] }>(
     request,
@@ -38,7 +59,7 @@ test.describe('SCR-D08 일정 관리', () => {
   });
 
   test('일정이 없으면 빈 문구를 보여 준다', async ({ page }) => {
-    await page.goto('/schedules');
+    await gotoList(page);
     await expect(
       page.getByRole('heading', { level: 1, name: '일정 관리' })
     ).toBeVisible();
@@ -62,7 +83,7 @@ test.describe('SCR-D08 일정 관리', () => {
       { name: 'fixture-1-w3-반', daysOfWeek: ['SAT'], status: 'ACTIVE' }
     );
 
-    await page.goto('/schedules');
+    await gotoList(page);
     await page.getByRole('button', { name: '일정 추가' }).click();
     const dialog = page.getByRole('dialog', { name: '일정 추가' });
     await dialog.getByLabel('제목').fill('fixture-1-w3-공연 일정');
@@ -102,7 +123,7 @@ test.describe('SCR-D08 일정 관리', () => {
     page,
     request,
   }) => {
-    await page.goto('/schedules');
+    await gotoList(page);
     await page.getByRole('button', { name: '일정 추가' }).click();
     const dialog = page.getByRole('dialog', { name: '일정 추가' });
     await dialog.getByRole('button', { name: '추가' }).click();
@@ -157,7 +178,7 @@ test.describe('SCR-D08 일정 관리', () => {
       startAt: '2026-11-30T15:00:00.000Z',
       location: 'fixture-1-w3-연습실',
     });
-    await page.goto('/schedules');
+    await gotoList(page);
     await expect(
       page.getByText('2026.12.01 00:00').filter({ visible: true })
     ).toBeVisible();
@@ -189,7 +210,7 @@ test.describe('SCR-D08 일정 관리', () => {
       type: 'EVENT',
       startAt: '2026-12-05T10:00:00+09:00',
     });
-    await page.goto('/schedules');
+    await gotoList(page);
     await page.getByRole('button', { name: '일정 삭제' }).click();
     const confirm = page.getByRole('alertdialog');
     await expect(confirm).toContainText('일정을 삭제하시겠습니까?');
@@ -211,7 +232,7 @@ test.describe('SCR-D08 일정 관리', () => {
       type: 'SHOW',
       startAt: '2026-12-02T10:00:00+09:00',
     });
-    await page.goto('/schedules');
+    await gotoList(page);
     await expect(
       page.getByText('fixture-1-w3-연습').filter({ visible: true })
     ).toBeVisible();

@@ -5,6 +5,7 @@
 import type { LabelTone } from '@/src/theme/semantic';
 import type { BookingShowState, ReservationStatus } from '@/src/types/booking';
 import type {
+  ApplicationProgress,
   ApplicationStatus,
   ClassStatus,
   MemberType,
@@ -23,6 +24,16 @@ export const APPLICATION_STATUS_TONE: Record<ApplicationStatus, LabelTone> = {
   APPROVED: 'success',
   REJECTED: 'error',
 };
+
+/** 진행 단계(design §10.1) — 접수 neutral · 일정 확정/상담 예정 info · 완료·입단 success · 불참/보류 neutral(outline 은 화면이 고른다) */
+export const APPLICATION_PROGRESS_TONE: Record<ApplicationProgress, LabelTone> =
+  {
+    RECEIVED: 'neutral',
+    SCHEDULED: 'info',
+    COMPLETED: 'success',
+    JOINED: 'success',
+    DROPPED: 'neutral',
+  };
 
 export const CLASS_STATUS_TONE: Record<ClassStatus, LabelTone> = {
   ACTIVE: 'success',

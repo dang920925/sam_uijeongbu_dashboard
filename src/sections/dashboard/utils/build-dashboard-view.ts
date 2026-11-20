@@ -2,6 +2,7 @@
 // 요약(SCR-D02) 화면 가공 — 요약 모델 → KPI 4·목록 행(순수 함수, + spec).
 // - KPI 순서·문구·색은 현행 Dashboard.tsx:81-108(파랑·에메랄드·앰버·보라).
 // - 최근 공연 유형은 영문 코드 대신 한국어 라벨(B16), 상태 배지는 D03·D04 와 같은 매핑(예정=노랑, 사용자 확정).
+// - 대기 신청서 설명 줄 = "승인 대기 중 · 연락 전 {n}건"(U31 보강 — design §10.1).
 // - 대기 신청 연락처가 비면 '-'(현행 `app.phone || '-'`), 배지는 "대기"(warning).
 // ----------------------------------------------------------------------
 import { MSG_COMMON } from '@/src/shared/messages/common';
@@ -63,7 +64,9 @@ export function toDashboardKpis(summary: DashboardSummary): DashboardKpi[] {
       key: 'pending',
       title: MSG_D02.KPI_PENDING,
       value: String(summary.pendingApplicationCount),
-      description: MSG_D02.KPI_PENDING_DESC,
+      description: MSG_D02.KPI_PENDING_DESC_UNCONTACTED(
+        summary.uncontactedPendingCount
+      ),
       icon: 'solar:document-text-linear',
       tone: 'amber',
     },

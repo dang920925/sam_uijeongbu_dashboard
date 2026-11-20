@@ -498,7 +498,10 @@ test.describe('연동 SCR-D12 예매 관리', () => {
     await dialog.getByRole('textbox', { name: /^매수/ }).fill('2');
     await dialog.getByRole('textbox', { name: /^금액/ }).fill('0');
     await dialog.getByRole('button', { name: '확정' }).click();
-    await dialog.getByRole('textbox', { name: /^입장 인원/ }).fill('0');
+    // R1-002 사용자 결정: D12 사전 등록에는 입장 인원 칸이 없고 늘 0 으로 보낸다
+    await expect(
+      dialog.getByRole('textbox', { name: /^입장 인원/ })
+    ).toHaveCount(0);
     const post = page.waitForResponse(
       (res) =>
         res.url().endsWith('/admin/reservations') &&

@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------
 // 관리자 내비 목록 — 사이드바(lg, 라벨) · 레일(md, 아이콘만 + aria-label) · 드로어(xs) 공용.
-// 어두운 내비 위 포커스 링은 흰색(designer W3 리드 요청 1).
+// 어두운 내비 위 포커스 링은 활성 글자색(designer W3 리드 요청 1). U30 A: 활성 = 골드 tint + 왼쪽 골드 막대(inset 3px).
 // R1: 묶음 사이 구분선(role=separator) · 하단 계정 설정(SHELL-ADMIN-R1 시안).
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
@@ -20,6 +20,8 @@ import {
   type NavItem,
 } from '@/src/layouts/admin/config-navigation';
 import { MSG_D00 } from '@/src/shared/messages/d00';
+import { RADIUS } from '@/src/theme/layout-tokens';
+import { SEMANTIC } from '@/src/theme/semantic';
 
 interface AdminNavProps {
   pathname: string;
@@ -38,9 +40,10 @@ const itemSx = (isActive: boolean, isRail: boolean) => ({
   minHeight: 44,
   width: isRail ? 44 : '100%',
   px: isRail ? 0 : 3,
-  borderRadius: 1.5,
+  borderRadius: `${RADIUS.sm}px`,
   color: isActive ? 'semantic.nav.itemActive' : 'semantic.nav.item',
   bgcolor: isActive ? 'semantic.nav.itemActiveBg' : 'transparent',
+  boxShadow: isActive ? `inset 3px 0 0 ${SEMANTIC.nav.activeBar}` : 'none',
   transition: 'background-color 150ms, color 150ms',
   '&:hover': {
     bgcolor: isActive

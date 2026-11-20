@@ -3,6 +3,9 @@
 // - 목록: type·year·month(KST 달력 기준) 필터, startAt desc, 페이지. 소프트 삭제 제외.
 // - 생성·수정: datetime 은 오프셋 필수 → 출력은 UTC `Z`. endAt < startAt 이면 400 SCH_002.
 //   performanceId·classId 는 존재 확인(404 PERF_001 / CLS_001). 없는 일정은 404 SCH_001.
+// - U29(develop §13): 목록 status 필터, cancel(이미 취소 409 SCH_003 · 사유 trim 1~50 · 이벤트·기타는 참관 false),
+//   restore(취소 아님 409 SCH_004), cancel-impact(그 KST 날짜 = preferredDate · 공연 = 직접 ?? 반 경유 인 참관 PENDING·APPROVED, 접수순).
+//   PATCH 는 상태를 유지하고, 취소 일정을 이벤트·기타로 바꾸면 참관 옵션을 false 로 맞춘다(back-end §15 자체 결정 ②).
 // ----------------------------------------------------------------------
 import {
   apiError,
@@ -17,7 +20,11 @@ import {
   type MockRoute,
 } from '@/src/_mock/backend/mock-http';
 import { getStore, type SoftDeleted } from '@/src/_mock/backend/mock-store';
-import { SCHEDULE_TYPES, type ScheduleType } from '@/src/types/codes';
+import {
+  OBSERVATION_CLOSABLE_TYPES,
+  SCHEDULE_TYPES,
+  type ScheduleType,
+} from '@/src/types/codes';
 import type { ScheduleItemResponse } from '@/src/types/content';
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -49,6 +56,24 @@ function toUtcIso(value: unknown): string | undefined {
     return undefined;
   const time = Date.parse(value);
   return Number.isNaN(time) ? undefined : new Date(time).toISOString();
+}
+
+/** UTC ISO → KST 'YYYY-MM-DD' */
+export function kstDate(iso: string): string {
+  return new Date(Date.parse(iso) + KST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** 일정의 공연 = 직접 연결 ?? 반 경유(back-end §15 자체 결정 ⑤) */
+export function schedulePerformanceId(s: MockSchedule): string | null {
+  if (s.performanceId) return s.performanceId;
+  if (!s.classId) return null;
+  return (
+    getStore().classes.find((c) => c.id === s.classId)?.performanceId ?? null
+  );
+}
+
+function notFoundSchedule(ctx: MockContext): Response {
+  return apiError(ctx, 404, 'SCH_001', '일정 정보를 찾을 수 없습니다.');
 }
 
 function kstYearMonth(iso: string): { year: number; month: number } {
@@ -137,11 +162,13 @@ export const scheduleRoutes: MockRoute[] = [
     auth: true,
     handle: (ctx) => {
       const type = ctx.query.get('type');
+      const status = ctx.query.get('status');
       const year = Number(ctx.query.get('year')) || null;
       const month = Number(ctx.query.get('month')) || null;
       const items = getStore()
         .schedules.filter((s) => {
           if (s.deletedAt !== null || (type && s.type !== type)) return false;
+          if (status && s.status !== status) return false;
           const ym = kstYearMonth(s.startAt);
           return (!year || ym.year === year) && (!month || ym.month === month);
         })
@@ -161,6 +188,9 @@ export const scheduleRoutes: MockRoute[] = [
         description: null,
         classId: null,
         performanceId: null,
+        status: 'ACTIVE',
+        cancelReason: null,
+        observationClosed: null,
       };
       const error = applySchedule(ctx, draft, true);
       if (error) return error;
@@ -180,12 +210,17 @@ export const scheduleRoutes: MockRoute[] = [
     auth: true,
     handle: (ctx) => {
       const s = findSchedule(ctx.params.id);
-      if (!s)
-        return apiError(ctx, 404, 'SCH_001', '일정 정보를 찾을 수 없습니다.');
+      if (!s) return notFoundSchedule(ctx);
       const next: Partial<ScheduleItemResponse> = { ...s };
       const error = applySchedule(ctx, next, false);
       if (error) return error;
       if (endBeforeStart(next)) return endBeforeStartError(ctx);
+      if (
+        next.status === 'CANCELLED' &&
+        next.type &&
+        !OBSERVATION_CLOSABLE_TYPES.includes(next.type)
+      )
+        next.observationClosed = false;
       Object.assign(s, next);
       return json(toItem(s));
     },
@@ -196,10 +231,74 @@ export const scheduleRoutes: MockRoute[] = [
     auth: true,
     handle: (ctx) => {
       const s = findSchedule(ctx.params.id);
-      if (!s)
-        return apiError(ctx, 404, 'SCH_001', '일정 정보를 찾을 수 없습니다.');
+      if (!s) return notFoundSchedule(ctx);
       s.deletedAt = nowIso();
       return noContent();
+    },
+  },
+  {
+    method: 'GET',
+    pattern: /^\/v1\/admin\/schedules\/(?<id>[^/]+)\/cancel-impact$/,
+    auth: true,
+    handle: (ctx) => {
+      const s = findSchedule(ctx.params.id);
+      if (!s) return notFoundSchedule(ctx);
+      const date = kstDate(s.startAt);
+      const performanceId = schedulePerformanceId(s);
+      const items = getStore()
+        .applications.filter(
+          (a) =>
+            a.appType === 'WORK_OBSERVATION' &&
+            (a.status === 'PENDING' || a.status === 'APPROVED') &&
+            a.preferredDate === date &&
+            performanceId !== null &&
+            a.performance?.id === performanceId
+        )
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .map((a) => ({
+          id: a.id,
+          applicantName: a.applicantName,
+          phone: a.phone,
+          status: a.status as 'PENDING' | 'APPROVED',
+        }));
+      return json({ observationApplications: { count: items.length, items } });
+    },
+  },
+  {
+    method: 'POST',
+    pattern: /^\/v1\/admin\/schedules\/(?<id>[^/]+)\/cancel$/,
+    auth: true,
+    handle: (ctx) => {
+      const s = findSchedule(ctx.params.id);
+      if (!s) return notFoundSchedule(ctx);
+      const reason = str(ctx.body.reason)?.trim() ?? '';
+      if (reason.length < 1 || reason.length > 50)
+        return validationError(ctx, '취소 사유를 입력해주세요');
+      if (typeof ctx.body.observationClosed !== 'boolean')
+        return validationError(ctx);
+      if (s.status === 'CANCELLED')
+        return apiError(ctx, 409, 'SCH_003', '이미 취소된 일정입니다.');
+      s.status = 'CANCELLED';
+      s.cancelReason = reason;
+      s.observationClosed = OBSERVATION_CLOSABLE_TYPES.includes(s.type)
+        ? ctx.body.observationClosed
+        : false;
+      return json(toItem(s));
+    },
+  },
+  {
+    method: 'POST',
+    pattern: /^\/v1\/admin\/schedules\/(?<id>[^/]+)\/restore$/,
+    auth: true,
+    handle: (ctx) => {
+      const s = findSchedule(ctx.params.id);
+      if (!s) return notFoundSchedule(ctx);
+      if (s.status !== 'CANCELLED')
+        return apiError(ctx, 409, 'SCH_004', '취소된 일정이 아닙니다.');
+      s.status = 'ACTIVE';
+      s.cancelReason = null;
+      s.observationClosed = null;
+      return json(toItem(s));
     },
   },
 ];

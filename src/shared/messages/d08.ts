@@ -50,4 +50,82 @@ export const MSG_D08 = {
     '공연 일정은 공연을 연결해야 홈페이지 일정에 작품 상세 버튼이 표시됩니다',
   /** 삭제 확인 — 현행 Schedules.tsx:226 */
   CONFIRM_DELETE: '일정을 삭제하시겠습니까?',
+
+  // ---------------------------------------------------------------------
+  // U23 보강(구글 캘린더식 월·주·목록) — design SCR-D08 "U23 보강"·designer §14 "제안" 문구 그대로.
+  // ---------------------------------------------------------------------
+  /** 도구 줄 — design U23 보강 "오늘"(제안) · ‹ › aria "이전"·"다음" */
+  TODAY: '오늘',
+  PREV: '이전',
+  NEXT: '다음',
+  /** 보기 전환 — "월 · 주 · 목록"(제안), 묶음 aria "보기 방식"(design U23 MSG-D08-VIEW-ARIA 제안) */
+  VIEW_ARIA: '보기 방식',
+  VIEW_MONTH: '월',
+  VIEW_WEEK: '주',
+  VIEW_LIST: '목록',
+  /** 범위 제목 — 월 "{year}년 {month}월"(SCR-07), 주 "{year}년 {m}월 {d}일 – {d2}일" / 달이 바뀌면 "… – {m2}월 {d2}일"(제안) */
+  MONTH_TITLE: (year: number, month: number) => `${year}년 ${month}월`,
+  WEEK_TITLE: (year: number, m: number, d: number, m2: number, d2: number) =>
+    m === m2
+      ? `${year}년 ${m}월 ${d}일 – ${d2}일`
+      : `${year}년 ${m}월 ${d}일 – ${m2}월 ${d2}일`,
+  /** 월 칸 넘침 — "+{n}개 더"(제안) */
+  MORE: (count: number) => `+${count}개 더`,
+  /** xs 아젠다 빈 달 — "이 달에는 일정이 없습니다"(제안) */
+  MONTH_EMPTY: '이 달에는 일정이 없습니다',
+  /** 주 보기 자정 넘김 — "→ 다음 날 {HH:mm}"(제안) */
+  OVERNIGHT: (time: string) => `→ 다음 날 ${time}`,
+  /** 칸 aria — "{year}년 {month}월 {day}일" + ", 오늘" + ", 일정 {count}건"(SCR-07 MSG-D08-CELL-ARIA) */
+  CELL_ARIA: (
+    year: number,
+    month: number,
+    day: number,
+    isToday: boolean,
+    count: number
+  ) =>
+    `${year}년 ${month}월 ${day}일${isToday ? ', 오늘' : ''}${count > 0 ? `, 일정 ${count}건` : ''}`,
+  /** 더보기 팝오버·xs 시트 날짜 제목 "{m}월 {d}일 {요일}요일"(SCR-07 형식 "11월 20일 금요일") */
+  DAY_TITLE: (month: number, day: number, weekday: string) =>
+    `${month}월 ${day}일 ${weekday}요일`,
+  /** 상세 날짜 줄 "{M월 D일 (요일)} HH:mm – HH:mm" */
+  WHEN: (month: number, day: number, weekday: string, time: string) =>
+    `${month}월 ${day}일 (${weekday}) ${time}`,
+  /** 시간 범위 "{start} – {end}"(SCR-07 MSG-D08-TIME-RANGE) */
+  TIME_RANGE: (start: string, end: string) => `${start} – ${end}`,
+  /** 칩·블록 aria "{유형} {제목}, {M월 D일} {HH:mm}–{HH:mm}"(제안), 취소면 앞에 "취소된 일정, "(designer §14.5) */
+  EVENT_ARIA: (
+    typeLabel: string,
+    title: string,
+    month: number,
+    day: number,
+    time: string,
+    isCancelled: boolean
+  ) =>
+    `${isCancelled ? '취소된 일정, ' : ''}${typeLabel} ${title}, ${month}월 ${day}일 ${time}`,
+  /** 주 보기 빈 30분 칸 aria "{M}월 {D}일 {HH:mm} 일정 추가"(designer §14.7 #2 제안) */
+  SLOT_ADD_ARIA: (month: number, day: number, time: string) =>
+    `${month}월 ${day}일 ${time} 일정 추가`,
+
+  // ---------------------------------------------------------------------
+  // U29 일정 취소 — design §8 SCR-D08 · designer §14.3 "제안" 문구 그대로.
+  // ---------------------------------------------------------------------
+  CANCEL: '일정 취소',
+  RESTORE: '취소 해제',
+  CANCEL_SUBMIT: '취소 처리',
+  CANCEL_REASON: '사유',
+  CANCEL_REASON_PH: '예: 공연 단체관람',
+  /** designer §14.7 #2 추가 제안 */
+  CANCEL_REASON_REQUIRED: '사유를 입력해주세요',
+  CANCEL_REASON_COUNT: (length: number, max: number) => `${length}/${max}`,
+  CANCEL_OBSERVATION: '이 날 참관 신청 받지 않음',
+  CANCEL_OBSERVATION_HELP:
+    '체크하면 홈페이지 참관 신청에서 이 날짜가 빠집니다.',
+  CANCEL_IMPACT: (count: number) =>
+    `이 날짜에 참관 신청 ${count}건이 있습니다. 신청서 관리에서 연락해주세요.`,
+  CANCEL_IMPACT_REST: (count: number) => `외 ${count}건`,
+  /** 취소 표시 — 칩·블록 앞 글자 / Label */
+  CANCELLED_TAG: '취소',
+  CANCELLED_REASON: (reason: string) => `취소 · ${reason}`,
+  OBSERVATION_CLOSED: '참관 받지 않음',
+  CONFIRM_RESTORE: '취소를 해제하시겠습니까?',
 } as const;

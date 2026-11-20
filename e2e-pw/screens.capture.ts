@@ -245,7 +245,10 @@ test('대시보드 화면을 xs·md·lg 로 캡처한다', async ({
   await expect(page.getByRole('button', { name: '프로필 저장' })).toBeVisible();
   await shoot(page, 'SCR-D05-panel-actor', 'lg');
   await page.goto('/applications');
-  await page.getByRole('button', { name: '상세 보기' }).first().click();
+  // U31: 행 끝 "상세 보기" 버튼 → 이름 버튼으로 드로어를 연다
+  await page
+    .getByRole('button', { name: 'fixture-신청-1', exact: true })
+    .click();
   await shoot(page, 'SCR-D06-detail-pending', 'lg');
   await page.setViewportSize(VIEWPORTS.xs);
   await page.goto('/');

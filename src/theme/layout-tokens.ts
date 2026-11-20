@@ -1,6 +1,8 @@
 // ----------------------------------------------------------------------
 // 고정 치수 토큰(간격 아님 — 고정 높이·캡 폭). 출처 design/tokens.css :root --layout-*·--size-*.
 // ----------------------------------------------------------------------
+import { ALPHA } from '@/src/theme/palette';
+
 export const LAYOUT = {
   sidebar: 240,
   rail: 72,
@@ -30,12 +32,13 @@ export const LAYOUT = {
   quickSearchPopup: 384,
 } as const;
 
-export const RADIUS = { xs: 4, sm: 6, md: 8, lg: 12, pill: 9999 } as const;
+// U30 안 A(design/u30/tokens-A.css --r-* · --sh-*): 컨트롤 10 · 카드 14 · 칩 pill. 깊은 그림자 + 주 버튼 골드 글로우.
+export const RADIUS = { xs: 6, sm: 10, md: 14, lg: 16, pill: 9999 } as const;
 
 export const SHADOW = {
-  card: '0 1px 2px 0 rgba(0 0 0 / 0.05)',
-  dialog:
-    '0 10px 15px -3px rgba(0 0 0 / 0.1), 0 4px 6px -4px rgba(0 0 0 / 0.1)',
-  snackbar: '0 10px 15px -3px rgba(0 0 0 / 0.2)',
-  drawer: '0 25px 50px -12px rgba(0 0 0 / 0.25)',
+  card: `inset 0 1px 0 ${ALPHA.cardHighlight}, 0 12px 32px ${ALPHA.shadowCard}`,
+  dialog: `0 0 0 1px ${ALPHA.panelRing}, 0 16px 40px ${ALPHA.shadowPanel}`,
+  snackbar: `0 12px 32px ${ALPHA.shadowPanel}`,
+  drawer: `0 16px 40px ${ALPHA.shadowPanel}`,
+  primary: `0 6px 20px ${ALPHA.primaryGlow}`,
 } as const;

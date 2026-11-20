@@ -5,10 +5,11 @@
 import { endpoints } from '@/src/api/endpoints';
 import {
   fromApplicationItemResponse,
+  toApplicationContactRequest,
   toRegisterMemberFromApplicationRequest,
 } from '@/src/api/application-mapper';
 import { fromMemberListItemResponse } from '@/src/api/member-mapper';
-import { apiFetch, apiPost, withQuery } from '@/src/lib/api-client';
+import { apiFetch, apiPatch, apiPost, withQuery } from '@/src/lib/api-client';
 import type {
   Application,
   ApplicationActionResponse,
@@ -17,7 +18,7 @@ import type {
   PendingCountResponse,
   RegisterMemberFromApplicationResponse,
 } from '@/src/types/application';
-import type { ApplicationType } from '@/src/types/codes';
+import type { ApplicationProgress, ApplicationType } from '@/src/types/codes';
 import type { Paginated } from '@/src/types/common';
 import type { Member, MemberFormInput } from '@/src/types/member';
 
@@ -76,4 +77,31 @@ export async function registerMemberFromApplication(
     application: fromApplicationItemResponse(res.application),
     member: fromMemberListItemResponse(res.member),
   };
+}
+
+/** U31 보강 — 연락 완료/전 토글과 메모(note 생략이면 메모 유지) */
+export async function updateApplicationContact(
+  id: string,
+  contacted: boolean,
+  note?: string
+): Promise<Application> {
+  return fromApplicationItemResponse(
+    await apiPatch<ApplicationItemResponse>(
+      endpoints.applications.contact(id),
+      toApplicationContactRequest(contacted, note)
+    )
+  );
+}
+
+/** U31 보강 — 진행 단계 변경(참관에 JOINED·거절 건 변경은 409 APP_012) */
+export async function updateApplicationProgress(
+  id: string,
+  progress: ApplicationProgress
+): Promise<Application> {
+  return fromApplicationItemResponse(
+    await apiPatch<ApplicationItemResponse>(
+      endpoints.applications.progress(id),
+      { progress }
+    )
+  );
 }
