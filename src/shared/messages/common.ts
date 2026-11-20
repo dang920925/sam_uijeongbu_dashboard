@@ -39,6 +39,11 @@ export const MSG_UPLOAD = {
   SIZE_EXCEEDED: '파일 크기가 초과되었습니다.',
   FAILED: '파일 업로드에 실패했습니다. 다시 시도해주세요.',
   REQUIRED: '이미지를 업로드해주세요.',
+  /** 업로드 전 자동 축소·압축(W5, 사용자 요청 2026-11-20) — 제안 문구(지휘자 명세 제안 그대로, 확정 전) */
+  OPTIMIZING: '이미지 최적화 중...',
+  COMPRESSED: (from: string, to: string) =>
+    `${from} → ${to}로 줄여 올렸습니다.`,
+  DECODE_FAILED: '이미지를 열 수 없습니다. JPG·PNG로 저장해 다시 올려 주세요.',
   /** 규격 안내 — MSG-UPLOAD-HELP/HINT 확정 문구(사용자 결정 2026-11-19 "제안 문구 그대로", integration §11.1). 규격 근거 FN-18 */
   HELP: 'JPG·PNG·WEBP, 포스터 5MB · 상세 이미지 10MB 이하',
   HINT: 'JPG·PNG·WEBP, 5MB 이하',

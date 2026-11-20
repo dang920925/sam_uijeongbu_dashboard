@@ -1,11 +1,13 @@
 // ----------------------------------------------------------------------
-// 업로드 실패 → 사용자 문구(develop §3.1 UPL_001·002·004). 에러 코드만 단독 노출하지 않는다(§4.6).
+// 업로드 실패 → 사용자 문구(develop §3.1 UPL_001·002·004 + 압축 단계 디코드 실패 W5). 에러 코드만 단독 노출하지 않는다(§4.6).
 // ----------------------------------------------------------------------
 import { UploadValidationError } from '@/src/api/upload-mapper';
 import { ApiError } from '@/src/lib/api-client';
+import { ImageDecodeError } from '@/src/lib/image-decode-error';
 import { MSG_UPLOAD } from '@/src/shared/messages/common';
 
 export function toUploadErrorMessage(error: unknown): string {
+  if (error instanceof ImageDecodeError) return MSG_UPLOAD.DECODE_FAILED;
   const code =
     error instanceof UploadValidationError
       ? error.code
