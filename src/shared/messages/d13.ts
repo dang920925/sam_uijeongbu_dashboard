@@ -88,7 +88,7 @@ export const MSG_D13 = {
   NO_RESULT: '찾는 예매가 없습니다. 이름이나 번호를 다시 확인해주세요.',
   NO_SHOW: '오늘 이후 회차가 없습니다',
   /** 검색어 없이 명단이 빈 회차 — 근거 문구 없음 */
-  EMPTY: '[MSG-D13-EMPTY — 확인 필요] 이 회차에 예매가 없습니다.',
+  EMPTY: '이 회차에 예매가 없습니다.',
   /** MSG-D13-OTHER-* (design §6.1a) */
   OTHER_TITLE: '다른 회차 예매입니다',
   OTHER_SUB: (when: string) => `이 회차(${when}) 명단에는 없습니다.`,
