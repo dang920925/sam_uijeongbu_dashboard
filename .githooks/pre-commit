@@ -1,0 +1,6 @@
+#!/bin/sh
+# 스테이징된 .ts/.tsx/.mjs 만 prettier --check + eslint (전체 테스트는 CI) — style-guide §5.3
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|mjs)$' | grep -v 'generated-icons.ts')
+[ -z "$FILES" ] && exit 0
+pnpm exec prettier --check $FILES || exit 1
+pnpm exec eslint $FILES || exit 1

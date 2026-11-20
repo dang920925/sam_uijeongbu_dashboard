@@ -1,0 +1,6 @@
+.next
+.next-*
+node_modules
+src/components/iconify/generated-icons.ts
+playwright-report
+test-results

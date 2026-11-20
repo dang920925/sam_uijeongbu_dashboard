@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- SAM 임시 마크 (qa1 U17 — 실제 로고 받으면 교체). 골드 #E8A020 / 바탕 #0a0a0a = 홈 GNB 로고 계열. 글자는 선 도형(글꼴 의존 없음) -->
+  <rect width="64" height="64" rx="12" fill="#0a0a0a"/>
+  <g fill="none" stroke="#E8A020" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M18.5 21.5H8.5V32H18.5V42.5H8.5"/>
+    <path d="M27 42.5V21.5H37V42.5M27 33H37"/>
+    <path d="M45.5 42.5V21.5L50.5 30L55.5 21.5V42.5"/>
+  </g>
+</svg>

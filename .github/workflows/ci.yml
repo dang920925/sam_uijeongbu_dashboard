@@ -1,0 +1,25 @@
+# 대시보드 CI — typecheck · lint(게이트 포함) · format · unit · build · E2E(목 백엔드)
+# 배포 순서는 DB 마이그레이션 → 서버 → 클라이언트(style-guide §7). 이 워크플로는 검증만 한다.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main, release, develop]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e --project=setup --project=desktop --project=mobile
