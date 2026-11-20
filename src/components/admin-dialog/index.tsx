@@ -36,6 +36,11 @@ interface AdminDialogProps {
   blockMessage?: string | null;
   /** 진행 중에는 바깥 클릭·Esc 로 닫히지 않게 */
   isBusy?: boolean;
+  /**
+   * 현장용 터치 하한(px) — 주면 창 안 버튼·입력·체크·닫기를 모두 이 높이 이상으로(SCR-D13 현장 예매 등록 48, S24 · qa-r1 R1-004).
+   * 없으면 테마 기본(xs 44).
+   */
+  minTouch?: number;
 }
 
 export function AdminDialog({
@@ -49,6 +54,7 @@ export function AdminDialog({
   errorMessage,
   blockMessage,
   isBusy = false,
+  minTouch,
 }: AdminDialogProps) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('md'));
@@ -74,6 +80,17 @@ export function AdminDialog({
             width: '100%',
             maxWidth: wide ? LAYOUT.dialogWide : LAYOUT.dialog,
             m: { xs: 0, md: 4 },
+            ...(minTouch
+              ? {
+                  '& .MuiButtonBase-root:not(.MuiSwitch-switchBase)': {
+                    minHeight: minTouch,
+                  },
+                  '& .MuiIconButton-root, & .MuiCheckbox-root': {
+                    minWidth: minTouch,
+                  },
+                  '& .MuiInputBase-root': { minHeight: minTouch },
+                }
+              : {}),
           },
         } as object,
       }}

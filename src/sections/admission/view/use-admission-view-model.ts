@@ -53,6 +53,7 @@ import { useAdmissionStore } from '@/src/stores/admission-store';
 import { RESERVATION_STATUS_LABEL } from '@/src/types/codes';
 import { toApiErrorMessage } from '@/src/utils/api-error-message';
 import { todayKst } from '@/src/utils/kst-date-format';
+import { useOnlineStatus } from '@/src/hooks/use-online-status';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const FLASH_MS = 1500;
@@ -121,6 +122,7 @@ export function useAdmissionViewModel() {
   );
   const [announcement, setAnnouncement] = useState('');
   const [isMutationOffline, setIsMutationOffline] = useState(false);
+  const isOnline = useOnlineStatus();
   const [payTarget, setPayTarget] = useState<PayTarget | null>(null);
   const [isOnsiteOpen, setIsOnsiteOpen] = useState(false);
   const [onsiteError, setOnsiteError] = useState<string | null>(null);
@@ -145,7 +147,8 @@ export function useAdmissionViewModel() {
     items.length === 0;
   const otherMatches = answeredForCode ? (board?.otherShowMatches ?? []) : [];
 
-  const isOffline = isMutationOffline || boardQuery.isError;
+  // R1-001: 실제 오프라인(navigator.onLine)도 바로 배너 — 조회·처리 실패를 기다리지 않는다
+  const isOffline = !isOnline || isMutationOffline || boardQuery.isError;
 
   let listState: AdmissionListState;
   if (!board) listState = boardQuery.isError ? 'error' : 'loading';
@@ -186,6 +189,11 @@ export function useAdmissionViewModel() {
   const runDelta = (id: string, toDelta: (remaining: number) => number) => {
     const item = findItem(id);
     if (!item || !showId || busyIds.includes(id)) return;
+    // R1-001: 오프라인이면 낙관 표시 없이 배너만(요청을 만들지 않는다 — 나중에 몰래 전송되지 않게)
+    if (!isOnline) {
+      setIsMutationOffline(true);
+      return;
+    }
     const delta = toDelta(item.quantity - item.admittedCount);
     if (delta === 0) return;
     changeAdmission.mutate(
@@ -206,6 +214,10 @@ export function useAdmissionViewModel() {
   const payItem = payTarget ? findItem(payTarget.id) : null;
   const handleConfirmPay = () => {
     if (!payTarget || !payItem || !showId) return;
+    if (!isOnline) {
+      setIsMutationOffline(true);
+      return;
+    }
     const admit = payTarget.admit;
     setPayTarget(null);
     confirmAdmit.mutate(

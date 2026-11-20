@@ -185,7 +185,8 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
         inviterOptions={invite.inviterOptions}
         tierOptions={vm.tierOptions}
         defaultStatus='PENDING'
-        admitNowPlacement='bottom'
+        // R1-002 사용자 결정 "0명으로 시작" — 사전 등록이라 입장 인원 칸 없이 0(입장은 D13 에서)
+        admitNowPlacement='none'
         isSubmitting={actions.isManualSubmitting}
         errorMessage={actions.manualError}
         onSubmit={actions.onSubmitManual}

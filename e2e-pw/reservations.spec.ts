@@ -291,10 +291,10 @@ test.describe('SCR-D12 예매 관리', () => {
     await dialog.getByRole('textbox', { name: /^금액/ }).fill('0');
     await expect(dialog.getByText('2매 · 0원')).toBeVisible();
     await dialog.getByRole('button', { name: '확정' }).click();
+    // R1-002 사용자 결정 "0명으로 시작" — D12 에는 입장 인원 칸이 없다(입장은 D13)
     await expect(
       dialog.getByRole('textbox', { name: /^입장 인원/ })
-    ).toHaveValue('2');
-    await dialog.getByRole('textbox', { name: /^입장 인원/ }).fill('0');
+    ).toHaveCount(0);
     await dialog.getByLabel('메모').fill('초대 — 연출 지인');
     await dialog.getByRole('button', { name: '등록', exact: true }).click();
     await expect(page.getByText(/예매를 등록했습니다\./)).toBeVisible();
@@ -307,6 +307,7 @@ test.describe('SCR-D12 예매 관리', () => {
     await expect(created).toContainText('연락처 없음');
     await expect(created).toContainText('초대 2');
     await expect(created).toContainText('0원');
+    await expect(created).toContainText('0/2');
   });
 
   test('수동 등록은 남은 좌석보다 많으면 저장할 수 없다', async ({

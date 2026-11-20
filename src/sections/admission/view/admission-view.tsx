@@ -160,6 +160,7 @@ export function AdmissionView({ vm, showsFallback, list }: AdmissionViewProps) {
         tierOptions={vm.onsite.tierOptions}
         defaultStatus='CONFIRMED'
         admitNowPlacement='afterStatus'
+        minTouch={LAYOUT.touchField}
         isSubmitting={vm.onsite.isSubmitting}
         errorMessage={vm.onsite.errorMessage}
         onSubmit={vm.onSubmitOnsite}

@@ -104,12 +104,14 @@ export type ManualEntryMode = 'tier' | 'custom';
 
 /**
  * 화면 상태 → 보낼 폼 값. 입력 방식이 '직접 입력'이면 등급 수량을 비우고, '등급별 수량'이면 직접 입력 줄을 끈다.
- * 입장 인원을 손대지 않았으면 기본 = 매수(designer §13.11 남은 확인 6).
+ * 입장 인원을 손대지 않았으면 기본 = 매수(D13 현장 판매 — designer §13.11 남은 확인 6).
+ * withAdmit=false(D12 사전 등록 — 사용자 결정 R1-002 "0명으로 시작")면 입장 인원은 늘 0.
  */
 export function toEffectiveManualInput(
   form: ManualReservationFormInput,
   mode: ManualEntryMode,
-  isAdmitTouched: boolean
+  isAdmitTouched: boolean,
+  withAdmit = true
 ): ManualReservationFormInput {
   const lines =
     mode === 'custom'
@@ -117,6 +119,10 @@ export function toEffectiveManualInput(
       : { ...form, useCustom: false };
   return {
     ...lines,
-    admitNow: isAdmitTouched ? form.admitNow : String(totalQuantityOf(lines)),
+    admitNow: !withAdmit
+      ? '0'
+      : isAdmitTouched
+        ? form.admitNow
+        : String(totalQuantityOf(lines)),
   };
 }

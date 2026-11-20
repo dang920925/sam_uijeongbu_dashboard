@@ -433,6 +433,38 @@ test('입장 처리 요청이 네트워크에서 끊기면 숫자를 되돌리�
   await expectSummary(page, { admitted: 1, confirmed: 4 });
 });
 
+test('휴대폰이 실제로 오프라인이면 +1 을 눌러도 입장 완료로 바꾸지 않고 배너를 보이며, 다시 연결돼도 몰래 보내지 않는다(R1-001)', async ({
+  page,
+  context,
+  request,
+  isMobile,
+}) => {
+  await openAdmission(page);
+  await expectSummary(page, { admitted: 1, confirmed: 4 });
+  const banner = page.getByRole('alert').filter({ hasText: OFFLINE });
+  // Act — 연결 끊김(navigator.onLine=false) 뒤 +1 · 전원 입장
+  await context.setOffline(true);
+  await expect(banner).toBeVisible();
+  await page.getByRole('button', { name: '홍길동 1명 입장' }).click();
+  await page.getByRole('button', { name: '홍길동 남은 3명 모두 입장' }).click();
+  // Assert — 낙관 표시 없음
+  await expect(rowOf(page, isMobile, '홍길동')).toContainText('1/4');
+  await expectSummary(page, { admitted: 1, confirmed: 4 });
+  // Act — 다시 연결
+  await context.setOffline(false);
+  await banner.getByRole('button', { name: '다시 시도' }).click();
+  await expect(banner).toBeHidden();
+  // Assert — 보류됐던 요청이 나중에 전송되지 않았다(서버 값 그대로)
+  await page.waitForTimeout(1_500);
+  const board = await adminApi<{
+    items: { bookerName: string; admittedCount: number }[];
+  }>(request, 'GET', `/admin/shows/${fixture.showA}/admission`);
+  expect(
+    board.items.find((item) => item.bookerName === '홍길동')?.admittedCount
+  ).toBe(1);
+  await expect(rowOf(page, isMobile, '홍길동')).toContainText('1/4');
+});
+
 test('현장 예매 등록으로 등급 매수를 넣으면 확정 + 입장된 새 행이 생긴다(S16·S48)', async ({
   page,
   isMobile,
@@ -485,4 +517,38 @@ test('휴대폰 390 에서 현장 조작 요소는 모두 48 이상이다(S24)',
     () => document.documentElement.scrollWidth - window.innerWidth
   );
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test('휴대폰 390 의 현장 예매 등록 창 안 조작 요소도 모두 48 이상이다(S24 · R1-004)', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, '휴대폰 화면 전용');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openAdmission(page);
+  await page
+    .getByRole('button', { name: '현장 예매 등록' })
+    .filter({ visible: true })
+    .first()
+    .click();
+  const dialog = page.getByRole('dialog', { name: '예매 등록' });
+  await expect(dialog).toBeVisible();
+  const controls = dialog.locator(
+    'button:visible, input:not([type=checkbox]):not([type=radio]):visible, textarea:visible'
+  );
+  const count = await controls.count();
+  expect(count).toBeGreaterThan(5);
+  for (let i = 0; i < count; i += 1) {
+    const control = controls.nth(i);
+    // 입력칸은 둘러싼 InputBase 높이로 잰다
+    const box = await control.evaluate((el) => {
+      const target = el.closest('.MuiInputBase-root') ?? el;
+      const rect = target.getBoundingClientRect();
+      return { height: rect.height, width: rect.width };
+    });
+    expect(
+      box.height,
+      (await control.getAttribute('aria-label')) ?? `#${i}`
+    ).toBeGreaterThanOrEqual(48);
+  }
 });

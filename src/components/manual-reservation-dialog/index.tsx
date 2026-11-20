@@ -75,8 +75,10 @@ export interface ManualReservationDialogProps {
   tierOptions: ManualReservationTierOption[];
   /** 상태 기본값 — D12 'PENDING' · D13 'CONFIRMED'(designer §13.11) */
   defaultStatus: 'PENDING' | 'CONFIRMED';
-  /** D13: 확정일 때 입장 인원(0~매수, 기본 = 매수) 칸을 상태 바로 아래에 보인다. D12 는 확정일 때 맨 아래 */
-  admitNowPlacement: 'afterStatus' | 'bottom';
+  /** 입장 인원 칸 — D13 'afterStatus'(확정이면 상태 바로 아래, 기본 = 매수) · 'bottom'(맨 아래) · D12 'none'(칸 없음, 늘 0 — R1-002 사용자 결정) */
+  admitNowPlacement: 'afterStatus' | 'bottom' | 'none';
+  /** 현장 터치 하한(px) — D13 은 48(S24 · qa-r1 R1-004). 없으면 대시보드 기본 */
+  minTouch?: number;
   isSubmitting: boolean;
   /** 폼 위 오류 문구(RSV_003 등) — 없으면 null */
   errorMessage: string | null;
@@ -108,6 +110,7 @@ function ManualReservationDialogBody({
   tierOptions,
   defaultStatus,
   admitNowPlacement,
+  minTouch,
   isSubmitting,
   errorMessage,
   onSubmit,
@@ -145,7 +148,12 @@ function ManualReservationDialogBody({
 
   const patch = (next: Partial<ManualReservationFormInput>) =>
     setForm((current) => ({ ...current, ...next }));
-  const input = toEffectiveManualInput(form, mode, isAdmitTouched);
+  const input = toEffectiveManualInput(
+    form,
+    mode,
+    isAdmitTouched,
+    admitNowPlacement !== 'none'
+  );
   const preview = previewLinesAmount(
     input,
     (tierId) => tierOptions.find((tier) => tier.id === tierId)?.price ?? 0
@@ -194,6 +202,7 @@ function ManualReservationDialogBody({
       errorMessage={errorMessage}
       blockMessage={seatsMessage}
       isBusy={isSubmitting}
+      minTouch={minTouch}
       actions={
         <>
           <Button

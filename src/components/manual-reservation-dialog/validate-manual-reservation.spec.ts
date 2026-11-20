@@ -130,6 +130,16 @@ describe('toEffectiveManualInput', () => {
     expect(input.admitNow).toBe('2');
   });
 
+  it('입장 인원 칸이 없으면(D12 사전 등록 — R1-002) 확정이어도 입장 0 으로 보낸다', () => {
+    const input = toEffectiveManualInput(
+      { ...VALID, customQuantity: '2', customAmount: '0', admitNow: '2' },
+      'custom',
+      true,
+      false
+    );
+    expect(input.admitNow).toBe('0');
+  });
+
   it('입장 인원을 손댔으면 그 값을 그대로 둔다', () => {
     const input = toEffectiveManualInput(
       { ...VALID, admitNow: '1', useCustom: true },
