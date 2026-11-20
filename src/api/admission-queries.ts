@@ -109,6 +109,23 @@ export function useAdmissionBoard(showId: string | null, q: string) {
   });
 }
 
+/**
+ * 인쇄용 명단(오프라인 대비 PDF — 지휘자 추가 2026-11-20). 한 번만 받고 폴링하지 않는다(인쇄 시점 사진).
+ * 검색어 없는 전체 명단 = 취소 제외 예매 전부.
+ */
+export function useAdmissionPrintBoard(showId: string) {
+  return useQuery({
+    queryKey: [...admissionKeys.boards(showId), 'print'] as const,
+    queryFn: () => {
+      assertOnline();
+      return fetchAdmissionBoard(showId, '');
+    },
+    networkMode: 'always',
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+}
+
 /** 현장 예매 등록 Dialog 의 등급 선택지 — 공연 id 가 없으면 부르지 않는다(직접 입력만) */
 export function useAdmissionPriceTiers(
   performanceId: string | null,

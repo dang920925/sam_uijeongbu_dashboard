@@ -14,6 +14,7 @@ import type { ReactNode } from 'react';
 import { ManualReservationDialog } from '@/src/components/manual-reservation-dialog';
 import { PageContainer } from '@/src/components/page-container';
 import { PageHead } from '@/src/components/page-head';
+import { RosterPrintButton } from '@/src/components/roster-print-button';
 import { ADMISSION_SX } from '@/src/sections/admission/components/admission-field-sx';
 import { AdmissionOnsiteButton } from '@/src/sections/admission/components/admission-onsite-button';
 import { AdmissionOfflineBanner } from '@/src/sections/admission/components/admission-offline-banner';
@@ -51,9 +52,12 @@ export function AdmissionView({ vm, showsFallback, list }: AdmissionViewProps) {
           }
           actions={
             showsFallback ? null : (
-              <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                <AdmissionOnsiteButton onClick={vm.onOpenOnsite} />
-              </Box>
+              <>
+                <RosterPrintButton showId={vm.printShowId} />
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                  <AdmissionOnsiteButton onClick={vm.onOpenOnsite} />
+                </Box>
+              </>
             )
           }
         />
