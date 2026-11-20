@@ -6,3 +6,9 @@
 @layer theme, base, mui, components, utilities;
 
 @import 'tailwindcss';
+
+/* 회차 입장 명단 인쇄(오프라인 대비 PDF) — A4 세로. 다른 화면 인쇄에도 같은 용지 여백을 쓴다 */
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}

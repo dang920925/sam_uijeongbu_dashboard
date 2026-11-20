@@ -254,6 +254,8 @@ export function useAdmissionViewModel() {
     shows.find((s) => s.id === id)?.performanceTitle ?? '';
 
   return {
+    /** 명단 PDF 저장(오프라인 대비) 대상 회차 */
+    printShowId: showId,
     // 회차
     isShowsLoading: !clock || showsQuery.isPending,
     isShowsError: showsQuery.isError,

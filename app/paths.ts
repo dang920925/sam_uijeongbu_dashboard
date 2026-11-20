@@ -32,6 +32,9 @@ export const paths = {
     `/reservations?performanceId=${encodeURIComponent(performanceId)}&q=${encodeURIComponent(code)}`,
   /** SCR-D13 입장 체크(U24 R1) */
   admission: '/admission',
+  /** 회차 입장 명단 인쇄·PDF 저장(오프라인 대비 — 지휘자 추가 2026-11-20). sort=code 면 예매번호순 */
+  admissionPrint: (showId: string, sort?: 'name' | 'code') =>
+    `/admission/${encodeURIComponent(showId)}/print${sort === 'code' ? '?sort=code' : ''}`,
   /** 입장 체크 특정 회차로(다른 회차 예매 안내 → 이동 버튼) */
   admissionShow: (showId: string) =>
     `/admission?showId=${encodeURIComponent(showId)}`,

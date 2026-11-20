@@ -16,6 +16,7 @@ import { Iconify } from '@/src/components/iconify';
 import { ManualReservationDialog } from '@/src/components/manual-reservation-dialog';
 import { PageContainer } from '@/src/components/page-container';
 import { PageHead } from '@/src/components/page-head';
+import { RosterPrintButton } from '@/src/components/roster-print-button';
 import { Pagination } from '@/src/components/pagination';
 import { ReservationDetailDrawer } from '@/src/components/reservation-detail-drawer';
 import { SectionStack } from '@/src/components/section-stack';
@@ -64,6 +65,7 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
           actions={
             gate ? null : (
               <>
+                <RosterPrintButton showId={vm.printShowId} />
                 <Button
                   variant='outlined'
                   color='inherit'

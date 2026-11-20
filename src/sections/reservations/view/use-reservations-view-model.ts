@@ -165,6 +165,8 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
     : null;
 
   return {
+    /** 명단 PDF 저장 — 회차 pill 을 하나 골랐을 때만(전체면 null) */
+    printShowId: showFilter === ALL ? null : showFilter,
     tab,
     performances,
     performanceId,
