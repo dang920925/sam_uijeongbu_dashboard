@@ -11,9 +11,13 @@ import {
   resetFixtureAdminLocks,
 } from '@/e2e-pw/integration/support/integration-api';
 
+// R1(U24·U25) 메뉴: 예매 관리·입장 체크를 공연 관리 아래에 더했다(front-end-dashboard §15.1 SCR-D00).
+// 계정 설정은 메뉴 랜드마크 밖 하단 묶음이라 여기 목록에 들지 않는다.
 const MENU = [
   '대시보드',
   '공연 관리',
+  '예매 관리',
+  '입장 체크',
   '단원 관리',
   '신청서 관리',
   '갤러리',
@@ -47,7 +51,7 @@ async function sessionContext(browser: Browser, baseURL: string | undefined) {
 test.describe('연동 SCR-D00 대시보드 공용', () => {
   test.beforeAll(() => resetFixtureAdminLocks());
 
-  test('메뉴 8개를 순서대로 보여 주고 이동하면 활성 메뉴가 바뀐다', async ({
+  test('메뉴 10개(R1)를 순서대로 보여 주고 이동하면 활성 메뉴가 바뀐다', async ({
     page,
   }) => {
     // Arrange
