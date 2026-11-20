@@ -11,7 +11,8 @@ describe('revalidateTargetsFor (develop §12.1 R-1)', () => {
     expect(
       revalidateTargetsFor('PATCH', `/v1/admin/performances/${PERF_ID}`, 200)
     ).toEqual({
-      tags: ['public:performances'],
+      // R3 — 캐스트 공개 스위치가 공연 PATCH 에 실린다
+      tags: ['public:performances', 'public:cast'],
       paths: ['/', '/works', `/works/${PERF_ID}`],
     });
     expect(
@@ -76,6 +77,47 @@ describe('revalidateTargetsFor (develop §12.1 R-1)', () => {
     expect(
       revalidateTargetsFor('PATCH', '/v1/admin/popups/x', 200)?.tags
     ).toEqual(['public:popups']);
+  });
+
+  it('R3 배역·회차 지정·참여자·배우 쪽 연결은 public:cast 를 고른다', () => {
+    expect(
+      revalidateTargetsFor(
+        'POST',
+        `/v1/admin/performances/${PERF_ID}/roles`,
+        201
+      )
+    ).toEqual({
+      tags: ['public:cast'],
+      paths: [`/works/${PERF_ID}`, '/actors'],
+    });
+    expect(
+      revalidateTargetsFor(
+        'PUT',
+        `/v1/admin/performances/${PERF_ID}/credits/order`,
+        200
+      )?.tags
+    ).toEqual(['public:cast']);
+    expect(
+      revalidateTargetsFor('PUT', '/v1/admin/shows/s/roles/r/cast', 200)?.tags
+    ).toEqual(['public:cast']);
+    expect(revalidateTargetsFor('PATCH', '/v1/admin/roles/r', 200)).toEqual({
+      tags: ['public:cast'],
+      paths: ['/actors'],
+    });
+    expect(revalidateTargetsFor('DELETE', '/v1/admin/credits/c', 204)).toEqual({
+      tags: ['public:cast'],
+      paths: ['/actors', '/about'],
+    });
+    expect(
+      revalidateTargetsFor(
+        'POST',
+        `/v1/admin/members/${PERF_ID}/cast-roles`,
+        201
+      )?.tags
+    ).toEqual(['public:actors', 'public:cast']);
+    expect(
+      revalidateTargetsFor('PATCH', `/v1/admin/staff/${PERF_ID}`, 200)?.paths
+    ).toContain(`/about/staff/${PERF_ID}`);
   });
 
   it('GET·실패 응답·공개 무관 경로는 부르지 않는다', () => {

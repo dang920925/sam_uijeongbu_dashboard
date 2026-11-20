@@ -29,4 +29,6 @@ export const ROOT_KEYS = {
   /** U34 팀 계정(공연별) · 연습실 예약 */
   teamAccount: ['team-account'] as const,
   roomReservation: ['room-reservation'] as const,
+  /** R3 배역·캐스팅·참여자 — 배우 쪽(SCR-D05)·작품 쪽(SCR-D14)이 같은 데이터라 같은 접두사로 함께 무효화 */
+  cast: ['cast'] as const,
 };

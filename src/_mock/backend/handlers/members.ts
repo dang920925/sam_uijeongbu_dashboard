@@ -36,7 +36,12 @@ export function toMemberItem(
 ): MemberListItemResponse {
   const { deletedAt: _deletedAt, ...rest } = m;
   const profile = getStore().actorProfiles.get(m.id);
-  return { ...rest, profileImageUrl: profile?.profileImageUrl ?? null };
+  return {
+    ...rest,
+    profileImageUrl: profile?.profileImageUrl ?? null,
+    // R3 — 목은 배우 프로필 id 를 `ap-{단원 id}` 로 흉내 낸다(프로필이 생긴 뒤에만)
+    actorProfileId: profile ? `ap-${m.id}` : null,
+  };
 }
 
 /** 단원 생성(신청서 "단원으로 등록"도 이 함수를 쓴다 — W3 applications 목 핸들러) */
@@ -68,7 +73,7 @@ export function createMemberRecord(
   return created;
 }
 
-function emptyProfile(memberId: string): ActorProfileResponse {
+export function emptyProfile(memberId: string): ActorProfileResponse {
   return {
     memberId,
     profileImageUrl: null,

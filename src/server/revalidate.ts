@@ -3,7 +3,8 @@
 // 공용 BFF 프록시가 `/admin/*` 의 POST·PUT·PATCH·DELETE 가 2xx 로 끝나면 `after()` 안에서
 // 홈페이지 `POST {CLIENT_PUBLIC_URL}/api/revalidate`(Bearer REVALIDATE_SECRET)를 부른다.
 // 실패·시간 초과(5초)는 console.warn 만 — 관리 작업 응답·상태코드에 영향 없음(이미 응답함). 60초 안전망은 홈페이지가 유지.
-// 경로 → 태그·경로 표는 develop §12.1 표 그대로(R3 배역 줄은 R3 에서 더한다).
+// 경로 → 태그·경로 표는 develop §12.1 표 그대로 + R3: 배역·회차 지정·참여자·배우 쪽 연결·캐스트 공개 스위치는
+// public:cast(홈페이지의 작품 캐스트·배우 상세·연출진 상세 요청이 모두 이 태그를 단다).
 // ----------------------------------------------------------------------
 import { readRevalidateConfig } from '@/src/server/server-config';
 
@@ -13,7 +14,8 @@ export type PublicTag =
   | 'public:staff'
   | 'public:schedules'
   | 'public:galleries'
-  | 'public:popups';
+  | 'public:popups'
+  | 'public:cast';
 
 export interface RevalidateTargets {
   tags: PublicTag[];
@@ -45,7 +47,25 @@ export function revalidateTargetsFor(
   if (!match) return null;
   const segments = match[1].split('/').filter(Boolean);
   const [resource, id, sub] = segments;
+  // R3 — 공연 아래 배역·격자·참여자, 회차 지정(shows/{id}/roles/{roleId}/cast)은 캐스트만 바뀐다
+  if (
+    (resource === 'performances' &&
+      (sub === 'roles' || sub === 'credits' || sub === 'show-casts')) ||
+    (resource === 'shows' && sub === 'roles')
+  ) {
+    return {
+      tags: ['public:cast'],
+      paths: [
+        ...(resource === 'performances' ? idPath('/works', id) : []),
+        '/actors',
+      ],
+    };
+  }
   switch (resource) {
+    case 'roles':
+      return { tags: ['public:cast'], paths: ['/actors'] };
+    case 'credits':
+      return { tags: ['public:cast'], paths: ['/actors', '/about'] };
     case 'performances':
     case 'classes':
     case 'shows':
@@ -54,7 +74,11 @@ export function revalidateTargetsFor(
     // 가격 등급 단건 PATCH·DELETE·링크 재발급(develop §11.10) — 작품 상세 예매 버튼·등급 표시(지휘자 추가 2026-11-20)
     case 'price-tiers':
       return {
-        tags: ['public:performances'],
+        // 공연 행 PATCH 는 캐스트 공개 스위치(castPublic)도 담을 수 있다 → public:cast 함께
+        tags:
+          resource === 'performances' && id && !sub
+            ? ['public:performances', 'public:cast']
+            : ['public:performances'],
         paths: [
           '/',
           '/works',
@@ -65,11 +89,18 @@ export function revalidateTargetsFor(
       // 초대 코드(`members/invite-codes`·`members/{id}/invite-code`)는 공개 페이지에 안 나온다
       if (id === 'invite-codes' || sub === 'invite-code') return null;
       return {
-        tags: ['public:actors'],
+        // R3 배우 쪽 SAM 출연작·참여 직함(cast-roles · credits)은 캐스트도 바뀐다
+        tags:
+          sub === 'cast-roles' || sub === 'credits'
+            ? ['public:actors', 'public:cast']
+            : ['public:actors'],
         paths: ['/actors', ...idPath('/actors', id)],
       };
     case 'staff':
-      return { tags: ['public:staff'], paths: ['/', '/about'] };
+      return {
+        tags: ['public:staff'],
+        paths: ['/', '/about', ...idPath('/about/staff', id)],
+      };
     case 'schedules':
       return { tags: ['public:schedules'], paths: ['/schedule'] };
     case 'galleries':

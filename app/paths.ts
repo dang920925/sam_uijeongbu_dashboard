@@ -13,6 +13,8 @@ export const paths = {
     shows: (id: string) => `/performances/${id}/shows`,
     /** U34 팀 계정 탭(공연 상세의 탭 — design §13 SCR-D04 '팀 계정') */
     teams: (id: string) => `/performances/${id}/teams`,
+    /** SCR-D14 배역·캐스팅 탭(R3 — design §6 SCR-D14) */
+    cast: (id: string) => `/performances/${id}/cast`,
   },
   /** U34 연습실 예약 목록(관리자 — U23 캘린더 레이어는 T-SA 배포 뒤 연결) */
   roomReservations: '/room-reservations',

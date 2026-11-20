@@ -13,6 +13,8 @@ export const MSG_D04 = {
   TAB_SHOWS: '회차·예매',
   /** U34 — design §13 SCR-D04 '팀 계정' 탭 */
   TAB_TEAMS: '팀 계정',
+  /** R3 SCR-D14 — design §6 SCR-D11 탭 "(R3) 배역·캐스팅"(제안) */
+  TAB_CAST: '배역·캐스팅',
   /** 탭 목록 aria-label(접근성 전용, 자체 결정) */
   TABS_LABEL: '공연 상세 메뉴',
 

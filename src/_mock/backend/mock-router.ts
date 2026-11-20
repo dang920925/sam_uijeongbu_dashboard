@@ -7,6 +7,7 @@ import { accountRoutes } from '@/src/_mock/backend/handlers/account';
 import { admissionRoutes } from '@/src/_mock/backend/handlers/admission';
 import { applicationRoutes } from '@/src/_mock/backend/handlers/applications';
 import { authRoutes } from '@/src/_mock/backend/handlers/auth';
+import { castRoutes } from '@/src/_mock/backend/handlers/cast';
 import { dashboardRoutes } from '@/src/_mock/backend/handlers/dashboard';
 import { galleryRoutes } from '@/src/_mock/backend/handlers/galleries';
 import { inviteCodeRoutes } from '@/src/_mock/backend/handlers/invite-codes';
@@ -46,6 +47,8 @@ const ROUTES: MockRoute[] = [
   ...admissionRoutes,
   // U34 — `performances/{id}/team-accounts` 를 공연 라우트보다 먼저
   ...teamAccountRoutes,
+  // R3 배역·참여자 — `members/{id}/cast-roles` 등이 단원 라우트보다 먼저(경로가 더 길어 겹치진 않지만 묶음을 한곳에)
+  ...castRoutes,
   ...performanceRoutes,
   ...memberRoutes,
   ...applicationRoutes,

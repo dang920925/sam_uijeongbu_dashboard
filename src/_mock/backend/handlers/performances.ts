@@ -109,6 +109,10 @@ function applyPerformance(
       return validationError(ctx);
     target.seatSelectionEnabled = b.seatSelectionEnabled;
   }
+  if ('castPublic' in b) {
+    if (typeof b.castPublic !== 'boolean') return validationError(ctx);
+    target.castPublic = b.castPublic;
+  }
   return null;
 }
 

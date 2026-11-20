@@ -44,6 +44,7 @@ export function fromPerformanceResponse(
     ...fromPerformanceListItemResponse(res),
     description: res.description ?? null,
     detailImageUrls: res.detailImageUrls ?? [],
+    castPublic: res.castPublic === true,
     updatedAt: res.updatedAt,
   };
 }

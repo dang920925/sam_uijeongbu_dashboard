@@ -2,6 +2,7 @@
 // 연출진 행 표시 모델 — 소개 없으면 "-", 노출 여부 → 라벨·tone(노출 success / 비노출 neutral, design SCR-D09).
 // ----------------------------------------------------------------------
 import { MSG_COMMON } from '@/src/shared/messages/common';
+import { MSG_D09 } from '@/src/shared/messages/d09';
 import type { Staff } from '@/src/types/content';
 import type { LabelTone } from '@/src/theme/semantic';
 
@@ -14,6 +15,8 @@ export interface StaffRowModel {
   displayOrder: number;
   visibleLabel: string;
   visibleTone: LabelTone;
+  /** "연혁 {n}개"(U28) */
+  historyLabel: string;
 }
 
 export function toStaffRow(staff: Staff): StaffRowModel {
@@ -26,5 +29,6 @@ export function toStaffRow(staff: Staff): StaffRowModel {
     displayOrder: staff.displayOrder,
     visibleLabel: staff.isVisible ? MSG_COMMON.VISIBLE : MSG_COMMON.HIDDEN,
     visibleTone: staff.isVisible ? 'success' : 'neutral',
+    historyLabel: MSG_D09.historyCount(staff.histories?.length ?? 0),
   };
 }

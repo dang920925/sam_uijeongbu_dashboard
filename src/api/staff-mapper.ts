@@ -1,6 +1,11 @@
 // ----------------------------------------------------------------------
 // 연출진 매퍼(FN-16). 이름·역할은 앞뒤 공백 제거, 빈 소개는 null, 노출 순서는 0 이상 정수.
 // ----------------------------------------------------------------------
+import {
+  type StaffHistoryRow,
+  toHistoryRequest,
+  toHistoryRows,
+} from '@/src/sections/staff/utils/staff-history-form';
 import type {
   AdminStaffItemResponse,
   Staff,
@@ -15,6 +20,8 @@ export interface StaffFormInput {
   bio: string;
   displayOrder: string;
   isVisible: boolean;
+  /** 연혁 입력 줄(U28) — 저장하면 통째 교체 */
+  histories: StaffHistoryRow[];
 }
 
 export function fromAdminStaffItemResponse(res: AdminStaffItemResponse): Staff {
@@ -27,6 +34,7 @@ export function fromAdminStaffItemResponse(res: AdminStaffItemResponse): Staff {
     displayOrder: res.displayOrder,
     isVisible: res.isVisible,
     createdAt: res.createdAt,
+    histories: res.histories ?? [],
   };
 }
 
@@ -47,6 +55,7 @@ export function toStaffUpsertRequest(
     bio: bio === '' ? null : bio,
     displayOrder: toDisplayOrder(input.displayOrder),
     isVisible: input.isVisible,
+    histories: toHistoryRequest(input.histories),
   };
 }
 
@@ -59,5 +68,6 @@ export function toStaffFormInput(staff: Staff): StaffFormInput {
     bio: staff.bio ?? '',
     displayOrder: String(staff.displayOrder),
     isVisible: staff.isVisible,
+    histories: toHistoryRows(staff.histories),
   };
 }

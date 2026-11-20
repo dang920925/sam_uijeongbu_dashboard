@@ -24,6 +24,7 @@ export function fromMemberListItemResponse(
     createdAt: res.createdAt,
     profileImageUrl: res.profileImageUrl ?? null,
     inviterListed: res.inviterListed !== false,
+    actorProfileId: res.actorProfileId ?? null,
   };
 }
 

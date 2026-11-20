@@ -28,6 +28,7 @@ describe('staff-mapper', () => {
       bio: '  ',
       displayOrder: '3',
       isVisible: true,
+      histories: [{ key: 'h1', year: ' 2024 ', content: ' fixture-연혁 ' }],
     });
     // Assert
     expect(request).toEqual({
@@ -37,6 +38,7 @@ describe('staff-mapper', () => {
       bio: null,
       displayOrder: 3,
       isVisible: true,
+      histories: [{ year: 2024, content: 'fixture-연혁' }],
     });
   });
 
@@ -52,7 +54,7 @@ describe('staff-mapper', () => {
     const staff = fromAdminStaffItemResponse(RESPONSE);
     const form = toStaffFormInput(staff);
     // Assert
-    expect(staff).toEqual(RESPONSE);
+    expect(staff).toEqual({ ...RESPONSE, histories: [] });
     expect(form).toEqual({
       name: 'fixture-연출',
       role: '연출',
@@ -60,6 +62,24 @@ describe('staff-mapper', () => {
       bio: '',
       displayOrder: '2',
       isVisible: false,
+      histories: [],
     });
+  });
+
+  it('연혁 응답을 입력 줄로 옮긴다(순서 유지, 옛 응답이면 빈 배열)', () => {
+    const staff = fromAdminStaffItemResponse({
+      ...RESPONSE,
+      histories: [
+        { year: 2024, content: 'a' },
+        { year: 2019, content: 'b' },
+      ],
+    });
+
+    expect(
+      toStaffFormInput(staff).histories.map((row) => [row.year, row.content])
+    ).toEqual([
+      ['2024', 'a'],
+      ['2019', 'b'],
+    ]);
   });
 });

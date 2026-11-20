@@ -41,7 +41,7 @@ test.describe('SCR-D09 연출진 관리', () => {
     const dialog = page.getByRole('dialog', { name: '연출진 추가' });
     await expect(dialog).toBeVisible();
     // Act — 빈 값 제출
-    await dialog.getByRole('button', { name: '추가' }).click();
+    await dialog.getByRole('button', { name: '추가', exact: true }).click();
     // Assert
     await expect(dialog.getByText('이름을 입력해주세요')).toBeVisible();
     await expect(dialog.getByText('역할을 입력해주세요')).toBeVisible();
@@ -57,7 +57,7 @@ test.describe('SCR-D09 연출진 관리', () => {
       .getByPlaceholder('예: 예술감독 · 연출')
       .fill('예술감독 · 연출');
     await expect(dialog.getByText(`${name.length}/50`)).toBeVisible();
-    await dialog.getByRole('button', { name: '추가' }).click();
+    await dialog.getByRole('button', { name: '추가', exact: true }).click();
     // Assert
     await expect(dialog).toBeHidden();
     await expect(page.getByText('저장되었습니다')).toBeVisible();

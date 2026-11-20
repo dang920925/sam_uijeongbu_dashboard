@@ -12,6 +12,8 @@ export interface MemberListItemResponse {
   profileImageUrl: string | null;
   /** U36 예매 초대자 목록에 표시(back-end §16 — 기본 true, J-107 대체) */
   inviterListed: boolean;
+  /** 배우 프로필 id(R3 — 회차 캐스팅 배우 선택용, 프로필 없으면 null · 옛 응답이면 없음) */
+  actorProfileId?: string | null;
 }
 
 export interface MemberCreateRequest {
@@ -72,6 +74,7 @@ export interface Member {
   profileImageUrl: string | null;
   /** U36 — 응답에 없으면 true(J-107 대체 기본값) */
   inviterListed: boolean;
+  actorProfileId: string | null;
 }
 
 export interface Filmography {

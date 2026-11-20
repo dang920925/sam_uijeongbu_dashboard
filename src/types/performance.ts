@@ -16,6 +16,8 @@ export interface AdminPerformanceListItemResponse {
 export interface AdminPerformanceResponse extends AdminPerformanceListItemResponse {
   description: string | null;
   detailImageUrls: string[];
+  /** 캐스트·참여자 홈페이지 공개(R3 U33 — develop §17.3, 기본 false) */
+  castPublic?: boolean;
   updatedAt: string;
 }
 
@@ -53,6 +55,8 @@ export interface PerformanceSummary {
 export interface Performance extends PerformanceSummary {
   description: string | null;
   detailImageUrls: string[];
+  /** 캐스트·참여자 홈페이지 공개(R3 — 옛 응답이면 false) */
+  castPublic: boolean;
   updatedAt: string;
 }
 

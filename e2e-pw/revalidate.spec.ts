@@ -38,7 +38,7 @@ test.describe('U27 홈페이지 즉시 반영 호출', () => {
     // Act
     await dialog.getByPlaceholder('이름 입력').fill(`${PREFIX}연출`);
     await dialog.getByPlaceholder('예: 예술감독 · 연출').fill('연출');
-    await dialog.getByRole('button', { name: '추가' }).click();
+    await dialog.getByRole('button', { name: '추가', exact: true }).click();
     // Assert
     await expect(page.getByText('저장되었습니다')).toBeVisible();
     await expect

@@ -37,7 +37,8 @@ export const MSG_D05 = {
   DISPLAY_ORDER: '노출 순서',
   /** 노출 순서 도움말 — develop §3.4 displayOrder 0~9999 (designer W4 제안 — 사용자 확정 2026-11-19 "제안 문구 그대로") */
   DISPLAY_ORDER_HELP: '0~9999',
-  FILMOGRAPHY: '출연작',
+  /** U26 보강(design §12.1) — 기존 텍스트 출연작은 "외부 출연작"(제안)으로 이름만 바뀐다 */
+  FILMOGRAPHY: '외부 출연작',
   /** 출연작 행 추가 버튼 — designer W4 "○○ 추가" 패턴 줄임(사용자 확정 2026-11-19 "제안 문구 그대로") */
   FILMOGRAPHY_ADD: '추가',
   FILM_TITLE: '작품명',

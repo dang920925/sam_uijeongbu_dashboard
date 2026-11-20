@@ -23,6 +23,7 @@ const member: Member = {
   createdAt: '2026-11-18T16:00:00.000Z',
   profileImageUrl: null,
   inviterListed: true,
+  actorProfileId: null,
 };
 
 const profile: ActorProfile = {

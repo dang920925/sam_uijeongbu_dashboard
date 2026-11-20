@@ -119,6 +119,39 @@ export interface MockSeatLayout {
   cells: MockSeatCell[];
 }
 
+/** 배역(performance_roles — R3 develop §11.7 · §17.1). name null = "출연" 묶음 */
+export interface MockRole {
+  id: string;
+  performanceId: string;
+  name: string | null;
+  description: string | null;
+  sortOrder: number;
+  isRecruiting: boolean;
+  createdAt: string;
+}
+
+/** 캐스트 행 — showId null 이면 기본 캐스트(role_casts), 있으면 회차 지정(show_role_casts). 배우는 단원 id 로 든다 */
+export interface MockRoleCast {
+  roleId: string;
+  showId: string | null;
+  memberId: string;
+  note: string | null;
+  sortOrder: number;
+}
+
+/** 참여자(performance_credits — R3 develop §17.1) */
+export interface MockCredit {
+  id: string;
+  performanceId: string;
+  title: string;
+  staffId: string | null;
+  memberId: string | null;
+  displayName: string | null;
+  sortOrder: number;
+  isVisible: boolean;
+  createdAt: string;
+}
+
 /** 관리자 계정(U25) — null 이면 env MOCK_ADMIN_USERNAME/PASSWORD. sessionVersion 이 토큰 버전과 다르면 401 */
 export interface MockAccount {
   username: string | null;
@@ -151,6 +184,11 @@ export interface MockStore {
   }[];
   /** memberId → 초대 코드 */
   inviteCodes: Map<string, string>;
+  /** R3 배역·캐스트·참여자 · 연출진 연혁(staffId → 연혁). 캐스트 공개 스위치는 공연 행의 castPublic */
+  roles: MockRole[];
+  roleCasts: MockRoleCast[];
+  credits: MockCredit[];
+  staffHistories: Map<string, { year: number; content: string }[]>;
   account: MockAccount;
   /** accessToken → 발급 당시 sessionVersion(U25 다른 기기 로그아웃 흉내) */
   sessionVersions: Map<string, number>;
@@ -204,6 +242,10 @@ function emptyStore(): MockStore {
     seatLayouts: new Map(),
     admissionLogs: [],
     inviteCodes: new Map(),
+    roles: [],
+    roleCasts: [],
+    credits: [],
+    staffHistories: new Map(),
     account: { username: null, password: null, sessionVersion: 0 },
     sessionVersions: new Map(),
     revalidateCalls: [],

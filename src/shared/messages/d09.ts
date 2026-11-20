@@ -33,6 +33,19 @@ export const MSG_D09 = {
   NAME_REQUIRED: '이름을 입력해주세요',
   /** 역할 필수 — designer §3.4 §4 "역할을 입력해주세요 패턴" 제안 문구 — 사용자 확정 2026-11-19 "제안 문구 그대로" */
   ROLE_REQUIRED: '역할을 입력해주세요',
+  /** U28 연혁 입력(design §7 SCR-D09 — "제안") */
+  HISTORY: '연혁',
+  HISTORY_ADD: '연혁 추가',
+  HISTORY_YEAR: '연도',
+  HISTORY_CONTENT: '내용',
+  HISTORY_MAX_HELP: '연혁은 50개까지 넣을 수 있습니다.',
+  HISTORY_INVALID: '연도(4자리)와 내용을 확인해주세요.',
+  HISTORY_UP_ARIA: '위로',
+  HISTORY_DOWN_ARIA: '아래로',
+  HISTORY_REMOVE_ARIA: '연혁 삭제',
+  /** 목록 표 "연혁 {n}개" */
+  COL_HISTORY: '연혁',
+  historyCount: (n: number) => `연혁 ${n}개`,
   /** design SCR-D09 빈 상태(D03 빈 상태 패턴) */
   EMPTY: '등록된 연출진이 없습니다',
   /** design SCR-D09 "…을(를) 삭제하시겠습니까?" 패턴(Members.tsx:304) */

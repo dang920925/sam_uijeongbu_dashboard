@@ -21,7 +21,29 @@ type MockStaff = SoftDeleted<AdminStaffItemResponse>;
 
 function toItem(s: MockStaff): AdminStaffItemResponse {
   const { deletedAt: _deletedAt, ...rest } = s;
-  return rest;
+  return { ...rest, histories: getStore().staffHistories.get(s.id) ?? [] };
+}
+
+/** 연혁(U28) — 보내면 통째 교체(0~50, 연도 1900~2100 · 내용 1~200). 잘못되면 400 */
+function readHistories(
+  ctx: MockContext
+): { year: number; content: string }[] | null | Response {
+  if (!('histories' in ctx.body)) return null;
+  const list = ctx.body.histories;
+  if (!Array.isArray(list) || list.length > 50) return validationError(ctx);
+  const rows = (list as Record<string, unknown>[]).map((h) => ({
+    year: Number(h.year),
+    content: str(h.content)?.trim() ?? '',
+  }));
+  const valid = rows.every(
+    (h) =>
+      Number.isInteger(h.year) &&
+      h.year >= 1900 &&
+      h.year <= 2100 &&
+      h.content.length >= 1 &&
+      h.content.length <= 200
+  );
+  return valid ? rows : validationError(ctx);
 }
 
 function findStaff(id: string): MockStaff | undefined {
@@ -95,6 +117,8 @@ export const staffRoutes: MockRoute[] = [
       };
       const invalid = applyStaff(ctx, draft, true);
       if (invalid) return invalid;
+      const histories = readHistories(ctx);
+      if (histories instanceof Response) return histories;
       const created: MockStaff = {
         ...(draft as AdminStaffItemResponse),
         id: newId(),
@@ -102,6 +126,7 @@ export const staffRoutes: MockRoute[] = [
         deletedAt: null,
       };
       getStore().staff.push(created);
+      if (histories) getStore().staffHistories.set(created.id, histories);
       return json(toItem(created), 201);
     },
   },
@@ -116,7 +141,10 @@ export const staffRoutes: MockRoute[] = [
       const next: Partial<AdminStaffItemResponse> = {};
       const invalid = applyStaff(ctx, next, false);
       if (invalid) return invalid;
+      const histories = readHistories(ctx);
+      if (histories instanceof Response) return histories;
       Object.assign(target, next);
+      if (histories) getStore().staffHistories.set(target.id, histories);
       return json(toItem(target));
     },
   },
