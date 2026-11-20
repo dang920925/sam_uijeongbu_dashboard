@@ -35,6 +35,20 @@ describe('revalidateTargetsFor (develop §12.1 R-1)', () => {
     expect(
       revalidateTargetsFor('PATCH', '/v1/admin/classes/x', 200)?.tags
     ).toEqual(['public:performances']);
+    // 가격 등급 단건 PATCH·DELETE(지휘자 추가 2026-11-20)
+    expect(
+      revalidateTargetsFor('PATCH', '/v1/admin/price-tiers/t-1', 200)
+    ).toEqual({ tags: ['public:performances'], paths: ['/', '/works'] });
+    expect(
+      revalidateTargetsFor('DELETE', '/v1/admin/price-tiers/t-1', 204)?.tags
+    ).toEqual(['public:performances']);
+    expect(
+      revalidateTargetsFor(
+        'POST',
+        `/v1/admin/performances/${PERF_ID}/price-tiers`,
+        201
+      )?.paths
+    ).toContain(`/works/${PERF_ID}`);
   });
 
   it('단원·연출진·일정·갤러리·팝업은 표의 태그·경로를 고른다', () => {

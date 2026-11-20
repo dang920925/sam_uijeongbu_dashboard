@@ -49,6 +49,10 @@ export function revalidateTargetsFor(
     case 'performances':
     case 'classes':
     case 'shows':
+    // 가격 등급 단건 PATCH·DELETE·링크 재발급(develop §11.10) — 지휘자 추가 2026-11-20
+    case 'price-tiers':
+    // 가격 등급 단건 PATCH·DELETE·링크 재발급(develop §11.10) — 작품 상세 예매 버튼·등급 표시(지휘자 추가 2026-11-20)
+    case 'price-tiers':
       return {
         tags: ['public:performances'],
         paths: [

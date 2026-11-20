@@ -11,7 +11,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
 import Switch from '@mui/material/Switch';
 import Tooltip from '@mui/material/Tooltip';
-import { useId } from 'react';
+import { useId, type ReactElement } from 'react';
 
 import { DataTable, type DataTableColumn } from '@/src/components/data-table';
 import { EmptyContent } from '@/src/components/empty-content';
@@ -29,29 +29,51 @@ interface TierCardProps {
   card: PriceTierSection['card'];
 }
 
-const ICON_BUTTON_SX = { width: LAYOUT.controlSm, height: LAYOUT.controlSm };
+// R1-003(qa-r1): 비활성 버튼은 sx 색이 MUI 비활성 색을 덮어 활성과 똑같아 보였다 → 같은 색 50%(QA2-008 규칙)
+const ICON_BUTTON_SX = {
+  width: LAYOUT.controlSm,
+  height: LAYOUT.controlSm,
+  '&.Mui-disabled': { opacity: 0.5 },
+};
+
+/** 비활성 버튼에도 이유를 보인다 — span 으로 감싸 이벤트를 받고, 터치는 바로 띄운다 */
+function withTip(button: ReactElement, tip: string | null) {
+  return tip ? (
+    <Tooltip title={tip} enterTouchDelay={0}>
+      <span className='inline-flex'>{button}</span>
+    </Tooltip>
+  ) : (
+    button
+  );
+}
 
 export function TierCard({ card }: TierCardProps) {
   const titleId = useId();
 
   const orderButtons = (row: TierRowDisplay) => (
     <div className='flex gap-1'>
-      <IconButton
-        aria-label={MSG_D11.TIER_MOVE_UP(row.name)}
-        disabled={!row.canMoveUp || card.isBusy}
-        onClick={() => card.onMove(row.id, 'up')}
-        sx={{ ...ICON_BUTTON_SX, color: 'text.secondary' }}
-      >
-        <Iconify icon='solar:alt-arrow-up-linear' />
-      </IconButton>
-      <IconButton
-        aria-label={MSG_D11.TIER_MOVE_DOWN(row.name)}
-        disabled={!row.canMoveDown || card.isBusy}
-        onClick={() => card.onMove(row.id, 'down')}
-        sx={{ ...ICON_BUTTON_SX, color: 'text.secondary' }}
-      >
-        <Iconify icon='solar:alt-arrow-down-linear' />
-      </IconButton>
+      {withTip(
+        <IconButton
+          aria-label={MSG_D11.TIER_MOVE_UP(row.name)}
+          disabled={!row.canMoveUp || card.isBusy}
+          onClick={() => card.onMove(row.id, 'up')}
+          sx={{ ...ICON_BUTTON_SX, color: 'text.secondary' }}
+        >
+          <Iconify icon='solar:alt-arrow-up-linear' />
+        </IconButton>,
+        row.canMoveUp ? null : MSG_D11.TIER_MOVE_UP_BLOCKED_TIP
+      )}
+      {withTip(
+        <IconButton
+          aria-label={MSG_D11.TIER_MOVE_DOWN(row.name)}
+          disabled={!row.canMoveDown || card.isBusy}
+          onClick={() => card.onMove(row.id, 'down')}
+          sx={{ ...ICON_BUTTON_SX, color: 'text.secondary' }}
+        >
+          <Iconify icon='solar:alt-arrow-down-linear' />
+        </IconButton>,
+        row.canMoveDown ? null : MSG_D11.TIER_MOVE_DOWN_BLOCKED_TIP
+      )}
     </div>
   );
 
@@ -77,13 +99,7 @@ export function TierCard({ card }: TierCardProps) {
         <Iconify icon='solar:trash-bin-trash-linear' />
       </IconButton>
     );
-    return row.canDelete ? (
-      button
-    ) : (
-      <Tooltip title={MSG_D11.DELETE_BLOCKED_TIP}>
-        <span>{button}</span>
-      </Tooltip>
-    );
+    return withTip(button, row.canDelete ? null : MSG_D11.DELETE_BLOCKED_TIP);
   };
 
   const actions = (row: TierRowDisplay, isCard = false) => (

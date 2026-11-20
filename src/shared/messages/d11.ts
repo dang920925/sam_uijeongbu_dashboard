@@ -188,6 +188,9 @@ export const MSG_D11 = {
   REISSUE: '재발급',
   /** 쓰인 등급 삭제 막음 툴팁 — design §6.1b(제안) */
   DELETE_BLOCKED_TIP: '예매에 쓰인 등급은 사용 중지로 바꿔주세요',
+  /** 비활성 ▲▼ 이유(R1-003 qa-r1) — 자체 제안 */
+  TIER_MOVE_UP_BLOCKED_TIP: '맨 위 등급입니다',
+  TIER_MOVE_DOWN_BLOCKED_TIP: '맨 아래 등급입니다',
   /** 등급 삭제 확인 — 회차 삭제와 같은 패턴(자체 결정) */
   TIER_DELETE_CONFIRM: '가격 등급을 삭제하시겠습니까?',
 
