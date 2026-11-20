@@ -9,6 +9,22 @@ export interface TierOrderChange {
   sortOrder: number;
 }
 
+/** 서버 sortOrder 상한(CreatePriceTierRequestDto 0~999) */
+export const TIER_SORT_ORDER_MAX = 999;
+
+/**
+ * 새 등급의 sortOrder — 지금 등급 중 가장 큰 값 + 1(없으면 0, 상한 999).
+ * 서버는 sortOrder 를 빼면 0 으로 넣고 "순서 → 등록 순"으로 정렬해, ▲▼ 로 0..n-1 이 된 뒤 추가하면
+ * 새 등급이 맨 뒤가 아니라 sortOrder 0 무리 끝(중간)에 끼었다(integration 실측 2026-11-20).
+ */
+export function nextTierSortOrder(
+  tiers: Pick<PriceTier, 'sortOrder'>[]
+): number {
+  if (tiers.length === 0) return 0;
+  const max = Math.max(...tiers.map((tier) => tier.sortOrder));
+  return Math.min(max + 1, TIER_SORT_ORDER_MAX);
+}
+
 export function moveTier(
   tiers: Pick<PriceTier, 'id' | 'sortOrder'>[],
   id: string,

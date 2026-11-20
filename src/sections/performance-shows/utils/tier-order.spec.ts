@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { moveTier } from '@/src/sections/performance-shows/utils/tier-order';
+import {
+  moveTier,
+  nextTierSortOrder,
+} from '@/src/sections/performance-shows/utils/tier-order';
 
 describe('tier-order', () => {
+  it('새 등급 순서는 가장 큰 sortOrder + 1(없으면 0, 999 상한)', () => {
+    expect(nextTierSortOrder([])).toBe(0);
+    expect(
+      nextTierSortOrder([{ sortOrder: 0 }, { sortOrder: 2 }, { sortOrder: 1 }])
+    ).toBe(3);
+    expect(nextTierSortOrder([{ sortOrder: 999 }])).toBe(999);
+  });
+
   it('한 칸 옮기고 바뀐 등급의 sortOrder 만 돌려준다', () => {
     const tiers = [
       { id: 'a', sortOrder: 0 },

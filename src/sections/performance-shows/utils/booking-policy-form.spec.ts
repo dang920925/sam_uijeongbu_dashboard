@@ -54,7 +54,7 @@ describe('booking-policy-form', () => {
     expect(hasBookingPolicyFormError(ok)).toBe(false);
   });
 
-  it('문의처는 비우거나 전화·글자는 통과, http 로 시작하면 https:// 만 통과한다', () => {
+  it('문의처는 비우거나 전화·글자·https 는 통과, http:·javascript: 등은 어디 있든 막는다(서버 규칙과 같음)', () => {
     const check = (value: string) =>
       validateBookingPolicyForm({ ...EMPTY, inquiryContact: value })
         .inquiryContact;
@@ -62,5 +62,9 @@ describe('booking-policy-form', () => {
     expect(check('010-0000-0000 (문자)')).toBeNull();
     expect(check('https://open.kakao.com/o/fixture')).toBeNull();
     expect(check('http://open.kakao.com/o/fixture')).toBe(INVALID);
+    expect(check('javascript:alert(1)')).toBe(INVALID);
+    expect(check('카톡 문의 http://open.kakao.com/o/x')).toBe(INVALID);
+    expect(check('https://a.example/?next=data:text')).toBe(INVALID);
+    expect(check('문의: 010-0000-0000')).toBeNull();
   });
 });

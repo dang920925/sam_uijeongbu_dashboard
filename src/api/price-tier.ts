@@ -34,14 +34,16 @@ export async function fetchPriceTiers(
   return res.items.map(fromAdminPriceTierResponse);
 }
 
+/** 추가 — sortOrder 는 화면이 정한 맨 뒤 순서(서버 기본 0) */
 export async function createPriceTier(
   performanceId: string,
-  input: PriceTierFormInput
+  input: PriceTierFormInput,
+  sortOrder?: number
 ): Promise<PriceTier> {
   return fromAdminPriceTierResponse(
     await apiPost<AdminPriceTierResponse>(
       tierPaths.list(performanceId),
-      toPriceTierCreateRequest(input)
+      toPriceTierCreateRequest(input, sortOrder)
     )
   );
 }

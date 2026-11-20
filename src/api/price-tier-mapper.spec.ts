@@ -37,6 +37,22 @@ describe('price-tier-mapper', () => {
     });
   });
 
+  it('추가 요청에 순서를 주면 sortOrder 를 함께 보낸다(서버 기본 0 은 맨 뒤가 아님)', () => {
+    // Act
+    const request = toPriceTierCreateRequest(
+      { ...EMPTY_PRICE_TIER_FORM, name: '학생', price: '10000' },
+      3
+    );
+    // Assert
+    expect(request).toEqual({
+      name: '학생',
+      price: 10000,
+      visibility: 'PUBLIC',
+      sortOrder: 3,
+      isActive: true,
+    });
+  });
+
   it('응답을 화면 모델로 옮기고 수정 폼 값으로 바꾼다', () => {
     const tier = fromAdminPriceTierResponse(RESPONSE);
     expect(tier).toEqual(RESPONSE);

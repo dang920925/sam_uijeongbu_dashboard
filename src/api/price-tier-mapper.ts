@@ -59,14 +59,19 @@ export function fromAdminPriceTierResponse(
   };
 }
 
-/** 추가 요청 — 순서는 서버가 맨 뒤로 정한다(sortOrder 생략) */
+/**
+ * 추가 요청 — sortOrder 를 주면 그 순서로(화면은 맨 뒤 = 가장 큰 값 + 1 을 준다).
+ * 서버는 sortOrder 를 빼면 0 으로 넣는다(맨 뒤가 아님 — integration 실측).
+ */
 export function toPriceTierCreateRequest(
-  input: PriceTierFormInput
+  input: PriceTierFormInput,
+  sortOrder?: number
 ): PriceTierCreateRequest {
   return {
     name: input.name.trim(),
     price: toIntOrNull(input.price) ?? 0,
     visibility: input.visibility,
+    ...(sortOrder === undefined ? {} : { sortOrder }),
     isActive: input.isActive,
   };
 }

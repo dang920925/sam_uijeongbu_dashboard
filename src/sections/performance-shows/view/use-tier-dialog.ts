@@ -44,7 +44,11 @@ export interface TierDialogState {
   onSubmit: () => void;
 }
 
-export function useTierDialog(performanceId: string): TierDialogState {
+/** nextSortOrder: 새 등급을 맨 뒤에 두는 순서(utils/tier-order nextTierSortOrder) */
+export function useTierDialog(
+  performanceId: string,
+  nextSortOrder: number
+): TierDialogState {
   const snackbar = useAppSnackbar();
   const createTier = useCreatePriceTier(performanceId);
   const saveTier = useSavePriceTier();
@@ -78,7 +82,10 @@ export function useTierDialog(performanceId: string): TierDialogState {
     if (editingId) {
       saveTier.mutate({ id: editingId, input: form }, { onSuccess, onError });
     } else {
-      createTier.mutate(form, { onSuccess, onError });
+      createTier.mutate(
+        { input: form, sortOrder: nextSortOrder },
+        { onSuccess, onError }
+      );
     }
   };
 

@@ -17,7 +17,10 @@ import {
   useSavePriceTierActive,
 } from '@/src/api/price-tier-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
-import { moveTier } from '@/src/sections/performance-shows/utils/tier-order';
+import {
+  moveTier,
+  nextTierSortOrder,
+} from '@/src/sections/performance-shows/utils/tier-order';
 import { toTierRowDisplay } from '@/src/sections/performance-shows/utils/tier-row';
 import { useTierDialog } from '@/src/sections/performance-shows/view/use-tier-dialog';
 import { useTierMemberLink } from '@/src/sections/performance-shows/view/use-tier-member-link';
@@ -34,11 +37,10 @@ export function usePriceTierSection(
   const reorder = useReorderPriceTiers();
   const deleteTier = useDeletePriceTier();
   const reissue = useReissuePriceTierLink();
-  const dialog = useTierDialog(performanceId);
+  const tiers = tiersQuery.data ?? [];
+  const dialog = useTierDialog(performanceId, nextTierSortOrder(tiers));
   const [reissueTargetId, setReissueTargetId] = useState<string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-
-  const tiers = tiersQuery.data ?? [];
 
   const copy = async (text: string): Promise<boolean> => {
     try {

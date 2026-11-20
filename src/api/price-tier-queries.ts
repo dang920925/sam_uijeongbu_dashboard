@@ -45,8 +45,13 @@ function useInvalidateBooking() {
 export function useCreatePriceTier(performanceId: string) {
   const invalidate = useInvalidateBooking();
   return useMutation({
-    mutationFn: (input: PriceTierFormInput) =>
-      createPriceTier(performanceId, input),
+    mutationFn: ({
+      input,
+      sortOrder,
+    }: {
+      input: PriceTierFormInput;
+      sortOrder?: number;
+    }) => createPriceTier(performanceId, input, sortOrder),
     onSuccess: invalidate,
   });
 }
