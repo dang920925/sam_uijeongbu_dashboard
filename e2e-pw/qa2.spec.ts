@@ -5,6 +5,11 @@
 import { expect, test } from '@playwright/test';
 
 import { adminApi, resetMock } from '@/e2e-pw/support/mock-api';
+import { RAW } from '@/src/theme/palette';
+
+/** '#rrggbb' → getComputedStyle 형식 'rgb(r, g, b)' */
+const toRgb = (hex: string) =>
+  `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
 
 const P = 'fixture-qa2-';
 
@@ -129,6 +134,7 @@ test.describe('qa2 수정 확인', () => {
       const s = getComputedStyle(el);
       return { bg: s.backgroundColor, opacity: s.opacity };
     });
-    expect(look).toEqual({ bg: 'rgb(15, 23, 42)', opacity: '0.5' });
+    // U30(2026-11-20 지휘자 승인 — TH-1 예외): 색 리터럴 대신 테마 주 색(RAW.gold) + 50% 를 검사한다
+    expect(look).toEqual({ bg: toRgb(RAW.gold), opacity: '0.5' });
   });
 });
