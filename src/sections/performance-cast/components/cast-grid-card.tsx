@@ -55,7 +55,7 @@ function CellContent({
             <Typo.Badge.Bold>{cell.names}</Typo.Badge.Bold>
           ) : (
             <>
-              <Typo.Caption.Regular color='text.disabled'>
+              <Typo.Caption.Regular color='text.secondary'>
                 {MSG_D14.GRID_DEFAULT}
               </Typo.Caption.Regular>
               <Typo.Badge.Regular color='text.secondary'>
