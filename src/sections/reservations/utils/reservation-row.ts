@@ -61,6 +61,8 @@ export interface ReservationRow {
   /** 입장 인원 있는 확정 건 — 확인 취소·취소 비활성 */
   isLocked: boolean;
   canEditItems: boolean;
+  /** (R2) 입금 대기인데 입금 알림으로 일부만 받았으면 "받은 금액 N원 / M원" — VM 이 받은 금액 조회로 채운다 */
+  partialDepositText?: string | null;
 }
 
 /** "2099.12.12 14:00" → "12.12 14:00"(표 칸 폭 — designer 보강2) */

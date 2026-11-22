@@ -9,6 +9,7 @@ import { applicationRoutes } from '@/src/_mock/backend/handlers/applications';
 import { authRoutes } from '@/src/_mock/backend/handlers/auth';
 import { castRoutes } from '@/src/_mock/backend/handlers/cast';
 import { dashboardRoutes } from '@/src/_mock/backend/handlers/dashboard';
+import { depositNotificationRoutes } from '@/src/_mock/backend/handlers/deposit-notifications';
 import { galleryRoutes } from '@/src/_mock/backend/handlers/galleries';
 import { inviteCodeRoutes } from '@/src/_mock/backend/handlers/invite-codes';
 import { memberRoutes } from '@/src/_mock/backend/handlers/members';
@@ -39,6 +40,8 @@ const ROUTES: MockRoute[] = [
   // R1 예매 묶음 — `members/invite-codes` 가 `members/{id}` 보다 먼저 맞아야 해서 단원 라우트 앞에 둔다
   ...accountRoutes,
   ...pushRoutes,
+  // R2 — `deposit-notifications/preview`·`received-amounts` 가 `{id}/…` 보다 먼저(경로 모양이 달라 겹치진 않음)
+  ...depositNotificationRoutes,
   ...inviteCodeRoutes,
   ...seatMapRoutes,
   ...showRoutes,

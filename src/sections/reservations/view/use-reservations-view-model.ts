@@ -19,6 +19,11 @@ import {
   useReservations,
 } from '@/src/api/reservation-queries';
 import { paths } from '@/app/paths';
+import {
+  toPartialText,
+  toReceivedAmountMap,
+} from '@/src/api/deposit-notification-mapper';
+import { useDepositReceivedAmounts } from '@/src/api/deposit-notification-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
 import { clampPage } from '@/src/sections/applications/utils/clamp-page';
 import { useInviteLinks } from '@/src/sections/reservations/view/use-invite-links';
@@ -45,7 +50,7 @@ import {
 } from '@/src/sections/reservations/utils/inviter-filter';
 import { toApiErrorMessage } from '@/src/utils/api-error-message';
 
-export type ReservationTab = 'list' | 'summary' | 'invite';
+export type ReservationTab = 'list' | 'summary' | 'invite' | 'deposits';
 export type StatusFilter = ReservationStatus | 'ALL';
 const ALL = 'ALL';
 const SEARCH_DEBOUNCE_MS = 300;
@@ -61,7 +66,10 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
   const urlKey = searchParams.toString();
 
   const [chosenId, setChosenId] = useState<string | null>(urlPerformanceId);
-  const [tab, setTab] = useState<ReservationTab>('list');
+  // (R2) 입금 알림 푸시를 누르면 `/reservations?tab=deposits` 로 들어온다
+  const [tab, setTab] = useState<ReservationTab>(
+    searchParams.get('tab') === 'deposits' ? 'deposits' : 'list'
+  );
   const [showFilter, setShowFilter] = useState<string>(ALL);
   const [status, setStatus] = useState<StatusFilter>(ALL);
   const [overdueOnly, setOverdueOnly] = useState(false);
@@ -77,7 +85,8 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
   // URL(헤더 빠른 검색 → paths.reservationFocus)이 바뀌면 그 값으로 다시 맞춘다 — 렌더 중 파생 상태 조정
   if (appliedUrlKey !== urlKey) {
     setAppliedUrlKey(urlKey);
-    if (urlPerformanceId || urlQ) {
+    if (searchParams.get('tab') === 'deposits') setTab('deposits');
+    else if (urlPerformanceId || urlQ) {
       if (urlPerformanceId) setChosenId(urlPerformanceId);
       setTab('list');
       setShowFilter(ALL);
@@ -138,9 +147,23 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
     () => orderWithExactMatch(items, search),
     [items, search]
   );
+  // (R2) 입금 알림으로 받은 금액 — 입금 대기 예매에 '일부 입금' 라벨 + "받은 금액 N원 / M원"
+  const receivedQuery = useDepositReceivedAmounts(performanceId);
+  const receivedMap = useMemo(
+    () => toReceivedAmountMap(receivedQuery.data?.items ?? []),
+    [receivedQuery.data]
+  );
   const rows = useMemo(
-    () => ordered.items.map((r) => toReservationRow(r, seatSelection)),
-    [ordered, seatSelection]
+    () =>
+      ordered.items.map((r) => ({
+        ...toReservationRow(r, seatSelection),
+        partialDepositText: toPartialText({
+          status: r.status,
+          amount: r.amount,
+          receivedAmount: receivedMap.get(r.id) ?? 0,
+        }),
+      })),
+    [ordered, seatSelection, receivedMap]
   );
 
   const clampedPage = listQuery.data

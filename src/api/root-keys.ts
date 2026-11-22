@@ -23,6 +23,8 @@ export const ROOT_KEYS = {
   reservation: ['booking', 'reservation'] as const,
   admission: ['booking', 'admission'] as const,
   inviteCode: ['booking', 'invite-code'] as const,
+  /** R2 입금 알림 — 연결 확정이 예매를 바꾸므로 booking 아래(예매를 바꾸면 함께 무효화) */
+  depositNotification: ['booking', 'deposit-notification'] as const,
   account: ['account'] as const,
   /** U37 새 예매 푸시 — 공개키·내 기기 */
   push: ['push'] as const,

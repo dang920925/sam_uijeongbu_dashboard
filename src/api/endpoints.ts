@@ -149,6 +149,14 @@ export const endpoints = {
     detail: (id: string) => `${admin}/popups/${id}`,
   },
   uploads: { create: `${admin}/uploads` },
+  /** R2 입금 알림(SCR-D12 '입금 알림' 탭) — 목록 · 예매별 받은 금액 · 문구 시험 · 연결 확정 · 무시 */
+  depositNotifications: {
+    list: `${admin}/deposit-notifications`,
+    receivedAmounts: `${admin}/deposit-notifications/received-amounts`,
+    preview: `${admin}/deposit-notifications/preview`,
+    match: (id: string) => `${admin}/deposit-notifications/${id}/match`,
+    ignore: (id: string) => `${admin}/deposit-notifications/${id}/ignore`,
+  },
   /** U37 새 예매 푸시(develop §21) — 공개키 · 내 기기 GET·POST·DELETE · 시험 발송 */
   push: {
     publicKey: `${admin}/push/public-key`,

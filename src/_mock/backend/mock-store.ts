@@ -3,6 +3,10 @@
 // - 시드 데이터 없음(develop §4 "개발용 목업 시드는 두지 않는다") — 빈 상태로 시작하고, E2E·캡처가 픽스처를 만든다.
 // - dev 서버 HMR 에도 상태가 남도록 globalThis 에 둔다. `POST /api/backend/v1/__mock/reset` 으로 비운다(세션은 유지).
 // ----------------------------------------------------------------------
+import type {
+  DepositNotificationStatus,
+  DepositReviewReason,
+} from '@/src/types/deposit-notification';
 import type { ApplicationItemResponse } from '@/src/types/application';
 import type {
   AdminPopupItemResponse,
@@ -103,6 +107,20 @@ export interface MockReservation {
   admittedCount: number;
   version: number;
   createdAt: string;
+}
+
+/** R2 입금 알림(server deposit_notifications — 본문은 잔액 지운 값이라고 가정) */
+export interface MockDepositNotification {
+  id: string;
+  receivedAt: string;
+  source: string | null;
+  title: string | null;
+  text: string | null;
+  parsedAmount: number | null;
+  status: DepositNotificationStatus;
+  reviewReason: DepositReviewReason | null;
+  resolvedAt: string | null;
+  reservationId: string | null;
 }
 
 /** 좌석 배치 칸(U35 — show_seats). VOID 칸은 두지 않는다 */
@@ -225,6 +243,8 @@ export interface MockStore {
   pushEnabled: boolean;
   /** U37 — 시험 알림 발송 기록(E2E 확인용) */
   pushTestCalls: number;
+  /** R2 입금 알림 */
+  depositNotifications: MockDepositNotification[];
 }
 
 function emptyStore(): MockStore {
@@ -261,6 +281,7 @@ function emptyStore(): MockStore {
     pushDevices: [],
     pushEnabled: true,
     pushTestCalls: 0,
+    depositNotifications: [],
   };
 }
 
