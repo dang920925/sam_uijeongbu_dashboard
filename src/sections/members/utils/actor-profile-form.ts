@@ -5,6 +5,8 @@
 //   노출 순서(0~9999)는 도움말 "0~9999" 를 오류 색으로, 출연작 작품명·연도(1900~2100)는 칸 테두리만 오류로 표시한다
 //   (기획에 문구 없음 — 지어내지 않음). SNS URL(https)은 서버 검증 문구를 스낵바로 보인다.
 // - 노출 순서 빈 값은 0(서버 기본값).
+// - (U39) 홈페이지 공개 동의일(publicConsentAt)도 MemberListItem 소속 — 노출과 함께 PATCH members 로 보낸다.
+//   노출을 켰는데 동의일이 비면 경고만 한다(저장은 막지 않음 — 사용자 결정 2026-11-20).
 // ----------------------------------------------------------------------
 import { MSG_D05 } from '@/src/shared/messages/d05';
 import type { ActorProfile, Member } from '@/src/types/member';
@@ -24,6 +26,8 @@ export interface FilmographyFormRow {
 
 export interface ActorProfileForm {
   isVisible: boolean;
+  /** (U39) YYYY-MM-DD 또는 빈 문자열 */
+  publicConsentAt: string;
   intro: string;
   snsUrl: string;
   activityStart: string;
@@ -53,6 +57,7 @@ export function toActorProfileForm(
 ): ActorProfileForm {
   return {
     isVisible: member.isVisible,
+    publicConsentAt: member.publicConsentAt ?? '',
     intro: profile.intro ?? '',
     snsUrl: profile.snsUrl ?? '',
     activityStart: profile.activityStart ?? '',
@@ -64,6 +69,28 @@ export function toActorProfileForm(
       year: String(f.year),
     })),
   };
+}
+
+/** (U39) 공개를 켰는데 동의일이 비었는가 — 경고만(저장은 그대로) */
+export function isPublicConsentMissing(
+  form: Pick<ActorProfileForm, 'isVisible' | 'publicConsentAt'>
+): boolean {
+  return form.isVisible && form.publicConsentAt.trim() === '';
+}
+
+/** (U39) 단원 쪽 바뀐 값만 PATCH members 본문으로 — 없으면 null(요청 안 함) */
+export function toMemberChangeInput(
+  form: Pick<ActorProfileForm, 'isVisible' | 'publicConsentAt'>,
+  member: Pick<Member, 'isVisible' | 'publicConsentAt'>
+): { isVisible?: boolean; publicConsentAt?: string | null } | null {
+  const consent = form.publicConsentAt.trim() || null;
+  const input = {
+    ...(form.isVisible !== member.isVisible && { isVisible: form.isVisible }),
+    ...(consent !== (member.publicConsentAt ?? null) && {
+      publicConsentAt: consent,
+    }),
+  };
+  return Object.keys(input).length > 0 ? input : null;
 }
 
 function parseIntInRange(value: string, min: number, max: number) {

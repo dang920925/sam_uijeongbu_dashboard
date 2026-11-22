@@ -24,6 +24,48 @@ export const endpoints = {
     bookingPolicy: (id: string) => `${admin}/performances/${id}/booking-policy`,
     /** 가격 등급 목록·추가(develop §11.10) */
     priceTiers: (id: string) => `${admin}/performances/${id}/price-tiers`,
+    /** U34 팀 계정 목록·추가(develop §18.2) */
+    teamAccounts: (id: string) => `${admin}/performances/${id}/team-accounts`,
+    /** U34 팀 아이디 접두어 변경 */
+    teamPrefix: (id: string) => `${admin}/performances/${id}/team-prefix`,
+    /** R3 배역 목록·추가(develop §11.7) */
+    roles: (id: string) => `${admin}/performances/${id}/roles`,
+    rolesOrder: (id: string) => `${admin}/performances/${id}/roles/order`,
+    /** R3 회차×배역 격자 */
+    showCasts: (id: string) => `${admin}/performances/${id}/show-casts`,
+    /** R3 참여자(크레딧) 목록·추가(develop §17.3) */
+    credits: (id: string) => `${admin}/performances/${id}/credits`,
+    creditsOrder: (id: string) => `${admin}/performances/${id}/credits/order`,
+  },
+  /** U34 팀 계정 단건 — 재발급·사용 켜기/끄기 */
+  teamAccounts: {
+    detail: (id: string) => `${admin}/team-accounts/${id}`,
+    resetPassword: (id: string) =>
+      `${admin}/team-accounts/${id}/reset-password`,
+  },
+  /** U34 연습실 예약(관리) — 기간 목록·삭제 */
+  roomReservations: {
+    list: `${admin}/room-reservations`,
+    detail: (id: string) => `${admin}/room-reservations/${id}`,
+  },
+  /** R3 배역 단건 — PATCH·DELETE · 기본 캐스트 PUT(develop §11.7) */
+  roles: {
+    detail: (id: string) => `${admin}/roles/${id}`,
+    defaultCast: (id: string) => `${admin}/roles/${id}/default-cast`,
+  },
+  /** R3 회차 지정 캐스트 PUT·DELETE */
+  showRoleCast: (showId: string, roleId: string) =>
+    `${admin}/shows/${showId}/roles/${roleId}/cast`,
+  /** R3 참여자 단건 PATCH·DELETE(develop §17.3) */
+  credits: { detail: (id: string) => `${admin}/credits/${id}` },
+  /** R3 배우 쪽 SAM 출연작·참여 직함(develop §17.5) */
+  memberCast: {
+    samCredits: (memberId: string) =>
+      `${admin}/members/${memberId}/sam-credits`,
+    castRoles: (memberId: string) => `${admin}/members/${memberId}/cast-roles`,
+    castRole: (memberId: string, roleId: string) =>
+      `${admin}/members/${memberId}/cast-roles/${roleId}`,
+    credits: (memberId: string) => `${admin}/members/${memberId}/credits`,
   },
   /** 가격 등급 단건(develop §11.10) — PATCH·DELETE, 링크 토큰 재발급 */
   priceTiers: {
@@ -37,6 +79,9 @@ export const endpoints = {
     detail: (id: string) => `${admin}/shows/${id}`,
     /** FN-36 입장 명단 `GET ?q=` */
     admission: (id: string) => `${admin}/shows/${id}/admission`,
+    /** U35 좌석 배치·현황(GET·PUT) */
+    seatMap: (id: string) => `${admin}/shows/${id}/seat-map`,
+    seatMapCopy: (id: string) => `${admin}/shows/${id}/seat-map/copy-from`,
   },
   /** FN-33·34 예매 관리(develop §11.4) */
   reservations: {
@@ -49,6 +94,8 @@ export const endpoints = {
     restore: (id: string) => `${admin}/reservations/${id}/restore`,
     /** 등급 줄 교체(develop §11.10) `{ items?, customLine?, amountOverride?, version }` */
     items: (id: string) => `${admin}/reservations/${id}/items`,
+    /** U35 좌석 변경 */
+    seats: (id: string) => `${admin}/reservations/${id}/seats`,
     cancelOverdue: `${admin}/reservations/cancel-overdue`,
     /** FN-36 입장 증감 `{ delta }` */
     admission: (id: string) => `${admin}/reservations/${id}/admission`,
@@ -76,8 +123,6 @@ export const endpoints = {
     list: `${admin}/applications`,
     pendingCount: `${admin}/applications/pending-count`,
     detail: (id: string) => `${admin}/applications/${id}`,
-    approve: (id: string) => `${admin}/applications/${id}/approve`,
-    reject: (id: string) => `${admin}/applications/${id}/reject`,
     member: (id: string) => `${admin}/applications/${id}/member`,
     contact: (id: string) => `${admin}/applications/${id}/contact`,
     progress: (id: string) => `${admin}/applications/${id}/progress`,

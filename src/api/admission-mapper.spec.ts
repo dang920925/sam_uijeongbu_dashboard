@@ -41,6 +41,7 @@ function itemRes(
     deadlinePassed: false,
     memo: null,
     version: 1,
+    seats: [],
     ...overrides,
   };
 }

@@ -5,6 +5,7 @@
 import Box from '@mui/material/Box';
 
 import { Typo } from '@/src/components/typo';
+import { AdmissionSeatText } from '@/src/sections/admission/components/admission-seat-text';
 import {
   AdmissionRowActions,
   type AdmissionRowHandlers,
@@ -48,9 +49,12 @@ export function AdmissionRowCard({ row, handlers }: AdmissionRowCardProps) {
     >
       <div className='flex items-start justify-between gap-3'>
         <div className='flex min-w-0 flex-col gap-1'>
-          <Typo.Title.Bold component='h2' id={`admission-card-${row.id}`}>
-            {row.bookerName}
-          </Typo.Title.Bold>
+          <div className='flex flex-wrap items-baseline gap-x-3'>
+            <Typo.Title.Bold component='h2' id={`admission-card-${row.id}`}>
+              {row.bookerName}
+            </Typo.Title.Bold>
+            <AdmissionSeatText row={row} />
+          </div>
           <div className='flex flex-wrap gap-x-3'>
             <Typo.Badge.Regular color={metaColor}>
               {row.codeText}

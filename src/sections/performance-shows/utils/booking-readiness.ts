@@ -23,7 +23,7 @@ export const POLICY_FIELDS = [
 const PUBLIC_TIER = 'publicTier';
 
 /** 회차 필드 표시 순서 */
-const SHOW_FIELD_ORDER = ['totalSeats', 'bookingOpenAt'];
+const SHOW_FIELD_ORDER = ['totalSeats', 'bookingOpenAt', 'seatMap'];
 
 export interface ReadinessNotice {
   tone: 'warning' | 'info';

@@ -148,9 +148,11 @@ test.describe('연동 SCR-D02 요약 — 채운 상태', () => {
       type: 'ACTOR',
     });
     await adminApi('DELETE', `/admin/members/${deletedActor.id}`);
-    // 대기 6(승인 1 제외)
-    const approved = await consult(`${PREFIX}승인`, '010-7000-0000');
-    await adminApi('POST', `/admin/applications/${approved.id}/approve`);
+    // 대기 6(불참 DROPPED 1 제외 — U39: 대기 = 진행 RECEIVED 또는 연락 전, 승인은 호환용이라 대기에서 빼지 않는다)
+    const dropped = await consult(`${PREFIX}불참`, '010-7000-0000');
+    await adminApi('PATCH', `/admin/applications/${dropped.id}/progress`, {
+      progress: 'DROPPED',
+    });
     for (let n = 1; n <= 6; n += 1)
       await consult(`${PREFIX}신청-${n}`, `010-7000-000${n}`);
     // 일정 3(삭제 1 제외)

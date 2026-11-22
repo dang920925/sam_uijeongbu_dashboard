@@ -1,6 +1,7 @@
 // ----------------------------------------------------------------------
 // 목 공연·반(FN-09·10) — develop §3.4. 소프트 삭제, createdAt desc, 반 충돌 409 CLS_002 · 종료≤시작 400 CLS_003.
 // ----------------------------------------------------------------------
+import { provisionMockTeam } from '@/src/_mock/backend/handlers/team-accounts';
 import {
   apiError,
   byCreatedDesc,
@@ -36,8 +37,26 @@ function findPerformance(id: string) {
 }
 
 function toListItem(p: AdminPerformanceResponse) {
-  const { id, title, type, status, isVisible, posterImageUrl, createdAt } = p;
-  return { id, title, type, status, isVisible, posterImageUrl, createdAt };
+  const {
+    id,
+    title,
+    type,
+    status,
+    isVisible,
+    posterImageUrl,
+    createdAt,
+    seatSelectionEnabled,
+  } = p;
+  return {
+    id,
+    title,
+    type,
+    status,
+    isVisible,
+    posterImageUrl,
+    createdAt,
+    seatSelectionEnabled: seatSelectionEnabled ?? false,
+  };
 }
 
 function toDetail(
@@ -84,6 +103,16 @@ function applyPerformance(
     target.detailImageUrls = urls as string[];
   }
   if ('isVisible' in b) target.isVisible = b.isVisible === true;
+  // U35 좌석 지정 스위치(boolean 만)
+  if ('seatSelectionEnabled' in b) {
+    if (typeof b.seatSelectionEnabled !== 'boolean')
+      return validationError(ctx);
+    target.seatSelectionEnabled = b.seatSelectionEnabled;
+  }
+  if ('castPublic' in b) {
+    if (typeof b.castPublic !== 'boolean') return validationError(ctx);
+    target.castPublic = b.castPublic;
+  }
   return null;
 }
 
@@ -183,6 +212,7 @@ export const performanceRoutes: MockRoute[] = [
         posterImageUrl: null,
         detailImageUrls: [],
         isVisible: true,
+        seatSelectionEnabled: false,
       };
       const invalid = applyPerformance(ctx, draft, true);
       if (invalid) return invalid;
@@ -195,6 +225,8 @@ export const performanceRoutes: MockRoute[] = [
         deletedAt: null,
       };
       getStore().performances.push(created);
+      // U34 PR-1 — 공연 등록과 함께 팀 접두어·A 계정
+      provisionMockTeam(created);
       return json(toDetail(created), 201);
     },
   },

@@ -15,6 +15,7 @@ import { ReservationStatusCell } from '@/src/sections/reservations/components/re
 import type { ReservationRow } from '@/src/sections/reservations/utils/reservation-row';
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_D12 } from '@/src/shared/messages/d12';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 
 interface ReservationCardProps {
   row: ReservationRow;
@@ -58,6 +59,9 @@ export function ReservationCard({
       <div className='flex flex-wrap gap-x-3 gap-y-1'>
         {row.depositorText !== MSG_COMMON.EMPTY_VALUE ? (
           <Meta>{`${MSG_D12.DEPOSITOR} ${row.depositorText}`}</Meta>
+        ) : null}
+        {row.seatText ? (
+          <Meta>{`${MSG_SEAT.COLUMN} ${row.seatText}`}</Meta>
         ) : null}
         <Meta>{`${MSG_D12.ADMISSION} ${row.admissionText}`}</Meta>
         {row.inviterText !== MSG_COMMON.EMPTY_VALUE ? (

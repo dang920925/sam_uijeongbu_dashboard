@@ -30,6 +30,7 @@ function item(overrides: Partial<AdmissionItem> = {}): AdmissionItem {
     deadlinePassed: false,
     memo: null,
     version: 1,
+    seats: [],
     ...overrides,
   };
 }
@@ -151,5 +152,31 @@ describe('admission-error', () => {
       'offline'
     );
     expect(classifyAdmissionError(new ApiError(400, null))).toBe('other');
+  });
+});
+
+describe('toAdmissionRowModel — U35 좌석(SE-7)', () => {
+  it('좌석이 있으면 "B3·B4", 좌석 지정인데 없으면 좌석 미정, 꺼졌으면 null', () => {
+    const state = { busyIds: [], flashId: null };
+    const seated = toAdmissionRowModel(
+      item({
+        seats: [
+          { rowLabel: 'B', seatNumber: 3 },
+          { rowLabel: 'B', seatNumber: 4 },
+        ],
+      }),
+      { ...state, seatSelection: true }
+    );
+    expect(seated.seatText).toBe('B3·B4');
+    expect(seated.isSeatUnassigned).toBe(false);
+    const unassigned = toAdmissionRowModel(item(), {
+      ...state,
+      seatSelection: true,
+    });
+    expect(unassigned).toMatchObject({
+      seatText: '좌석 미정',
+      isSeatUnassigned: true,
+    });
+    expect(toAdmissionRowModel(item(), state).seatText).toBeNull();
   });
 });

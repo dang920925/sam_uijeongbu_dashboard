@@ -38,9 +38,9 @@ const APP: Application = {
 };
 
 describe('application-row', () => {
-  it('대기 신청은 승인·거절, 승인+미등록은 등록, 그 외는 상세만 고른다', () => {
+  it('(U39) 미등록이면 대기·승인 모두 등록, 등록됨·옛 거절은 상세만 고른다', () => {
     // Act & Assert
-    expect(getApplicationAction(APP)).toBe('review');
+    expect(getApplicationAction(APP)).toBe('register');
     expect(getApplicationAction({ ...APP, status: 'APPROVED' })).toBe(
       'register'
     );
@@ -69,12 +69,13 @@ describe('application-row', () => {
       methodLabel: '전화',
       preferredTimeLabel: '평일 저녁 (18~21시)',
       createdAt: '2026.11.19',
-      statusLabel: '대기',
-      statusTone: 'warning',
       detailTitle: '💬 방문 상담 신청 상세',
       motivation: null,
       question: '문의',
     });
+    // (U39) 처리 상태 배지·처리일은 표시 모델에 없다
+    expect(row).not.toHaveProperty('statusLabel');
+    expect(row).not.toHaveProperty('processedAt');
   });
 
   it('등록된 단원은 단원 관리 패널 링크로 만든다', () => {

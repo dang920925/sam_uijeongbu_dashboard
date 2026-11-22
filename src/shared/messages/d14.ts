@@ -1,0 +1,97 @@
+// ----------------------------------------------------------------------
+// SCR-D14 배역·캐스팅(R3 U26 · U33) 문구 — design §6 SCR-D14 · §12(모두 "제안") · develop §11.7 · §17.
+// 오류 문구는 서버 계약 문구를 그대로 보인다(toApiErrorMessage).
+// ----------------------------------------------------------------------
+export const MSG_D14 = {
+  TAB: '배역·캐스팅',
+  /** 공개 스위치(design §12) */
+  PUBLIC_TITLE: '홈페이지 공개',
+  PUBLIC_SWITCH: '캐스트·참여자 홈페이지 공개',
+  PUBLIC_HELP:
+    '꺼져 있으면 배역·캐스트·참여자가 홈페이지 어디에도 보이지 않습니다. 배우·연출진의 개인정보 동의를 받은 뒤 켜주세요.',
+  PUBLIC_LINKS_HELP: '배우·연출진 노출은 각 관리 화면에서 바꿉니다.',
+  LINK_MEMBERS: '단원 관리',
+  LINK_STAFF: '연출진 관리',
+  /** 배역 목록 */
+  ROLES_TITLE: '배역',
+  ROLE_ADD: '배역 추가',
+  ENSEMBLE_ADD_PERFORMER: '출연자 추가',
+  ENSEMBLE: '출연',
+  ENSEMBLE_OPTION: '출연(배역 없음) 묶음',
+  ENSEMBLE_EXISTS_HELP: '출연 묶음은 하나만 만들 수 있습니다.',
+  ROLES_EMPTY: '등록된 배역이 없습니다',
+  ROLE_ADD_TITLE: '배역 추가',
+  ROLE_EDIT_TITLE: '배역 수정',
+  ROLE_NAME: '배역 이름',
+  ROLE_NAME_PH: '예: 햄릿',
+  ROLE_NAME_REQUIRED: '배역 이름을 입력해주세요',
+  ROLE_DESCRIPTION: '배역 설명',
+  RECRUITING: '모집 중',
+  ACTOR_ADD: '배우 추가',
+  ACTOR_REMOVE_ARIA: (name: string) => `${name} 빼기`,
+  ROLE_EDIT_ARIA: (name: string) => `${name} 수정`,
+  ROLE_DELETE_ARIA: (name: string) => `${name} 삭제`,
+  MOVE_UP_ARIA: (name: string) => `${name} 위로`,
+  MOVE_DOWN_ARIA: (name: string) => `${name} 아래로`,
+  ROLE_DELETE_CONFIRM: (name: string) => `${name} 배역을 삭제하시겠습니까?`,
+  ROLE_DELETE_DESC: '기본 캐스트와 회차별 캐스팅도 함께 지워집니다.',
+  HIDDEN_ACTOR: '비노출',
+  /** 공개 안 됨 이유(publicNow=false — design §12) */
+  REASON_SWITCH_OFF: '공개 안 됨 — 공개 스위치 꺼짐',
+  REASON_PERFORMANCE_HIDDEN: '공개 안 됨 — 작품 비노출',
+  REASON_HIDDEN_ACTOR: '공개 안 됨 — 비노출 배우 포함',
+  REASON_NO_VISIBLE_ACTOR: '공개 안 됨 — 노출 배우 없음',
+  REASON_CREDIT_HIDDEN: '공개 안 됨 — 참여자 비노출',
+  REASON_STAFF_HIDDEN: '공개 안 됨 — 연출진 비노출',
+  REASON_MEMBER_HIDDEN: '공개 안 됨 — 배우 비노출',
+  PUBLIC_NOW: '공개 중',
+  /** 회차별 캐스팅 */
+  GRID_TITLE: '회차별 캐스팅',
+  GRID_NO_SHOWS: '회차·예매 탭에서 회차를 먼저 추가해주세요.',
+  GRID_DEFAULT: '기본',
+  GRID_UNDECIDED: '미정',
+  GRID_CLEAR: '해제',
+  GRID_EDIT_ARIA: (role: string, show: string) =>
+    `${show} ${role} 캐스트 고르기`,
+  GRID_CLEAR_ARIA: (role: string, show: string) =>
+    `${show} ${role} 회차 지정 해제`,
+  GRID_SHOW_PICK: '회차 선택',
+  GRID_ROLE_HEADER: '배역',
+  /** 배우 고르기 */
+  PICKER_TITLE_ROLE: (role: string) => `${role} — 배우 추가`,
+  PICKER_TITLE_ENSEMBLE: '출연자 추가',
+  PICKER_TITLE_CELL: (role: string, show: string) => `${show} · ${role}`,
+  PICKER_SEARCH: '배우 이름으로 검색',
+  PICKER_NOTE: '메모',
+  PICKER_NOTE_PH: '예: A캐스트',
+  PICKER_EMPTY: '고를 수 있는 배우가 없습니다',
+  PICKER_NO_PROFILE: '프로필 없음',
+  PICKER_DEFAULT_FIRST: '기본 캐스트',
+  PICKER_SELECT_REQUIRED: '배우를 골라주세요',
+  /** 참여자(크레딧) */
+  CREDITS_TITLE: '참여자',
+  CREDIT_ADD: '참여자 추가',
+  CREDITS_EMPTY: '등록된 참여자가 없습니다',
+  CREDIT_ADD_TITLE: '참여자 추가',
+  CREDIT_EDIT_TITLE: '참여자 수정',
+  CREDIT_TITLE: '직함',
+  CREDIT_TITLE_PH: '예: 연출, 조연출, 연출 및 음악감독',
+  CREDIT_TITLE_REQUIRED: '직함을 입력해주세요',
+  CREDIT_PERSON: '사람',
+  CREDIT_KIND_STAFF: '연출진',
+  CREDIT_KIND_MEMBER: '단원',
+  CREDIT_KIND_NAME: '이름만 입력',
+  CREDIT_STAFF_PH: '연출진 선택',
+  CREDIT_MEMBER_PH: '단원 선택',
+  CREDIT_NAME_PH: '이름',
+  CREDIT_PERSON_REQUIRED: '사람을 고르거나 이름을 입력해주세요',
+  CREDIT_VISIBLE: '홈페이지 노출',
+  CREDIT_EDIT_ARIA: (title: string) => `${title} 수정`,
+  CREDIT_DELETE_ARIA: (title: string) => `${title} 삭제`,
+  CREDIT_DELETE_CONFIRM: (title: string) =>
+    `${title} 참여자를 삭제하시겠습니까?`,
+  CREDIT_VISIBLE_ARIA: (title: string) => `${title} 노출`,
+  /** 연결 해제 뒤 회차 지정이 남았을 때(develop §17.5 안내 문구) */
+  overrideLeft: (n: number) =>
+    `회차별 캐스팅 ${n}칸은 배역·캐스팅 탭에서 정리해주세요.`,
+} as const;

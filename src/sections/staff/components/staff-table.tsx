@@ -54,6 +54,15 @@ export function StaffTable({ rows, onEdit, onDelete }: StaffTableProps) {
       ),
     },
     {
+      key: 'history',
+      header: MSG_D09.COL_HISTORY,
+      render: (row) => (
+        <Typo.Badge.Regular color='text.secondary'>
+          {row.historyLabel}
+        </Typo.Badge.Regular>
+      ),
+    },
+    {
       key: 'order',
       header: MSG_D09.COL_ORDER,
       render: (row) => (

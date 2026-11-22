@@ -220,6 +220,8 @@ export function toAdminReservationItem(
     depositorName: r.depositorName,
     inviter: member ? { memberId: member.id, name: member.name } : null,
     inviterNote: r.inviterNote,
+    inviterCategory: r.inviterCategory ?? (member ? 'MEMBER' : null),
+    seats: seatsOfReservation(r),
     status: r.status,
     source: r.source,
     depositDueAt: r.depositDueAt,
@@ -257,7 +259,33 @@ export function toAdmissionItem(r: MockReservation): AdmissionItemResponse {
     deadlinePassed: isDeadlinePassed(r),
     memo: r.memo,
     version: r.version,
+    seats: seatsOfReservation(r),
   };
+}
+
+/** 예매의 좌석(U35) — 배치에서 열 이름·번호를 찾아 열·번호 순 */
+export function seatsOfReservation(
+  r: Pick<MockReservation, 'showId' | 'seatIds'>
+): { rowLabel: string; seatNumber: number }[] {
+  const layout = getStore().seatLayouts.get(r.showId);
+  if (!layout || !r.seatIds?.length) return [];
+  return layout.cells
+    .filter((cell) => r.seatIds?.includes(cell.id) && cell.kind === 'SEAT')
+    .sort((a, b) => a.rowIndex - b.rowIndex || a.colIndex - b.colIndex)
+    .map((cell) => ({
+      rowLabel: cell.rowLabel ?? '',
+      seatNumber: cell.seatNumber ?? 0,
+    }));
+}
+
+/** 살아 있는(취소 아닌) 예매가 잡은 좌석 id → 예매 */
+export function liveSeatHolders(showId: string): Map<string, MockReservation> {
+  const holders = new Map<string, MockReservation>();
+  for (const r of getStore().reservations) {
+    if (r.showId !== showId || r.status === 'CANCELLED') continue;
+    for (const id of r.seatIds ?? []) holders.set(id, r);
+  }
+  return holders;
 }
 
 export function admissionSummary(showId: string): AdmissionSummaryResponse {

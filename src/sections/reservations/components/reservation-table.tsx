@@ -23,13 +23,17 @@ import { ReservationCard } from '@/src/sections/reservations/components/reservat
 import { ReservationIconActions } from '@/src/sections/reservations/components/reservation-icon-actions';
 import { ReservationStatusCell } from '@/src/sections/reservations/components/reservation-status-cell';
 import type { ReservationRow } from '@/src/sections/reservations/utils/reservation-row';
+import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_D12 } from '@/src/shared/messages/d12';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 
 interface ReservationTableProps {
   rows: ReservationRow[];
   matchId: string | null;
   busyId: string | null;
   handlers: ReservationRowHandlers;
+  /** U35 — 좌석 지정 공연이면 "좌석" 열 */
+  showSeatColumn?: boolean;
 }
 
 /** 정확 일치 강조 — info 옅은 배경 + 왼쪽 3px 선(designer exact-match) */
@@ -58,6 +62,7 @@ export function ReservationTable({
   matchId,
   busyId,
   handlers,
+  showSeatColumn = false,
 }: ReservationTableProps) {
   const tableMatchRef = useRef<HTMLTableRowElement | null>(null);
   const cardMatchRef = useRef<HTMLLIElement | null>(null);
@@ -93,6 +98,7 @@ export function ReservationTable({
               <TableCell>{MSG_D12.COL_CODE}</TableCell>
               <TableCell>{MSG_D12.COL_BOOKER}</TableCell>
               <TableCell>{MSG_D12.COL_SHOW}</TableCell>
+              {showSeatColumn ? <TableCell>{MSG_SEAT.COLUMN}</TableCell> : null}
               <TableCell>{MSG_D12.COL_TIERS}</TableCell>
               <TableCell>{MSG_D12.COL_AMOUNT}</TableCell>
               <TableCell>{MSG_D12.COL_STATUS}</TableCell>
@@ -136,6 +142,19 @@ export function ReservationTable({
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <Typo.Badge.Regular>{row.showText}</Typo.Badge.Regular>
                   </TableCell>
+                  {showSeatColumn ? (
+                    <TableCell data-testid='reservation-seat-cell'>
+                      {row.seatText === MSG_SEAT.UNASSIGNED ? (
+                        <Typo.Badge.Regular color='text.secondary'>
+                          {row.seatText}
+                        </Typo.Badge.Regular>
+                      ) : (
+                        <Typo.Badge.Bold>
+                          {row.seatText ?? MSG_COMMON.EMPTY_VALUE}
+                        </Typo.Badge.Bold>
+                      )}
+                    </TableCell>
+                  ) : null}
                   <TableCell>
                     <span className='flex flex-col'>
                       <Typo.Badge.Regular>{row.tierText}</Typo.Badge.Regular>

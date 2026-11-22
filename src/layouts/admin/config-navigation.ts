@@ -7,6 +7,7 @@
 // ----------------------------------------------------------------------
 import { paths } from '@/app/paths';
 import { MSG_D00 } from '@/src/shared/messages/d00';
+import type { NavBadgeKey } from '@/src/utils/nav-badge';
 
 export interface NavItem {
   href: string;
@@ -14,6 +15,8 @@ export interface NavItem {
   icon: string;
   /** '/' 는 정확히 일치할 때만 활성 */
   exact?: boolean;
+  /** (U40) 빨간 숫자 배지 — 예매 관리: 입금 대기 · 신청서 관리: 연락 전 */
+  badgeKey?: NavBadgeKey;
 }
 
 /** 본문 메뉴 — 바깥 배열 하나가 구분선으로 나뉘는 묶음 */
@@ -36,6 +39,7 @@ export const NAV_GROUPS: NavItem[][] = [
       href: paths.reservations,
       label: MSG_D00.NAV_RESERVATIONS,
       icon: 'solar:ticket-sale-linear',
+      badgeKey: 'reservations',
     },
     {
       href: paths.admission,
@@ -53,6 +57,7 @@ export const NAV_GROUPS: NavItem[][] = [
       href: paths.applications,
       label: MSG_D00.NAV_APPLICATIONS,
       icon: 'solar:document-text-linear',
+      badgeKey: 'applications',
     },
   ],
   [
@@ -65,6 +70,12 @@ export const NAV_GROUPS: NavItem[][] = [
       href: paths.schedules,
       label: MSG_D00.NAV_SCHEDULES,
       icon: 'solar:calendar-linear',
+    },
+    // U34 — 연습실 예약 목록(일정 옆. U23 캘린더 '연습실 예약' 레이어는 T-SA 배포 뒤 연결)
+    {
+      href: paths.roomReservations,
+      label: MSG_D00.NAV_ROOM_RESERVATIONS,
+      icon: 'solar:calendar-mark-linear',
     },
     {
       href: paths.staff,

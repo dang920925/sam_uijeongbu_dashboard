@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   hasActorProfileFormError,
+  isPublicConsentMissing,
   toActorProfileForm,
   toActorProfileInput,
+  toMemberChangeInput,
   validateActorProfileForm,
   type ActorProfileForm,
 } from '@/src/sections/members/utils/actor-profile-form';
@@ -20,8 +22,11 @@ const member: Member = {
   phone: null,
   isVisible: true,
   joinedAt: '2026-11-19',
+  publicConsentAt: null,
   createdAt: '2026-11-18T16:00:00.000Z',
   profileImageUrl: null,
+  inviterListed: true,
+  actorProfileId: null,
 };
 
 const profile: ActorProfile = {
@@ -36,6 +41,7 @@ const profile: ActorProfile = {
 
 const form = (over: Partial<ActorProfileForm> = {}): ActorProfileForm => ({
   isVisible: true,
+  publicConsentAt: '',
   intro: '',
   snsUrl: '',
   activityStart: '',
@@ -62,6 +68,15 @@ describe('member-display', () => {
     expect(row.typeTone).toBe('info');
     expect(row.phoneText).toBe('-');
     expect(row.joinedText).toBe('2026.11.19');
+    expect(row.consentText).toBe('-');
+  });
+
+  it('(U39) 공개 동의일이 있으면 YYYY.MM.DD 로 보인다', () => {
+    const row = toMemberRowDisplay({
+      ...member,
+      publicConsentAt: '2026-11-20',
+    });
+    expect(row.consentText).toBe('2026.11.20');
   });
 
   it('joinedAt 이 없으면 createdAt 의 KST 날짜를 가입일로 쓴다', () => {
@@ -135,5 +150,52 @@ describe('actor-profile-form', () => {
     expect(result.displayOrder).toBe(0);
     expect(result.filmography).toEqual([{ title: 't', role: '', year: 2020 }]);
     expect(result.profileImageUrl).toBe('https://example.test/a.png');
+  });
+});
+
+describe('(U39) 홈페이지 공개 동의일', () => {
+  it('공개를 켰는데 동의일이 비면 경고한다(끄거나 날짜가 있으면 아니다)', () => {
+    expect(isPublicConsentMissing(form({ publicConsentAt: ' ' }))).toBe(true);
+    expect(
+      isPublicConsentMissing(form({ isVisible: false, publicConsentAt: '' }))
+    ).toBe(false);
+    expect(
+      isPublicConsentMissing(form({ publicConsentAt: '2026-11-20' }))
+    ).toBe(false);
+  });
+
+  it('폼은 서버 동의일로 채우고, 없으면 빈 문자열이다', () => {
+    const makeKey = () => 'k';
+    expect(toActorProfileForm(member, profile, makeKey).publicConsentAt).toBe(
+      ''
+    );
+    expect(
+      toActorProfileForm(
+        { ...member, publicConsentAt: '2026-11-20' },
+        profile,
+        makeKey
+      ).publicConsentAt
+    ).toBe('2026-11-20');
+  });
+
+  it('단원 PATCH 본문은 바뀐 값만 — 빈 동의일은 null(지움), 바뀐 게 없으면 null', () => {
+    expect(
+      toMemberChangeInput(form({ publicConsentAt: '' }), {
+        isVisible: true,
+        publicConsentAt: '2026-11-01',
+      })
+    ).toEqual({ publicConsentAt: null });
+    expect(
+      toMemberChangeInput(form({ publicConsentAt: '' }), {
+        isVisible: true,
+        publicConsentAt: null,
+      })
+    ).toBeNull();
+    expect(
+      toMemberChangeInput(
+        form({ isVisible: false, publicConsentAt: '2026-11-20' }),
+        { isVisible: true, publicConsentAt: null }
+      )
+    ).toEqual({ isVisible: false, publicConsentAt: '2026-11-20' });
   });
 });

@@ -1,6 +1,7 @@
 // ----------------------------------------------------------------------
 // 신청서 → 표·카드·상세 표시 모델(순수 함수). 화면(View)은 이 값만 그린다.
-// - 행 액션(사용자 결정 2026-11-19 D6): 대기 = 상세·승인·거절 / 승인+미등록 = 상세·단원으로 등록 / 그 외 = 상세.
+// - 행 액션(U39 사용자 결정 2026-11-20 — 승인·거절을 진행 단계로 합침): 미등록 = 상세·단원으로 등록 /
+//   등록됨·옛 거절(REJECTED) = 상세만. 처리 상태 배지·처리일은 보이지 않는다(status 는 호환용으로만 남음).
 // - "단원 등록됨" 판단 = member !== null(develop §3.4 — 삭제된 단원이면 서버가 null).
 // - 나이 / 성별: 있는 값만 " / " 로 잇고 둘 다 없으면 null(현행 Applications.tsx:201 join 규칙).
 // - 날짜: preferredDate 는 달력 날짜(formatCalendarDate), createdAt·processedAt 은 KST(formatKstDate).
@@ -15,7 +16,6 @@ import type { Application } from '@/src/types/application';
 import {
   APPLICATION_PROGRESSES_BY_TYPE,
   APPLICATION_PROGRESS_LABEL,
-  APPLICATION_STATUS_LABEL,
   CONSULTATION_METHOD_LABEL,
   GENDER_LABEL,
   PREFERRED_TIME_LABEL,
@@ -35,13 +35,10 @@ import {
   type WorkChip,
   type WorkChipSplit,
 } from '@/src/sections/applications/utils/work-chips';
-import {
-  APPLICATION_PROGRESS_TONE,
-  APPLICATION_STATUS_TONE,
-} from '@/src/utils/status-tone';
+import { APPLICATION_PROGRESS_TONE } from '@/src/utils/status-tone';
 
-/** review = 승인·거절 가능(대기) · register = 단원으로 등록 가능 · none = 상세만 */
-export type ApplicationAction = 'review' | 'register' | 'none';
+/** register = 단원으로 등록 가능 · none = 상세만 */
+export type ApplicationAction = 'register' | 'none';
 
 export interface ApplicationRow {
   id: string;
@@ -59,9 +56,6 @@ export interface ApplicationRow {
   motivation: string | null;
   question: string | null;
   createdAt: string;
-  processedAt: string | null;
-  statusLabel: string;
-  statusTone: LabelTone;
   /** 등록된 단원 — 상세의 단원 이름 링크(단원 관리에서 그 단원 패널) */
   member: { name: string; href: string } | null;
   action: ApplicationAction;
@@ -119,9 +113,11 @@ export interface ProgressStep {
   state: 'done' | 'current' | 'todo';
 }
 
-export function getApplicationAction(app: Application): ApplicationAction {
-  if (app.status === 'PENDING') return 'review';
-  if (app.status === 'APPROVED' && app.member === null) return 'register';
+export function getApplicationAction(
+  app: Pick<Application, 'status' | 'member'>
+): ApplicationAction {
+  // 옛 거절(REJECTED)은 서버가 409 APP_009 — 버튼을 두지 않는다
+  if (app.member === null && app.status !== 'REJECTED') return 'register';
   return 'none';
 }
 
@@ -229,9 +225,6 @@ export function toApplicationRow(app: Application): ApplicationRow {
     motivation: app.motivation?.trim() ? app.motivation : null,
     question: app.question?.trim() ? app.question : null,
     createdAt: formatKstDate(app.createdAt),
-    processedAt: app.processedAt ? formatKstDate(app.processedAt) : null,
-    statusLabel: APPLICATION_STATUS_LABEL[app.status],
-    statusTone: APPLICATION_STATUS_TONE[app.status],
     member: app.member
       ? { name: app.member.name, href: paths.members.detail(app.member.id) }
       : null,
@@ -280,7 +273,5 @@ export interface ApplicationRowHandlers {
 
 /** 상세 드로어 하단 동작 콜백 */
 export interface ApplicationDetailHandlers {
-  onRequestApprove: (id: string) => void;
-  onRequestReject: (id: string) => void;
   onRequestRegister: (id: string) => void;
 }

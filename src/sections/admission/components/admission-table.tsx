@@ -9,6 +9,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 
 import { Typo } from '@/src/components/typo';
+import { AdmissionSeatText } from '@/src/sections/admission/components/admission-seat-text';
 import {
   AdmissionRowActions,
   type AdmissionRowHandlers,
@@ -55,7 +56,10 @@ export function AdmissionTable({ rows, handlers }: AdmissionTableProps) {
             >
               <TableCell>
                 <div className='flex flex-col gap-1'>
-                  <Typo.Body.Semibold>{row.bookerName}</Typo.Body.Semibold>
+                  <div className='flex flex-wrap items-baseline gap-x-3'>
+                    <Typo.Body.Semibold>{row.bookerName}</Typo.Body.Semibold>
+                    <AdmissionSeatText row={row} />
+                  </div>
                   <AdmissionTierLines
                     lines={row.lines}
                     ariaText={row.tiersAria}

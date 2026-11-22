@@ -101,7 +101,7 @@ test.describe('SCR-D09 연출진 관리 — 채운 상태(실서버)', () => {
     await page.getByRole('button', { name: '연출진 추가' }).click();
     const dialog = page.getByRole('dialog', { name: '연출진 추가' });
     // Act — 빈 제출
-    await dialog.getByRole('button', { name: '추가' }).click();
+    await dialog.getByRole('button', { name: '추가', exact: true }).click();
     // Assert
     await expect(dialog.getByText('이름을 입력해주세요')).toBeVisible();
     await expect(dialog.getByText('역할을 입력해주세요')).toBeVisible();
@@ -126,7 +126,7 @@ test.describe('SCR-D09 연출진 관리 — 채운 상태(실서버)', () => {
     await dialog.getByPlaceholder('이름 입력').fill(name);
     await dialog.getByPlaceholder('예: 예술감독 · 연출').fill('예술감독');
     await dialog.getByPlaceholder('연출진 소개').fill('20년 경력의 연출가');
-    await dialog.getByRole('button', { name: '추가' }).click();
+    await dialog.getByRole('button', { name: '추가', exact: true }).click();
     // Assert — 목록 행·아바타
     await expect(dialog).toBeHidden();
     await expect(page.getByText('저장되었습니다')).toBeVisible();
@@ -199,7 +199,7 @@ test.describe('SCR-D09 연출진 관리 — 채운 상태(실서버)', () => {
     await dialog.getByPlaceholder('예: 예술감독 · 연출').fill('연출');
     await dialog.getByLabel('노출 순서').fill('10000');
     // Act
-    await dialog.getByRole('button', { name: '추가' }).click();
+    await dialog.getByRole('button', { name: '추가', exact: true }).click();
     // Assert — 400 COMMON_001 서버 message
     await expect(
       dialog.getByText('노출 순서는 0~9999 사이 정수여야 합니다.')

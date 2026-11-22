@@ -25,6 +25,9 @@ export interface SemanticTokens {
     itemHoverBg: string;
     itemActiveBg: string;
     itemActive: string;
+    /** (U40) 메뉴 숫자 배지 — 흰 글자 대비 5.25:1(AA), 내비 바탕 대비 3.2:1 이상(비텍스트 3:1) */
+    badgeBg: string;
+    badgeFg: string;
   };
   alert: {
     warningBg: string;
@@ -72,6 +75,22 @@ export interface SemanticTokens {
   /** R1 designer §13.2 `--color-success-soft-bg/-border` — D13 입장 완료 행 */
   successSoft: { bg: string; border: string };
   scrim: { dialog: string; image: string; chip: string };
+  /** U35 좌석 지도·배치 편집 칸 */
+  seat: {
+    availableBg: string;
+    availableBorder: string;
+    availableFg: string;
+    selectedBg: string;
+    selectedFg: string;
+    soldBg: string;
+    soldFg: string;
+    mineBg: string;
+    mineFg: string;
+    aisleBorder: string;
+    voidBg: string;
+    stageBg: string;
+    stageFg: string;
+  };
 }
 
 export const SEMANTIC: SemanticTokens = {
@@ -96,6 +115,8 @@ export const SEMANTIC: SemanticTokens = {
     itemHoverBg: ALPHA.navHoverBg,
     itemActiveBg: ALPHA.navActiveBg,
     itemActive: RAW.navFgActive,
+    badgeBg: RAW.danger,
+    badgeFg: RAW.white,
   },
   alert: {
     warningBg: ALPHA.labelWarningBg,
@@ -141,6 +162,22 @@ export const SEMANTIC: SemanticTokens = {
   },
   input: { borderStrong: RAW.borderStrong },
   successSoft: { bg: ALPHA.rowDoneBg, border: ALPHA.labelSuccessBg },
+  // U35 좌석 지도 — U30 다크 토큰으로 옮김(v1.3.0 합치기): 빈 좌석 = 올린 면, 판매 = 칩 테두리 면, 무대 = muted
+  seat: {
+    availableBg: RAW.raised,
+    availableBorder: RAW.borderStrong,
+    availableFg: RAW.text,
+    selectedBg: RAW.orange700,
+    selectedFg: RAW.white,
+    soldBg: RAW.chipBorder,
+    soldFg: RAW.text2,
+    mineBg: RAW.blue700,
+    mineFg: RAW.white,
+    aisleBorder: RAW.divider,
+    voidBg: RAW.bg,
+    stageBg: RAW.muted,
+    stageFg: RAW.text,
+  },
   scrim: {
     dialog: 'rgba(0 0 0 / 0.6)',
     image: 'rgba(0 0 0 / 0.6)',

@@ -17,6 +17,8 @@ import { PerformanceDetailHead } from '@/src/sections/performance-detail/compone
 import { BookingPolicyCard } from '@/src/sections/performance-shows/components/booking-policy-card';
 import { PerformanceShowsSkeleton } from '@/src/sections/performance-shows/components/performance-shows-skeleton';
 import { ReadinessNotice } from '@/src/sections/performance-shows/components/readiness-notice';
+import { SeatLayoutDialog } from '@/src/sections/performance-shows/components/seat-layout-dialog';
+import { SeatSelectionCard } from '@/src/sections/performance-shows/components/seat-selection-card';
 import { ShowDialog } from '@/src/sections/performance-shows/components/show-dialog';
 import { ShowsCard } from '@/src/sections/performance-shows/components/shows-card';
 import { TierCard } from '@/src/sections/performance-shows/components/tier-card';
@@ -51,6 +53,7 @@ export function PerformanceShowsView({
           <ReadinessNotice tone={vm.notice.tone} message={vm.notice.message} />
         ) : null}
         <BookingPolicyCard policyForm={vm.policyForm} />
+        <SeatSelectionCard {...vm.seatSelection} />
         <TierCard card={vm.tierSection.card} />
         <ShowsCard
           rows={vm.showsSection.rows}
@@ -59,6 +62,7 @@ export function PerformanceShowsView({
           onEdit={vm.showsSection.onEdit}
           onDelete={vm.showsSection.onDelete}
           onToggleStop={vm.showsSection.onToggleStop}
+          onSeatLayout={vm.showsSection.onSeatLayout}
         />
       </>
     );
@@ -74,6 +78,7 @@ export function PerformanceShowsView({
         {body}
       </SectionStack>
       <ShowDialog dialog={vm.showDialog} classOptions={vm.classOptions} />
+      <SeatLayoutDialog {...vm.seatLayout} />
       <ConfirmDialog
         open={vm.deleteConfirm.isOpen}
         message={MSG_D11.DELETE_CONFIRM}

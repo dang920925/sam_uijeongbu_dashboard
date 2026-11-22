@@ -17,6 +17,7 @@ describe('staff-form', () => {
     expect(errors).toEqual({
       name: '이름을 입력해주세요',
       role: '역할을 입력해주세요',
+      histories: [],
     });
     expect(hasStaffFormError(errors)).toBe(true);
   });

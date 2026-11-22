@@ -2,7 +2,8 @@
 
 // ----------------------------------------------------------------------
 // 연출진 추가·수정 다이얼로그(wide 640, design SCR-D09) —
-// 사진(원형 업로드, STAFF_PROFILE) → 이름 *·역할 *(sm↑ 2열, [n]/50) → 소개(≤1000) → 노출 순서 + 홈페이지 노출.
+// 사진(원형 업로드, STAFF_PROFILE) → 이름 *·역할 *(sm↑ 2열, [n]/50) → 소개(≤1000) → 노출 순서 + 홈페이지 노출 → 연혁(U28).
+// 편집 미리보기(FN-47)는 R3 자르는 순서 ①로 이번에 넣지 않았다(기획 §21).
 // 열릴 때마다 initialValue 로 다시 마운트해 폼을 리셋한다. 업로드 중에는 제출을 막는다. 제출 실패 문구는 다이얼로그 안.
 // ----------------------------------------------------------------------
 import Button from '@mui/material/Button';
@@ -14,6 +15,7 @@ import { AdminDialog } from '@/src/components/admin-dialog';
 import { FormField } from '@/src/components/form-field';
 import { ImageUploadField } from '@/src/components/image-upload-field';
 import { SwitchField } from '@/src/components/switch-field';
+import { StaffHistoryFields } from '@/src/sections/staff/components/staff-history-fields';
 import {
   hasStaffFormError,
   STAFF_BIO_MAX,
@@ -21,6 +23,12 @@ import {
   validateStaffForm,
   type StaffFormErrors,
 } from '@/src/sections/staff/utils/staff-form';
+import {
+  emptyHistoryRow,
+  invalidHistoryRows,
+  moveHistoryRow,
+  STAFF_HISTORY_MAX,
+} from '@/src/sections/staff/utils/staff-history-form';
 import { MSG_COMMON, MSG_UPLOAD } from '@/src/shared/messages/common';
 import { MSG_D09 } from '@/src/shared/messages/d09';
 
@@ -34,7 +42,7 @@ interface StaffFormDialogProps {
   onClose: () => void;
 }
 
-const NO_ERRORS: StaffFormErrors = { name: null, role: null };
+const NO_ERRORS: StaffFormErrors = { name: null, role: null, histories: [] };
 
 export function StaffFormDialog(props: StaffFormDialogProps) {
   return props.open ? <StaffFormBody {...props} /> : null;
@@ -69,6 +77,14 @@ function StaffFormBody({
     setField(key, value);
     setErrors((prev) => ({ ...prev, [key]: null }));
   };
+
+  // 연혁(U28) — 제출에서 잘못된 줄이 있었으면 고치는 동안 표시를 다시 계산한다(제출 전에는 표시하지 않음)
+  const setHistories = (
+    update: (rows: StaffFormInput['histories']) => StaffFormInput['histories']
+  ) => setForm((prev) => ({ ...prev, histories: update(prev.histories) }));
+  const invalidHistories = errors.histories.some(Boolean)
+    ? invalidHistoryRows(form.histories)
+    : [];
 
   const handleSubmit = () => {
     const next = validateStaffForm(form);
@@ -176,6 +192,30 @@ function StaffFormBody({
           onChange={(isVisible) => setField('isVisible', isVisible)}
         />
       </div>
+      <StaffHistoryFields
+        rows={form.histories}
+        invalid={invalidHistories}
+        onAdd={() =>
+          setHistories((rows) =>
+            rows.length >= STAFF_HISTORY_MAX
+              ? rows
+              : [...rows, emptyHistoryRow()]
+          )
+        }
+        onRemove={(key) =>
+          setHistories((rows) => rows.filter((row) => row.key !== key))
+        }
+        onMove={(key, direction) =>
+          setHistories((rows) => moveHistoryRow(rows, key, direction))
+        }
+        onChange={(key, field, value) =>
+          setHistories((rows) =>
+            rows.map((row) =>
+              row.key === key ? { ...row, [field]: value } : row
+            )
+          )
+        }
+      />
     </AdminDialog>
   );
 }

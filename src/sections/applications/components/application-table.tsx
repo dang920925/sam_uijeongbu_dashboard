@@ -2,8 +2,9 @@
 
 // ----------------------------------------------------------------------
 // 신청 한 행 목록(U31 보강 — designer §18.3 SCR-D06-U31B).
-// - lg 8열 한 줄(말줄임): 유형 · 이름/연락처 · 작품 · 희망 일정 · 연락 · 진행 · 처리 상태 · 접수일.
-// - md 6열: 희망 일정·연락처·접수일은 드로어로. xs 는 카드(ApplicationCard).
+// - lg 7열 한 줄(말줄임): 유형 · 이름/연락처 · 작품 · 희망 일정 · 연락 · 진행 · 접수일.
+// - md 5열: 희망 일정·연락처·접수일은 드로어로. xs 는 카드(ApplicationCard).
+// - (U39) 처리 상태 열을 없앴다(진행 단계로 합침). "단원 등록됨"은 진행 칸 옆 배지(md 아이콘만).
 // - 행 클릭 → 드로어. 키보드는 이름 버튼(시안 row-open)으로 연다. 연락 토글·진행 메뉴 클릭은 행으로 번지지 않는다.
 // - 열마다 폭 비율(table-layout fixed)로 한 줄을 지키고, 글자는 말줄임.
 // 공용 DataTable 은 열 단위 반응형 숨김이 없어 이 화면만 MUI Table 을 직접 쓴다(리드 보고).
@@ -23,7 +24,7 @@ import { ApplicationContactToggle } from '@/src/sections/applications/components
 import { ApplicationProgressMenu } from '@/src/sections/applications/components/application-progress-menu';
 import { ApplicationScheduleCell } from '@/src/sections/applications/components/application-schedule-cell';
 import { ApplicationSortHeader } from '@/src/sections/applications/components/application-sort-header';
-import { ApplicationStatusLabels } from '@/src/sections/applications/components/application-status-labels';
+import { ApplicationMemberLabel } from '@/src/sections/applications/components/application-member-label';
 import { ApplicationTypeLabel } from '@/src/sections/applications/components/application-type-label';
 import { ApplicationWorkChips } from '@/src/sections/applications/components/application-work-chips';
 import type {
@@ -81,7 +82,7 @@ export function ApplicationTable({
           </Box>
         </>
       ),
-      width: { md: '18%', lg: '14%' },
+      width: { md: '20%', lg: '16%' },
       render: (row) => (
         <span className='flex min-w-0 items-baseline gap-2'>
           <ButtonBase
@@ -112,7 +113,7 @@ export function ApplicationTable({
     {
       key: 'work',
       header: MSG_D06.COL_WORK,
-      width: { md: '24%', lg: '19%' },
+      width: { md: '28%', lg: '22%' },
       render: (row) => (
         <>
           <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
@@ -140,7 +141,7 @@ export function ApplicationTable({
     {
       key: 'contact',
       header: MSG_D06.COL_CONTACT,
-      width: { md: '17%', lg: '10%' },
+      width: { md: '18%', lg: '11%' },
       sort: 'contactedAt',
       render: (row) => (
         <ApplicationContactToggle
@@ -153,25 +154,22 @@ export function ApplicationTable({
     {
       key: 'progress',
       header: MSG_D06.COL_PROGRESS,
-      width: { md: '15%', lg: '11%' },
+      width: { md: '23%', lg: '17%' },
       sort: 'progress',
       render: (row) => (
-        <ApplicationProgressMenu
-          progress={row.progress}
-          onChange={(progress) => handlers.onChangeProgress(row.id, progress)}
-        />
+        <span className='inline-flex items-center gap-1'>
+          <ApplicationProgressMenu
+            progress={row.progress}
+            onChange={(progress) => handlers.onChangeProgress(row.id, progress)}
+          />
+          <ApplicationMemberLabel row={row} isIconOnlyMd />
+        </span>
       ),
-    },
-    {
-      key: 'status',
-      header: MSG_D06.COL_PROCESS_STATUS,
-      width: { md: '15%', lg: '14%' },
-      render: (row) => <ApplicationStatusLabels row={row} isNoWrap />,
     },
     {
       key: 'created',
       header: MSG_D06.COL_RECEIVED,
-      width: { md: '0', lg: '8%' },
+      width: { md: '0', lg: '10%' },
       isLgOnly: true,
       sort: 'createdAt',
       render: (row) => (

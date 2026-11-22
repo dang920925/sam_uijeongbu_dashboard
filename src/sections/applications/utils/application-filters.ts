@@ -1,6 +1,7 @@
 // ----------------------------------------------------------------------
 // 신청 목록 필터·정렬(U31 보강 — develop §15.5 · design §10.1) — 순수 함수.
-// - 유형 pill(전체/참관/상담) · 처리 상태 · 작품 · 연락(전체/연락 전/연락 완료) · 진행 / 정렬(접수일·진행·연락 시각, asc/desc).
+// - 유형 pill(전체/참관/상담) · 작품 · 연락(전체/연락 전/연락 완료) · 진행 / 정렬(접수일·진행·연락 시각, asc/desc).
+//   (U39) 처리 상태(status) 필터는 없앴다 — 진행 단계로 합침(서버 status 쿼리는 호환용으로 남지만 보내지 않는다).
 // - 필터 → `ApplicationListQuery`: '전체'는 보내지 않고, 연락은 boolean(쿼리 'true'|'false'), 정렬은 늘 보낸다(기본 createdAt desc).
 // - 진행 필터 항목: 유형을 고르면 그 유형 단계·이름, 전체면 다섯 단계에 두 유형 이름을 "·"로 묶는다(designer §18.3 확인 필요 ③ — 자체 결정).
 // - 정렬 머리 누르기: 같은 열이면 방향만 뒤집고, 다른 열이면 그 열 내림차순부터.
@@ -12,20 +13,17 @@ import {
   APPLICATION_PROGRESS_LABEL,
   type ApplicationProgress,
   type ApplicationSort,
-  type ApplicationStatus,
   type ApplicationType,
   type SortOrder,
 } from '@/src/types/codes';
 
 export const ALL = 'ALL' as const;
 export type AppTypeFilter = ApplicationType | typeof ALL;
-export type StatusFilter = ApplicationStatus | typeof ALL;
 export type ContactFilter = 'UNCONTACTED' | 'CONTACTED' | typeof ALL;
 export type ProgressFilter = ApplicationProgress | typeof ALL;
 
 export interface ApplicationFilters {
   appType: AppTypeFilter;
-  status: StatusFilter;
   /** 작품 id 또는 ALL */
   performanceId: string;
   contact: ContactFilter;
@@ -36,7 +34,6 @@ export interface ApplicationFilters {
 
 export const DEFAULT_APPLICATION_FILTERS: ApplicationFilters = {
   appType: ALL,
-  status: ALL,
   performanceId: ALL,
   contact: ALL,
   progress: ALL,
@@ -51,7 +48,6 @@ export function toApplicationListQuery(
 ): ApplicationListQuery {
   return {
     appType: filters.appType === ALL ? undefined : filters.appType,
-    status: filters.status === ALL ? undefined : filters.status,
     performanceId:
       filters.performanceId === ALL ? undefined : filters.performanceId,
     contacted:
@@ -67,7 +63,6 @@ export function toApplicationListQuery(
 /** 정렬 외 필터가 하나라도 걸려 있는지(빈 문구 고르기) */
 export function hasActiveFilter(filters: ApplicationFilters): boolean {
   return (
-    filters.status !== ALL ||
     filters.performanceId !== ALL ||
     filters.contact !== ALL ||
     filters.progress !== ALL

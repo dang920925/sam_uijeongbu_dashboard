@@ -17,6 +17,8 @@ import type {
 import type {
   BookingPolicyUpsertRequest,
   CancelReason,
+  InviterCategory,
+  SeatKind,
   ConfirmedBy,
   PriceTierVisibility,
   ReservationLineResponse,
@@ -83,6 +85,10 @@ export interface MockReservation {
   depositorName: string | null;
   inviterMemberId: string | null;
   inviterNote: string | null;
+  /** U36 — 초대 구분(null = 기존·없음) */
+  inviterCategory?: InviterCategory | null;
+  /** U35 — 잡은 좌석 id(취소돼도 기록은 남고, 살아 있는 예매만 좌석을 막는다) */
+  seatIds?: string[];
   status: ReservationStatus;
   source: ReservationSource;
   depositDueAt: string | null;
@@ -93,6 +99,56 @@ export interface MockReservation {
   memo: string | null;
   admittedCount: number;
   version: number;
+  createdAt: string;
+}
+
+/** 좌석 배치 칸(U35 — show_seats). VOID 칸은 두지 않는다 */
+export interface MockSeatCell {
+  id: string;
+  rowIndex: number;
+  colIndex: number;
+  kind: Exclude<SeatKind, 'VOID'>;
+  rowLabel: string | null;
+  seatNumber: number | null;
+}
+
+/** 회차 좌석 배치(show_seat_layouts + show_seats) */
+export interface MockSeatLayout {
+  rowCount: number;
+  colCount: number;
+  cells: MockSeatCell[];
+}
+
+/** 배역(performance_roles — R3 develop §11.7 · §17.1). name null = "출연" 묶음 */
+export interface MockRole {
+  id: string;
+  performanceId: string;
+  name: string | null;
+  description: string | null;
+  sortOrder: number;
+  isRecruiting: boolean;
+  createdAt: string;
+}
+
+/** 캐스트 행 — showId null 이면 기본 캐스트(role_casts), 있으면 회차 지정(show_role_casts). 배우는 단원 id 로 든다 */
+export interface MockRoleCast {
+  roleId: string;
+  showId: string | null;
+  memberId: string;
+  note: string | null;
+  sortOrder: number;
+}
+
+/** 참여자(performance_credits — R3 develop §17.1) */
+export interface MockCredit {
+  id: string;
+  performanceId: string;
+  title: string;
+  staffId: string | null;
+  memberId: string | null;
+  displayName: string | null;
+  sortOrder: number;
+  isVisible: boolean;
   createdAt: string;
 }
 
@@ -117,6 +173,8 @@ export interface MockStore {
   priceTiers: MockPriceTier[];
   bookingPolicies: Map<string, BookingPolicyUpsertRequest>;
   reservations: MockReservation[];
+  /** U35 showId → 배치 */
+  seatLayouts: Map<string, MockSeatLayout>;
   admissionLogs: {
     id: string;
     reservationId: string;
@@ -126,6 +184,11 @@ export interface MockStore {
   }[];
   /** memberId → 초대 코드 */
   inviteCodes: Map<string, string>;
+  /** R3 배역·캐스트·참여자 · 연출진 연혁(staffId → 연혁). 캐스트 공개 스위치는 공연 행의 castPublic */
+  roles: MockRole[];
+  roleCasts: MockRoleCast[];
+  credits: MockCredit[];
+  staffHistories: Map<string, { year: number; content: string }[]>;
   account: MockAccount;
   /** accessToken → 발급 당시 sessionVersion(U25 다른 기기 로그아웃 흉내) */
   sessionVersions: Map<string, number>;
@@ -176,8 +239,13 @@ function emptyStore(): MockStore {
     priceTiers: [],
     bookingPolicies: new Map(),
     reservations: [],
+    seatLayouts: new Map(),
     admissionLogs: [],
     inviteCodes: new Map(),
+    roles: [],
+    roleCasts: [],
+    credits: [],
+    staffHistories: new Map(),
     account: { username: null, password: null, sessionVersion: 0 },
     sessionVersions: new Map(),
     revalidateCalls: [],

@@ -5,6 +5,7 @@
 // - 단원은 useMember(id) 로 따로 읽는다(목록의 다른 쪽·다른 필터에 있는 단원도 URL 로 열 수 있게).
 // - 배우만 프로필을 읽는다(일반 단원은 연락처·가입일 — FN-12 수용 기준).
 // - 삭제: ConfirmDialog "{이름}을(를) 삭제하시겠습니까?" → 성공 시 패널 닫음, 실패 시 확인창 닫고 스낵바.
+// - (U36) 배우: "예매 초대자 목록에 표시" 스위치 → PATCH inviterListed(진행 중엔 바뀔 값을 미리 보임, 실패 스낵바).
 // ----------------------------------------------------------------------
 import { useState } from 'react';
 
@@ -12,6 +13,7 @@ import {
   useActorProfile,
   useDeleteMember,
   useMember,
+  useSaveMember,
 } from '@/src/api/member-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
 import {
@@ -33,6 +35,14 @@ export function useMemberPanelViewModel(memberId: string, onClose: () => void) {
   const isActor = member?.type === 'ACTOR';
   const profileQuery = useActorProfile(isActor ? memberId : null);
   const deleteMember = useDeleteMember();
+  const saveMember = useSaveMember();
+  /** 마지막으로 바꾼 값(실패하면 지운다) — 다시 받은 단원 값이 오기 전에도 스위치가 되돌아가지 않게 */
+  const [listedSet, setListedSet] = useState<{
+    id: string;
+    value: boolean;
+  } | null>(null);
+  const pendingListed =
+    listedSet && listedSet.id === memberId ? listedSet.value : undefined;
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleDelete = () => {
@@ -76,6 +86,25 @@ export function useMemberPanelViewModel(memberId: string, onClose: () => void) {
           joinedText: formatJoinedDate(member),
         }
       : null,
+    inviterSwitch:
+      member && isActor
+        ? {
+            checked: pendingListed ?? member.inviterListed,
+            disabled: saveMember.isPending,
+            onChange: (checked: boolean) => {
+              setListedSet({ id: member.id, value: checked });
+              saveMember.mutate(
+                { id: member.id, input: { inviterListed: checked } },
+                {
+                  onError: (e) => {
+                    setListedSet(null);
+                    snackbar.error(toApiErrorMessage(e));
+                  },
+                }
+              );
+            },
+          }
+        : null,
     onClose,
     deleteConfirm: {
       isOpen: isConfirmOpen,

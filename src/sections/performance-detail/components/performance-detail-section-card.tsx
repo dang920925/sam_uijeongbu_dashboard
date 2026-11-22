@@ -3,7 +3,7 @@
 // isFlush: 본문을 카드 가장자리까지(표·카드 리스트).
 // ----------------------------------------------------------------------
 import Card from '@mui/material/Card';
-import type { ReactNode } from 'react';
+import { type ReactNode, useId } from 'react';
 
 import { Typo } from '@/src/components/typo';
 
@@ -20,10 +20,13 @@ export function PerformanceDetailSectionCard({
   children,
   isFlush = false,
 }: PerformanceDetailSectionCardProps) {
+  const titleId = useId();
   return (
-    <Card component='section'>
+    <Card component='section' aria-labelledby={titleId}>
       <div className='flex items-center justify-between gap-3 p-4 md:p-6'>
-        <Typo.Title.Bold component='h2'>{title}</Typo.Title.Bold>
+        <Typo.Title.Bold component='h2' id={titleId}>
+          {title}
+        </Typo.Title.Bold>
         {action}
       </div>
       <div className={isFlush ? 'pb-2' : 'px-4 pb-4 md:px-6 md:pb-6'}>

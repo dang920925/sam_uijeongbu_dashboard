@@ -13,9 +13,10 @@ export const MSG_D02 = {
   KPI_ACTORS: '등록 배우',
   KPI_ACTORS_DESC: '전체 배우 회원',
   KPI_PENDING: '대기 신청서',
-  /** 현행 "승인 대기 중" + U31 보강 연락 전 수(design §10.1 제안) */
+  /** 현행 "승인 대기 중" + U31 보강 연락 전 수(design §10.1 제안) → U39 "승인" 뺌 */
   KPI_PENDING_DESC_UNCONTACTED: (count: number) =>
-    `승인 대기 중 · 연락 전 ${count}건`,
+    // (U39) 승인 단계가 없어져 '승인'을 뺐다(제안 — 사용자 결정 2026-11-20 진행 단계로 합침)
+    `대기 중 · 연락 전 ${count}건`,
   KPI_SCHEDULES: '등록 일정',
   KPI_SCHEDULES_DESC: '전체 일정 수',
   /** 카드 제목 — Dashboard.tsx:115,148 */

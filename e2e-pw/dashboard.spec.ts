@@ -87,7 +87,7 @@ test.describe('SCR-D02 요약', () => {
     page,
     request,
   }) => {
-    // Arrange — 배우 2(일반·삭제 배우 제외), 대기 6(승인 1 제외), 일정 3(삭제 1 제외)
+    // Arrange — 배우 2(일반·삭제 배우 제외), 대기 6(연락한 일정 확정 1 제외 — U39), 일정 3(삭제 1 제외)
     const seeded = await request.post('/api/backend/v1/__mock/seed/dashboard', {
       data: {
         members: [
@@ -101,6 +101,8 @@ test.describe('SCR-D02 요약', () => {
             applicantName: `${PREFIX}승인`,
             phone: '010-0000-0000',
             status: 'APPROVED',
+            progress: 'SCHEDULED',
+            contacted: true,
           },
           ...[1, 2, 3, 4, 5].map((n) => ({
             applicantName: `${PREFIX}신청-${n}`,
@@ -168,11 +170,11 @@ test.describe('SCR-D02 요약', () => {
     await expect(page.getByText('등록된 공연이 없습니다')).toBeVisible();
   });
 
-  test('U31 대기 신청서 설명 줄에 연락 전 수를 보인다(D02 "승인 대기 중 · 연락 전 n건")', async ({
+  test('(U39) 대기 = 접수 또는 연락 전 — 설명 줄 "대기 중 · 연락 전 n건"(불참·입단은 제외)', async ({
     page,
     request,
   }) => {
-    // Arrange — 대기 3(연락 완료 1) · 승인 1(연락 전이어도 제외)
+    // Arrange — 대기 4(접수 연락 전 2 · 접수 연락 완료 1 · 일정 확정 연락 전 1) · 불참 1·입단 1(연락 전이어도 제외)
     const seeded = await request.post('/api/backend/v1/__mock/seed/dashboard', {
       data: {
         applications: [
@@ -184,9 +186,20 @@ test.describe('SCR-D02 요약', () => {
             contacted: true,
           },
           {
-            applicantName: 'fixture-u31-승인',
+            applicantName: 'fixture-u31-확정',
+            phone: '010-0000-0000',
+            progress: 'SCHEDULED',
+          },
+          {
+            applicantName: 'fixture-u31-불참',
+            phone: '010-0000-0000',
+            progress: 'DROPPED',
+          },
+          {
+            applicantName: 'fixture-u31-입단',
             phone: '010-0000-0000',
             status: 'APPROVED',
+            progress: 'JOINED',
           },
         ],
       },
@@ -196,7 +209,7 @@ test.describe('SCR-D02 요약', () => {
     await page.goto('/');
     // Assert
     const card = kpiCard(page, '대기 신청서');
-    await expect(card.getByText('3', { exact: true })).toBeVisible();
-    await expect(card.getByText('승인 대기 중 · 연락 전 2건')).toBeVisible();
+    await expect(card.getByText('4', { exact: true })).toBeVisible();
+    await expect(card.getByText('대기 중 · 연락 전 3건')).toBeVisible();
   });
 });

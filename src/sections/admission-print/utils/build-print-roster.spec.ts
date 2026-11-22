@@ -23,6 +23,7 @@ function item(over: Partial<AdmissionItem>): AdmissionItem {
     deadlinePassed: false,
     memo: null,
     version: 1,
+    seats: [],
     ...over,
   };
 }
@@ -85,5 +86,22 @@ describe('buildPrintRoster', () => {
     expect(toRosterSort('code')).toBe('code');
     expect(toRosterSort(null)).toBe('name');
     expect(toRosterSort('x')).toBe('name');
+  });
+});
+
+describe('buildPrintRoster — U35 좌석', () => {
+  it('좌석 지정 공연이면 좌석 칸("B3·B4" · 없으면 "좌석 미정"), 아니면 칸 없음', () => {
+    const board = {
+      items: [
+        item({ id: 'a', seats: [{ rowLabel: 'B', seatNumber: 3 }] }),
+        item({ id: 'b', code: '0001' }),
+      ],
+      summary: SUMMARY,
+    };
+    const on = buildPrintRoster(board, 'name', true);
+    expect(on.hasSeatColumn).toBe(true);
+    expect(on.confirmed.map((r) => r.seatText)).toEqual(['B3', '좌석 미정']);
+    expect(buildPrintRoster(board, 'name').hasSeatColumn).toBe(false);
+    expect(buildPrintRoster(board, 'name').confirmed[1].seatText).toBeNull();
   });
 });

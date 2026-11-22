@@ -1,8 +1,8 @@
 'use client';
 
 // ----------------------------------------------------------------------
-// 상세 하단 동작(D6 — 기존 흐름 그대로): 대기 "승인"+"거절" / 승인+미등록 "단원으로 등록" /
-// 승인+등록됨 "단원 등록됨" 배지 + 단원 이름 링크 / 거절 없음.
+// 상세 하단 동작(U39 — 승인·거절 없음, 진행 단계로 대신): 미등록 "단원으로 등록" /
+// 등록됨 "단원 등록됨" 배지 + 단원 이름 링크 / 옛 거절 건은 없음.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -40,27 +40,6 @@ export function ApplicationDetailActions({
         borderColor: 'divider',
       }}
     >
-      {detail.action === 'review' ? (
-        <>
-          <Button
-            variant='contained'
-            startIcon={<Iconify icon='solar:check-circle-linear' />}
-            onClick={() => handlers.onRequestApprove(detail.id)}
-            sx={{ flex: 1 }}
-          >
-            {MSG_D06.APPROVE}
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            startIcon={<Iconify icon='solar:close-circle-linear' />}
-            onClick={() => handlers.onRequestReject(detail.id)}
-            sx={{ flex: 1 }}
-          >
-            {MSG_D06.REJECT}
-          </Button>
-        </>
-      ) : null}
       {detail.action === 'register' ? (
         <Button
           variant='contained'

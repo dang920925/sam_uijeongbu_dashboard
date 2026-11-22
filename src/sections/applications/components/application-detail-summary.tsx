@@ -1,11 +1,13 @@
 // ----------------------------------------------------------------------
-// 상세 요약(designer §18.3 drawer dr__sum): 이름 · 나이/성별 → 유형·처리 상태 Label → 신청일·처리일 →
+// 상세 요약(designer §18.3 drawer dr__sum): 이름 · 나이/성별 → 유형 Label(+ 단원 등록됨) → 신청일 →
+// (U39) 처리 상태·처리일은 진행 단계로 합쳐 보이지 않는다.
+//
 // 참관: '참관 작품'·'관심 작품'(따로, design §10) · '희망 날짜'(+ 일정 취소됨·사유) / 상담: '희망 작품' 전체 · '상담 방법 · 희망 시간'.
 // ----------------------------------------------------------------------
 import { Typo } from '@/src/components/typo';
 import { ApplicationDetailKv } from '@/src/sections/applications/components/application-detail-kv';
 import { ApplicationScheduleCell } from '@/src/sections/applications/components/application-schedule-cell';
-import { ApplicationStatusLabels } from '@/src/sections/applications/components/application-status-labels';
+import { ApplicationMemberLabel } from '@/src/sections/applications/components/application-member-label';
 import { ApplicationTypeLabel } from '@/src/sections/applications/components/application-type-label';
 import { ApplicationWorkChips } from '@/src/sections/applications/components/application-work-chips';
 import type { ApplicationRow } from '@/src/sections/applications/utils/application-row';
@@ -39,12 +41,10 @@ export function ApplicationDetailSummary({
       </div>
       <div className='flex flex-wrap items-center gap-1'>
         <ApplicationTypeLabel row={detail} hasIcon />
-        <ApplicationStatusLabels row={detail} />
+        <ApplicationMemberLabel row={detail} />
       </div>
       <Typo.Caption.Regular color='text.secondary'>
-        {detail.processedAt
-          ? `${MSG_D06.DRAWER_CREATED(detail.createdAt)} · ${MSG_D06.DRAWER_PROCESSED(detail.processedAt)}`
-          : MSG_D06.DRAWER_CREATED(detail.createdAt)}
+        {MSG_D06.DRAWER_CREATED(detail.createdAt)}
       </Typo.Caption.Regular>
       {isObservation ? (
         <>

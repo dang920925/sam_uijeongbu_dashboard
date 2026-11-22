@@ -88,11 +88,13 @@ export function AdmissionPrintView({
           title={MSG_PRINT.SECTION_CONFIRMED(roster.confirmed.length)}
           statusText={MSG_PRINT.STATUS_CONFIRMED}
           rows={roster.confirmed}
+          hasSeatColumn={roster.hasSeatColumn}
         />
         <PrintRosterTable
           title={MSG_PRINT.SECTION_PENDING(roster.pending.length)}
           statusText={MSG_PRINT.STATUS_PENDING}
           rows={roster.pending}
+          hasSeatColumn={roster.hasSeatColumn}
         />
       </div>
       <Box

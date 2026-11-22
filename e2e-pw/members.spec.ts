@@ -1,7 +1,8 @@
 // ----------------------------------------------------------------------
 // SCR-D05 단원 관리(FN-11·FN-12·FN-18) — 빈 상태, 목록·실제 가입일(B1)·필터, 단원 추가(공용 다이얼로그),
 // 일반 단원 패널(연락처·가입일만), 배우 패널 저장(프로필 + 홈페이지 노출 한 버튼 → "저장되었습니다 ✓"),
-// 소개 201자 문구, 사진 업로드(ACTOR_PROFILE), URL ?member=<id> 로 패널 열기, 단원 삭제 확인.
+// 소개 201자 문구, 사진 업로드(ACTOR_PROFILE), URL ?member=<id> 로 패널 열기, 단원 삭제 확인,
+// (U39) 홈페이지 공개 동의일 — 공개를 켜고 비우면 경고만(저장은 됨), 목록 '공개 동의일' 열.
 // desktop 은 표 옆 패널, mobile 은 전체 폭 시트(Drawer) — 보이는 요소만 골라 같은 테스트로 돈다.
 // ----------------------------------------------------------------------
 import {
@@ -19,6 +20,7 @@ interface CreatedMember {
   id: string;
   name: string;
   isVisible: boolean;
+  publicConsentAt?: string | null;
   profileImageUrl: string | null;
 }
 
@@ -175,6 +177,49 @@ test.describe('SCR-D05 단원 관리', () => {
       `/admin/members/${member.id}`
     );
     expect(saved.isVisible).toBe(true);
+  });
+
+  test('(U39) 공개를 켜고 동의일이 비면 경고만 하고 저장되며, 동의일을 넣으면 경고가 사라지고 목록에 보인다', async ({
+    page,
+    request,
+  }) => {
+    // Arrange
+    const name = `${PREFIX}배우 동의`;
+    const member = await createMember(request, name, 'ACTOR');
+    await page.goto(`/members?member=${member.id}`);
+    const sheet = panel(page, name);
+    const warning = sheet.getByText('공개 동의일을 입력해 주세요');
+    await expect(warning).toHaveCount(0);
+    // Act 1 — 공개만 켜고 저장(막지 않는다)
+    await sheet.getByLabel('홈페이지 노출').check();
+    await expect(warning).toBeVisible();
+    await sheet.getByRole('button', { name: '프로필 저장' }).click();
+    await expect(sheet.getByText('저장되었습니다 ✓')).toBeVisible();
+    const first = await adminApi<CreatedMember>(
+      request,
+      'GET',
+      `/admin/members/${member.id}`
+    );
+    expect(first).toMatchObject({ isVisible: true, publicConsentAt: null });
+    // Act 2 — 동의일 입력
+    await sheet.getByLabel('홈페이지 공개 동의일').fill('2026-11-20');
+    await expect(warning).toHaveCount(0);
+    await sheet.getByRole('button', { name: '프로필 저장' }).click();
+    await expect(sheet.getByText('저장되었습니다 ✓')).toBeVisible();
+    // Assert
+    const saved = await adminApi<CreatedMember>(
+      request,
+      'GET',
+      `/admin/members/${member.id}`
+    );
+    expect(saved.publicConsentAt).toBe('2026-11-20');
+    // 목록 '공개 동의일' 열(md↑) · 카드 "공개 동의일 2026.11.20"(xs)
+    await expect(
+      page
+        .getByText(/2026\.11\.20/)
+        .filter({ visible: true })
+        .first()
+    ).toBeVisible();
   });
 
   test('소개가 201자면 "한 줄 소개는 200자 이내로 입력해주세요." 로 막는다', async ({

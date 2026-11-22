@@ -223,7 +223,7 @@ test.describe('qa1 수정 확인', () => {
     await expect(page.getByText('저장되었습니다')).toBeVisible();
   });
 
-  test('QA1-026 다른 곳에서 먼저 거절된 신청을 상세에서 승인하면 상세도 거절로 바뀐다', async ({
+  test('QA1-026(U39) 다른 곳에서 먼저 거절된 신청을 상세에서 등록하면 APP_009 스낵바, 상세의 등록 버튼이 사라진다', async ({
     page,
     request,
   }) => {
@@ -242,22 +242,26 @@ test.describe('qa1 수정 확인', () => {
       .first()
       .click();
     const detail = page.getByRole('dialog', { name: '🎭 작품 참관 신청 상세' });
-    await expect(detail.getByRole('button', { name: '승인' })).toBeVisible();
+    await expect(
+      detail.getByRole('button', { name: '단원으로 등록' })
+    ).toBeVisible();
+    // 호환용 거절 API(대시보드는 부르지 않음)로 다른 곳에서 먼저 거절된 상황
     await adminApi(
       request,
       'POST',
       `/admin/applications/${items[0].id}/reject`
     );
-    await detail.getByRole('button', { name: '승인' }).click();
+    await detail.getByRole('button', { name: '단원으로 등록' }).click();
     await page
-      .getByRole('alertdialog')
-      .getByRole('button', { name: '승인' })
+      .getByRole('dialog', { name: '단원으로 등록' })
+      .getByRole('button', { name: '등록' })
       .click();
-    await expect(page.getByText('이미 처리된 신청입니다.')).toBeVisible();
-    await expect(detail.getByRole('button', { name: '승인' })).toHaveCount(0);
     await expect(
-      detail.getByText('거절', { exact: true }).first()
+      page.getByText('거절된 신청은 단원으로 등록할 수 없습니다.')
     ).toBeVisible();
+    await expect(
+      detail.getByRole('button', { name: '단원으로 등록' })
+    ).toHaveCount(0);
   });
 
   test('QA1-025 xs 드로어를 열면 첫 메뉴에 포커스가 간다', async ({

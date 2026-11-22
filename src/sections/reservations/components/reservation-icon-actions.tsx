@@ -11,9 +11,13 @@ import { Iconify } from '@/src/components/iconify';
 import type { ReservationRowHandlers } from '@/src/sections/reservations/components/reservation-action-buttons';
 import type { ReservationRow } from '@/src/sections/reservations/utils/reservation-row';
 import { MSG_D12 } from '@/src/shared/messages/d12';
+import { MSG_SEAT } from '@/src/shared/messages/seat';
 
 interface ReservationIconActionsProps {
-  row: Pick<ReservationRow, 'id' | 'code' | 'hasMemo' | 'canEditItems'>;
+  row: Pick<
+    ReservationRow,
+    'id' | 'code' | 'hasMemo' | 'canEditItems' | 'canChangeSeats'
+  >;
   handlers: ReservationRowHandlers;
 }
 
@@ -34,6 +38,16 @@ export function ReservationIconActions({
   const memoLabel = row.hasMemo ? MSG_D12.MEMO_EDIT : MSG_D12.MEMO_ADD;
   return (
     <span className='inline-flex items-center gap-1'>
+      {row.canChangeSeats && handlers.onRequestSeats ? (
+        <IconButton
+          aria-label={`${row.code} ${MSG_SEAT.CHANGE_ACTION}`}
+          title={MSG_SEAT.CHANGE_ACTION}
+          onClick={run(handlers.onRequestSeats)}
+          sx={BUTTON_SX}
+        >
+          <Iconify icon='solar:armchair-linear' />
+        </IconButton>
+      ) : null}
       {row.canEditItems ? (
         <IconButton
           aria-label={`${row.code} ${MSG_D12.ACT_ITEMS}`}

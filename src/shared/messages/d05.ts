@@ -21,6 +21,8 @@ export const MSG_D05 = {
   COL_TYPE: '구분',
   COL_PHONE: '연락처',
   COL_JOINED: '가입일',
+  /** (U39) 홈페이지 공개 동의일 열·칸 — 사용자 결정 2026-11-20 칸 이름 */
+  COL_CONSENT: '공개 동의일',
   TABLE_ARIA: '단원 목록',
   /** 빈 상태 — Members.tsx:163 */
   EMPTY: '등록된 단원이 없습니다',
@@ -35,9 +37,14 @@ export const MSG_D05 = {
   /** [D5] 칸 — design SCR-D05 [D5] */
   ACTIVITY_START: '활동 시작일',
   DISPLAY_ORDER: '노출 순서',
+  /** (U39) 편집 칸 라벨 — 사용자 결정 2026-11-20 '홈페이지 공개 동의일' */
+  PUBLIC_CONSENT_AT: '홈페이지 공개 동의일',
+  /** (U39) 공개를 켰는데 동의일이 비었을 때 — 막지 않고 경고만(제안 문구, 사용자 결정 2026-11-20) */
+  PUBLIC_CONSENT_MISSING: '공개 동의일을 입력해 주세요',
   /** 노출 순서 도움말 — develop §3.4 displayOrder 0~9999 (designer W4 제안 — 사용자 확정 2026-11-19 "제안 문구 그대로") */
   DISPLAY_ORDER_HELP: '0~9999',
-  FILMOGRAPHY: '출연작',
+  /** U26 보강(design §12.1) — 기존 텍스트 출연작은 "외부 출연작"(제안)으로 이름만 바뀐다 */
+  FILMOGRAPHY: '외부 출연작',
   /** 출연작 행 추가 버튼 — designer W4 "○○ 추가" 패턴 줄임(사용자 확정 2026-11-19 "제안 문구 그대로") */
   FILMOGRAPHY_ADD: '추가',
   FILM_TITLE: '작품명',

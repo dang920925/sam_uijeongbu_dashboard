@@ -16,6 +16,7 @@ import {
   findReservation,
   findShow,
   isDeadlinePassed,
+  liveSeatHolders,
   newReservationCode,
   PHONE_PATTERN,
   showCounts,
@@ -229,6 +230,44 @@ function readBooker(ctx: MockContext, phoneRequired: boolean) {
   return { name, phone };
 }
 
+/** U35 수동 등록 좌석(선택) — 비우면 좌석 미정. 개수·칸 400 SEAT_002, 잡힌 좌석 409 SEAT_001 */
+function readSeatIds(
+  ctx: MockContext,
+  showId: string,
+  quantity: number
+): string[] | Response {
+  const raw = ctx.body.seatIds;
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw) || raw.some((id) => typeof id !== 'string'))
+    return apiError(ctx, 400, 'SEAT_002', '선택할 수 없는 좌석입니다.');
+  const ids = raw as string[];
+  if (ids.length === 0) return [];
+  if (ids.length !== quantity || new Set(ids).size !== ids.length)
+    return apiError(ctx, 400, 'SEAT_002', '좌석 수와 매수가 맞지 않습니다.');
+  const layout = getStore().seatLayouts.get(showId);
+  const seats = new Set(
+    (layout?.cells ?? []).filter((c) => c.kind === 'SEAT').map((c) => c.id)
+  );
+  if (ids.some((id) => !seats.has(id)))
+    return apiError(ctx, 400, 'SEAT_002', '선택할 수 없는 좌석입니다.');
+  const holders = liveSeatHolders(showId);
+  const clashes = ids.filter((id) => holders.has(id));
+  if (clashes.length > 0)
+    return json(
+      {
+        statusCode: 409,
+        status: 'Conflict',
+        message: '다른 분이 먼저 선택한 좌석입니다.',
+        code: 'SEAT_001',
+        seatIds: clashes,
+        timestamp: new Date().toISOString(),
+        path: `/api${ctx.req.path}`,
+      },
+      409
+    );
+  return ids;
+}
+
 function findShowOr404(ctx: MockContext): MockShow | Response {
   const showId = str(ctx.body.showId);
   const show = showId ? findShow(showId) : undefined;
@@ -349,11 +388,25 @@ export const reservationRoutes: MockRoute[] = [
         const member = r.inviterMemberId
           ? store.members.find((m) => m.id === r.inviterMemberId)
           : undefined;
-        const key = member ? member.id : r.inviterNote ? '__note' : '__none';
+        const staff = !member && r.inviterCategory === 'STAFF_RELATED';
+        const key = member
+          ? member.id
+          : staff
+            ? '__staff'
+            : r.inviterNote
+              ? '__note'
+              : '__none';
         const group = groups.get(key) ?? {
           memberId: member?.id ?? null,
           // 직접 입력(inviterNote) 묶음은 memberId null + name '직접 입력' — 목 가정(계약 주석 해석, 확인 필요)
-          name: member ? member.name : r.inviterNote ? '직접 입력' : null,
+          // U36 STAFF_RELATED 묶음은 memberId null + name '임원·스태프 및 관계자'(back-end §16)
+          name: member
+            ? member.name
+            : staff
+              ? '임원·스태프 및 관계자'
+              : r.inviterNote
+                ? '직접 입력'
+                : null,
           pendingQty: 0,
           confirmedQty: 0,
         };
@@ -408,6 +461,16 @@ export const reservationRoutes: MockRoute[] = [
       const { remainingSeats } = showCounts(show);
       if (remainingSeats !== null && remainingSeats < quantity)
         return seatsError(ctx, remainingSeats);
+      // U35 좌석(선택) · U36 초대 구분
+      const seatIds = readSeatIds(ctx, show.id, quantity);
+      if (seatIds instanceof Response) return seatIds;
+      const inviterCategory =
+        ctx.body.inviterCategory === 'STAFF_RELATED' ||
+        ctx.body.inviterCategory === 'MEMBER'
+          ? ctx.body.inviterCategory
+          : null;
+      if (inviterCategory === 'STAFF_RELATED' && ctx.body.inviterMemberId)
+        return validationError(ctx);
       const code = newReservationCode(show.performanceId);
       // 목 가정: 관리자 등록은 연락처가 있고 입금 대기일 때만 입금자명·기한을 둔다(정본은 back-end.md)
       const needsDeposit = status === 'PENDING' && booker.phone !== null;
@@ -426,6 +489,9 @@ export const reservationRoutes: MockRoute[] = [
         depositorName: needsDeposit ? depositorNameOf(booker.name, code) : null,
         inviterMemberId: str(ctx.body.inviterMemberId) || null,
         inviterNote: null,
+        inviterCategory:
+          inviterCategory ?? (str(ctx.body.inviterMemberId) ? 'MEMBER' : null),
+        seatIds,
         status,
         source: 'ADMIN',
         depositDueAt: needsDeposit ? depositDueAtOf(show, Date.now()) : null,
@@ -547,6 +613,22 @@ export const reservationRoutes: MockRoute[] = [
       const remaining = show ? showCounts(show).remainingSeats : null;
       if (remaining !== null && remaining < r.quantity)
         return seatsError(ctx, remaining);
+      // U35 SE-2 — 되살릴 때 다른 예매가 그 좌석을 잡았으면 409 SEAT_001
+      const holders = liveSeatHolders(r.showId);
+      const clashes = (r.seatIds ?? []).filter((id) => holders.has(id));
+      if (clashes.length > 0)
+        return json(
+          {
+            statusCode: 409,
+            status: 'Conflict',
+            message: '다른 분이 먼저 선택한 좌석입니다.',
+            code: 'SEAT_001',
+            seatIds: clashes,
+            timestamp: new Date().toISOString(),
+            path: `/api${ctx.req.path}`,
+          },
+          409
+        );
       bump(r, {
         status: 'PENDING',
         cancelledAt: null,
@@ -633,6 +715,15 @@ export const reservationRoutes: MockRoute[] = [
         cancelledAt: status === 'CANCELLED' ? nowIso() : null,
         cancelReason: status === 'CANCELLED' ? 'ADMIN' : null,
         memo: str(ctx.body.memo) ?? null,
+        seatIds: Array.isArray(ctx.body.seatIds)
+          ? (ctx.body.seatIds as string[])
+          : [],
+        inviterCategory:
+          ctx.body.inviterCategory === 'STAFF_RELATED'
+            ? 'STAFF_RELATED'
+            : inviterMemberId
+              ? 'MEMBER'
+              : null,
         admittedCount:
           status === 'CONFIRMED' && typeof ctx.body.admittedCount === 'number'
             ? ctx.body.admittedCount

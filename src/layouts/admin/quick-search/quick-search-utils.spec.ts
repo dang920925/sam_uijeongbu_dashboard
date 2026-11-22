@@ -48,6 +48,8 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
     depositorName: '홍길동1234',
     inviter: null,
     inviterNote: null,
+    inviterCategory: null,
+    seats: [],
     status: 'PENDING',
     source: 'ONLINE',
     depositDueAt: null,

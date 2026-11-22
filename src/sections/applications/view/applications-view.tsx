@@ -8,7 +8,6 @@
 import Card from '@mui/material/Card';
 import type { ReactNode } from 'react';
 
-import { ConfirmDialog } from '@/src/components/confirm-dialog';
 import { MemberFormDialog } from '@/src/components/member-form-dialog';
 import { PageContainer } from '@/src/components/page-container';
 import { PageHead } from '@/src/components/page-head';
@@ -50,7 +49,6 @@ export function ApplicationsView({ vm, list }: ApplicationsViewProps) {
           workOptions={vm.workOptions}
           progressOptions={vm.progressOptions}
           onAppTypeChange={vm.onAppTypeChange}
-          onStatusChange={vm.onStatusChange}
           onWorkChange={vm.onWorkChange}
           onContactChange={vm.onContactFilterChange}
           onProgressChange={vm.onProgressFilterChange}
@@ -73,22 +71,9 @@ export function ApplicationsView({ vm, list }: ApplicationsViewProps) {
           onChangeProgress: vm.onChangeProgress,
           onMemoChange: vm.onMemoChange,
           onSaveMemo: vm.onSaveMemo,
-          onRequestApprove: vm.onRequestApprove,
-          onRequestReject: vm.onRequestReject,
           onRequestRegister: vm.onRequestRegister,
         }}
         onClose={vm.onCloseDetail}
-      />
-      <ConfirmDialog
-        open={vm.confirmKind !== null}
-        message={vm.confirmMessage}
-        confirmLabel={
-          vm.confirmKind === 'reject' ? MSG_D06.REJECT : MSG_D06.APPROVE
-        }
-        confirmColor={vm.confirmKind === 'reject' ? 'error' : 'primary'}
-        isLoading={vm.isConfirming}
-        onConfirm={vm.onConfirm}
-        onCancel={vm.onCancelConfirm}
       />
       <MemberFormDialog
         open={vm.registerInitial !== null}

@@ -81,6 +81,13 @@ export interface AdminStaffItemResponse {
   displayOrder: number;
   isVisible: boolean;
   createdAt: string;
+  /** 연혁(U28 — develop §12.2, 표시 순서). 옛 응답이면 없음 */
+  histories?: StaffHistoryItem[];
+}
+/** 연출진 연혁 1줄 */
+export interface StaffHistoryItem {
+  year: number;
+  content: string;
 }
 export interface StaffUpsertRequest {
   name: string;
@@ -89,6 +96,8 @@ export interface StaffUpsertRequest {
   bio?: string | null;
   displayOrder?: number;
   isVisible?: boolean;
+  /** 보내면 통째 교체(0~50, 배열 순서 = 표시 순서) */
+  histories?: StaffHistoryItem[];
 }
 
 export interface AdminPopupItemResponse {

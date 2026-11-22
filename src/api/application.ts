@@ -12,7 +12,6 @@ import { fromMemberListItemResponse } from '@/src/api/member-mapper';
 import { apiFetch, apiPatch, apiPost, withQuery } from '@/src/lib/api-client';
 import type {
   Application,
-  ApplicationActionResponse,
   ApplicationItemResponse,
   ApplicationListQuery,
   PendingCountResponse,
@@ -44,20 +43,6 @@ export async function fetchApplication(id: string): Promise<Application> {
   return fromApplicationItemResponse(
     await apiFetch<ApplicationItemResponse>(endpoints.applications.detail(id))
   );
-}
-
-export async function approveApplication(id: string): Promise<Application> {
-  const res = await apiPost<ApplicationActionResponse>(
-    endpoints.applications.approve(id)
-  );
-  return fromApplicationItemResponse(res.application);
-}
-
-export async function rejectApplication(id: string): Promise<Application> {
-  const res = await apiPost<ApplicationActionResponse>(
-    endpoints.applications.reject(id)
-  );
-  return fromApplicationItemResponse(res.application);
 }
 
 export interface RegisteredMemberResult {

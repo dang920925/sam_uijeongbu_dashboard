@@ -14,8 +14,13 @@ import {
   type MockContext,
   type MockRoute,
 } from '@/src/_mock/backend/mock-http';
+import { isWaitingApplication } from '@/src/_mock/backend/handlers/applications';
 import { getStore } from '@/src/_mock/backend/mock-store';
-import type { MemberType } from '@/src/types/codes';
+import {
+  APPLICATION_PROGRESSES,
+  type ApplicationProgress,
+  type MemberType,
+} from '@/src/types/codes';
 import type { DashboardSummaryResponse } from '@/src/types/dashboard';
 
 const RECENT_LIMIT = 5;
@@ -30,7 +35,9 @@ function byCreatedThenIdDesc<T extends { createdAt: string; id: string }>(
 function buildSummary(): DashboardSummaryResponse {
   const store = getStore();
   const performances = store.performances.filter((p) => p.deletedAt === null);
-  const pending = store.applications.filter((a) => a.status === 'PENDING');
+  const nowIso = new Date().toISOString();
+  // (U39) 대기 = 진행 RECEIVED 또는 연락 전(끝난 신청 제외) — 연락 전 건수는 끝나지 않은 연락 전
+  const pending = store.applications.filter(isWaitingApplication);
   return {
     performances: {
       total: performances.length,
@@ -41,8 +48,19 @@ function buildSummary(): DashboardSummaryResponse {
       (m) => m.type === 'ACTOR' && m.deletedAt === null
     ).length,
     pendingApplicationCount: pending.length,
-    uncontactedPendingCount: pending.filter((a) => a.contactedAt === null)
-      .length,
+    uncontactedPendingCount: store.applications.filter(
+      (a) =>
+        a.contactedAt === null &&
+        a.progress !== 'JOINED' &&
+        a.progress !== 'DROPPED'
+    ).length,
+    // (U40) 입금 대기 = PENDING · 기한 안 지남(없으면 포함) · 미삭제 공연 — 서버 pending-reservation.constant 와 같은 식
+    pendingReservationCount: store.reservations.filter(
+      (r) =>
+        r.status === 'PENDING' &&
+        (r.depositDueAt === null || r.depositDueAt >= nowIso) &&
+        performances.some((p) => p.id === r.performanceId)
+    ).length,
     scheduleCount: store.schedules.filter((s) => s.deletedAt === null).length,
     recentPerformances: [...performances]
       .sort(byCreatedThenIdDesc)
@@ -93,6 +111,7 @@ function seed(ctx: MockContext): Response {
       type: m.type === 'ACTOR' ? 'ACTOR' : ('GENERAL' as MemberType),
       phone: null,
       isVisible: true,
+      inviterListed: m.inviterListed !== false,
       joinedAt: null,
       createdAt: nextCreatedAt(),
       profileImageUrl: null,
@@ -124,7 +143,14 @@ function seed(ctx: MockContext): Response {
       interestUndecided: null,
       contactedAt: a.contacted === true ? nextCreatedAt() : null,
       contactNote: null,
-      progress: a.status === 'REJECTED' ? 'DROPPED' : 'RECEIVED',
+      // (U39) 시드가 진행을 주면 그대로(코드값 검사), 아니면 거절 → DROPPED · 그 밖 RECEIVED
+      progress: APPLICATION_PROGRESSES.includes(
+        a.progress as ApplicationProgress
+      )
+        ? (a.progress as ApplicationProgress)
+        : a.status === 'REJECTED'
+          ? 'DROPPED'
+          : 'RECEIVED',
       progressUpdatedAt: null,
     });
   }

@@ -34,7 +34,6 @@ describe('application-filters', () => {
     const query = toApplicationListQuery(
       {
         appType: 'CONSULTATION',
-        status: 'PENDING',
         performanceId: 'p1',
         contact: 'UNCONTACTED',
         progress: 'SCHEDULED',
@@ -47,7 +46,6 @@ describe('application-filters', () => {
     // Assert
     expect(query).toEqual({
       appType: 'CONSULTATION',
-      status: 'PENDING',
       performanceId: 'p1',
       contacted: false,
       progress: 'SCHEDULED',

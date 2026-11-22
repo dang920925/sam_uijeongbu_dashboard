@@ -33,6 +33,7 @@ export function fromPerformanceListItemResponse(
     isVisible: res.isVisible,
     posterImageUrl: res.posterImageUrl ?? null,
     createdAt: res.createdAt,
+    seatSelectionEnabled: res.seatSelectionEnabled === true,
   };
 }
 
@@ -43,6 +44,7 @@ export function fromPerformanceResponse(
     ...fromPerformanceListItemResponse(res),
     description: res.description ?? null,
     detailImageUrls: res.detailImageUrls ?? [],
+    castPublic: res.castPublic === true,
     updatedAt: res.updatedAt,
   };
 }

@@ -26,6 +26,7 @@ import type {
 } from '@/src/types/member';
 
 const PHONE = /^01[016789]-?\d{3,4}-?\d{4}$/;
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 export function findMember(id: string) {
   return getStore().members.find((m) => m.id === id && m.deletedAt === null);
@@ -36,7 +37,12 @@ export function toMemberItem(
 ): MemberListItemResponse {
   const { deletedAt: _deletedAt, ...rest } = m;
   const profile = getStore().actorProfiles.get(m.id);
-  return { ...rest, profileImageUrl: profile?.profileImageUrl ?? null };
+  return {
+    ...rest,
+    profileImageUrl: profile?.profileImageUrl ?? null,
+    // R3 — 목은 배우 프로필 id 를 `ap-{단원 id}` 로 흉내 낸다(프로필이 생긴 뒤에만)
+    actorProfileId: profile ? `ap-${m.id}` : null,
+  };
 }
 
 /** 단원 생성(신청서 "단원으로 등록"도 이 함수를 쓴다 — W3 applications 목 핸들러) */
@@ -58,7 +64,9 @@ export function createMemberRecord(
     type,
     phone,
     isVisible: false,
+    inviterListed: true,
     joinedAt: todayKst(),
+    publicConsentAt: null,
     createdAt: nowIso(),
     profileImageUrl: null,
     deletedAt: null,
@@ -67,7 +75,7 @@ export function createMemberRecord(
   return created;
 }
 
-function emptyProfile(memberId: string): ActorProfileResponse {
+export function emptyProfile(memberId: string): ActorProfileResponse {
   return {
     memberId,
     profileImageUrl: null,
@@ -140,6 +148,21 @@ export const memberRoutes: MockRoute[] = [
       if ('type' in b && ['GENERAL', 'ACTOR'].includes(b.type as string))
         m.type = b.type as MemberType;
       if ('isVisible' in b) m.isVisible = b.isVisible === true;
+      // U36 예매 초대자 목록 표시
+      if ('inviterListed' in b) {
+        if (typeof b.inviterListed !== 'boolean') return validationError(ctx);
+        m.inviterListed = b.inviterListed;
+      }
+      // (U39) 공개 동의일 — YYYY-MM-DD 또는 null(지움). 서버처럼 형식이 틀리면 400
+      if ('publicConsentAt' in b) {
+        const v = b.publicConsentAt;
+        if (v !== null && !(typeof v === 'string' && DATE_ONLY.test(v)))
+          return validationError(
+            ctx,
+            '공개 동의일은 YYYY-MM-DD 형식의 날짜여야 합니다.'
+          );
+        m.publicConsentAt = v;
+      }
       return json(toMemberItem(m));
     },
   },

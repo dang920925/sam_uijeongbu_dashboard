@@ -9,6 +9,7 @@ const BASE: PerformanceSummary = {
   type: 'MUSICAL',
   status: 'ONGOING',
   isVisible: true,
+  seatSelectionEnabled: false,
   posterImageUrl: null,
   createdAt: '2026-11-18T15:30:00.000Z',
 };

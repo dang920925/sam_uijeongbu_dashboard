@@ -19,10 +19,12 @@ const performance: Performance = {
   type: 'MUSICAL',
   status: 'ONGOING',
   isVisible: false,
+  seatSelectionEnabled: false,
   posterImageUrl: null,
   createdAt: '2026-11-18T15:30:00.000Z',
   description: '  ',
   detailImageUrls: ['a', 'b'],
+  castPublic: false,
   updatedAt: '2026-11-18T15:30:00.000Z',
 };
 

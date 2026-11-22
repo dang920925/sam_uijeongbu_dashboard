@@ -9,11 +9,15 @@ export interface AdminPerformanceListItemResponse {
   isVisible: boolean;
   posterImageUrl: string | null;
   createdAt: string;
+  /** U35 좌석 지정 예매 스위치(back-end §16 — 관리 공연 목록·상세) */
+  seatSelectionEnabled: boolean;
 }
 
 export interface AdminPerformanceResponse extends AdminPerformanceListItemResponse {
   description: string | null;
   detailImageUrls: string[];
+  /** 캐스트·참여자 홈페이지 공개(R3 U33 — develop §17.3, 기본 false) */
+  castPublic?: boolean;
   updatedAt: string;
 }
 
@@ -43,12 +47,16 @@ export interface PerformanceSummary {
   isVisible: boolean;
   posterImageUrl: string | null;
   createdAt: string;
+  /** U35 — 응답에 없으면 false */
+  seatSelectionEnabled: boolean;
 }
 
 /** 화면 모델 — 상세 */
 export interface Performance extends PerformanceSummary {
   description: string | null;
   detailImageUrls: string[];
+  /** 캐스트·참여자 홈페이지 공개(R3 — 옛 응답이면 false) */
+  castPublic: boolean;
   updatedAt: string;
 }
 

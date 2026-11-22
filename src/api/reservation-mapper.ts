@@ -29,6 +29,8 @@ export function fromAdminReservationItemResponse(
     depositDueAt: res.depositDueAt ?? null,
     inviter: res.inviter ?? null,
     inviterNote: res.inviterNote ?? null,
+    inviterCategory: res.inviterCategory ?? null,
+    seats: res.seats ?? [],
     confirmedAt: res.confirmedAt ?? null,
     confirmedBy: res.confirmedBy ?? null,
     cancelledAt: res.cancelledAt ?? null,
@@ -57,12 +59,18 @@ export interface ManualReservationFormInput extends ReservationLinesFormInput {
   bookerName: string;
   /** 선택 — 빈 칸이면 null */
   bookerPhone: string;
+  /** 단원 id · INVITER_STAFF_VALUE(임원·스태프 및 관계자 — U36) · null(없음) */
   inviterMemberId: string | null;
+  /** U35 — 고른 좌석(선택, 비우면 좌석 미정) */
+  seatIds?: string[];
   memo: string;
   status: 'PENDING' | 'CONFIRMED';
   /** CONFIRMED 일 때만 보낸다(0~매수) */
   admitNow: string;
 }
+
+/** 수동 등록 초대 선택지 "임원·스태프 및 관계자"(U36) — 요청에서 inviterCategory STAFF_RELATED 로 바꾼다 */
+export const INVITER_STAFF_VALUE = '__STAFF_RELATED__';
 
 export function toInt(value: string): number {
   const n = Math.trunc(Number(value));
@@ -129,7 +137,12 @@ export function toManualReservationRequest(
     ...toRequestLines(input),
     status: input.status,
     memo: memo === '' ? null : memo,
-    inviterMemberId: input.inviterMemberId || null,
+    ...(input.inviterMemberId === INVITER_STAFF_VALUE
+      ? { inviterMemberId: null, inviterCategory: 'STAFF_RELATED' as const }
+      : { inviterMemberId: input.inviterMemberId || null }),
+    ...(input.seatIds && input.seatIds.length > 0
+      ? { seatIds: [...input.seatIds] }
+      : {}),
     ...(input.status === 'CONFIRMED'
       ? { admitNow: toInt(input.admitNow) }
       : {}),

@@ -34,6 +34,8 @@ const BASE: Reservation = {
   depositorName: null,
   inviter: null,
   inviterNote: null,
+  inviterCategory: null,
+  seats: [],
   status: 'CONFIRMED',
   source: 'ADMIN',
   depositDueAt: null,
@@ -117,5 +119,38 @@ describe('orderWithExactMatch', () => {
       matchId: null,
       code: '9999',
     });
+  });
+});
+
+describe('toReservationRow — U35·U36', () => {
+  it('좌석 지정 공연은 "B3·B4" 또는 "좌석 미정", 아니면 null 이고 취소 건은 좌석 변경 불가', () => {
+    const seated = toReservationRow(
+      {
+        ...BASE,
+        seats: [
+          { rowLabel: 'B', seatNumber: 4 },
+          { rowLabel: 'B', seatNumber: 3 },
+        ],
+      },
+      true
+    );
+    expect(seated.seatText).toBe('B3·B4');
+    expect(seated.canChangeSeats).toBe(BASE.status !== 'CANCELLED');
+    expect(toReservationRow(BASE, true).seatText).toBe('좌석 미정');
+    expect(toReservationRow(BASE, false).seatText).toBeNull();
+    expect(
+      toReservationRow({ ...BASE, status: 'CANCELLED' }, true).canChangeSeats
+    ).toBe(false);
+  });
+
+  it('임원·스태프 및 관계자 초대를 초대 칸에 적는다', () => {
+    expect(
+      toReservationRow({
+        ...BASE,
+        inviter: null,
+        inviterNote: null,
+        inviterCategory: 'STAFF_RELATED',
+      }).inviterText
+    ).toBe('임원·스태프 및 관계자');
   });
 });

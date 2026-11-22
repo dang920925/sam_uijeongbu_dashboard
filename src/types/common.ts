@@ -21,6 +21,8 @@ export interface ApiErrorResponse {
   status: string;
   message: string;
   code?: string;
+  /** U35 SEAT_001·SEAT_004 — 걸린 좌석 id */
+  seatIds?: string[];
   timestamp: string;
   path: string;
 }

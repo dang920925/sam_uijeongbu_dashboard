@@ -18,7 +18,7 @@ export async function resetMock(request: APIRequestContext): Promise<void> {
 /** BFF 를 거쳐 관리 API 를 부른다(본문 JSON). 실패하면 던진다. */
 export async function adminApi<T>(
   request: APIRequestContext,
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
   path: string,
   data?: unknown
 ): Promise<T> {

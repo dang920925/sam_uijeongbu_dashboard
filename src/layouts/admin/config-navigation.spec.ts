@@ -8,7 +8,7 @@ import {
 } from '@/src/layouts/admin/config-navigation';
 
 describe('config-navigation', () => {
-  it('메뉴는 현행 6개 + D5 2개 + R1 예매 관리·입장 체크를 시안 순서대로 둔다', () => {
+  it('메뉴는 현행 6개 + D5 2개 + R1 예매 관리·입장 체크 + U34 연습실 예약을 순서대로 둔다', () => {
     expect(NAV_ITEMS.map((item) => item.label)).toEqual([
       '대시보드',
       '공연 관리',
@@ -18,13 +18,14 @@ describe('config-navigation', () => {
       '신청서 관리',
       '갤러리',
       '일정 관리',
+      '연습실 예약',
       '연출진 관리',
       '팝업 관리',
     ]);
   });
 
   it('구분선으로 나뉘는 묶음은 4개이고 계정 설정은 하단 메뉴에 있다', () => {
-    expect(NAV_GROUPS.map((group) => group.length)).toEqual([1, 3, 2, 4]);
+    expect(NAV_GROUPS.map((group) => group.length)).toEqual([1, 3, 2, 5]);
     expect(NAV_FOOTER_ITEMS.map((item) => item.label)).toEqual(['계정 설정']);
   });
 
