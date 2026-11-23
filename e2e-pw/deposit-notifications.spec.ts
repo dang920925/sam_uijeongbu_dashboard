@@ -176,7 +176,11 @@ test.describe('SCR-D12 입금 알림(R2)', () => {
       .filter({ visible: true })
       .click();
     await expect(page.getByText('입금 알림을 무시했습니다.')).toBeVisible();
-    await expect(visible(page, '무시함').first()).toBeVisible();
+    // 전체에서는 사라지고 '무시함' 거르기에서만 보인다(운영 스모크 2026-11-23)
+    await expect(visible(page, /^8,000원$/)).toHaveCount(0);
+    const filters = page.getByRole('group', { name: '판정 결과로 거르기' });
+    await filters.getByRole('button', { name: '무시함' }).click();
+    await expect(visible(page, /^8,000원$/).first()).toBeVisible();
 
     await page
       .getByRole('group', { name: '판정 결과로 거르기' })
@@ -233,6 +237,34 @@ test.describe('SCR-D12 입금 알림(R2)', () => {
     ).toBeVisible();
   });
 
+  test('(운영 스모크) 판정 안 함 알림은 무시해서 치울 수 있다(409 아님)', async ({
+    page,
+    request,
+  }) => {
+    const response = await request.post(`${API}/__mock/deposit`, {
+      data: {
+        appPackage: 'com.example.sms',
+        appName: '문자',
+        title: '알림',
+        text: '무시할판정안함 3,000원',
+      },
+    });
+    expect(response.status()).toBe(202);
+    await openDeposits(page);
+    const filters = page.getByRole('group', { name: '판정 결과로 거르기' });
+    await filters.getByRole('button', { name: '판정 안 함' }).click();
+    await expect(visible(page, /무시할판정안함/).first()).toBeVisible();
+
+    await page
+      // 판정 안 함은 금액을 읽지 않아 이름 앞이 금액 대신 '금액 모름' 등 — 이 거르기의 유일한 행이다
+      .getByRole('button', { name: / · .* 무시$/ })
+      .filter({ visible: true })
+      .click();
+
+    await expect(page.getByText('입금 알림을 무시했습니다.')).toBeVisible();
+    await expect(visible(page, /무시할판정안함/)).toHaveCount(0);
+  });
+
   test('출처 앱 열을 보이고, 허용 밖 앱 알림은 판정 안 함으로 남는다', async ({
     page,
     request,
@@ -248,8 +280,16 @@ test.describe('SCR-D12 입금 알림(R2)', () => {
     expect(response.status()).toBe(202);
     await openDeposits(page);
 
-    await expect(visible(page, '판정 안 함').first()).toBeVisible();
+    // 전체에는 안 보이고 '판정 안 함' 거르기에서만 보인다
+    await expect(visible(page, '문자')).toHaveCount(0);
+    const filters = page.getByRole('group', { name: '판정 결과로 거르기' });
+    await filters.getByRole('button', { name: '판정 안 함' }).click();
     await expect(visible(page, '문자').first()).toBeVisible();
+    await expect(
+      page
+        .getByRole('button', { name: /^20,000원 · .* 예매에 연결$/ })
+        .filter({ visible: true })
+    ).toHaveCount(0);
     await page.getByRole('tab', { name: '예매', exact: true }).click();
     await expect(
       page

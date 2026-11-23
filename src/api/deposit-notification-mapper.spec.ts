@@ -63,7 +63,8 @@ describe('toDepositRow', () => {
         text: '1234 · 홍길동1234 · fixture-r2-공연',
         partialText: '받은 금액 10,000원 / 15,000원',
       },
-      canResolve: true,
+      canMatch: true,
+      canIgnore: true,
     });
   });
 
@@ -89,7 +90,8 @@ describe('toDepositRow', () => {
   it.each(['AUTO_CONFIRMED', 'MANUALLY_MATCHED', 'IGNORED'] as const)(
     '%s 는 더 처리할 수 없다',
     (status) => {
-      expect(toDepositRow(buildItem({ status })).canResolve).toBe(false);
+      const row = toDepositRow(buildItem({ status }));
+      expect([row.canMatch, row.canIgnore]).toEqual([false, false]);
     }
   );
 });
@@ -105,7 +107,7 @@ describe('toDepositRow — 출처 앱', () => {
     ).toBe('알림톡');
   });
 
-  it('판정 안 함(다른 앱)은 neutral 라벨과 이유, 처리 불가', () => {
+  it('판정 안 함(다른 앱)은 neutral 라벨과 이유, 연결은 못 하고 무시만 된다(운영 스모크)', () => {
     const row = toDepositRow(
       buildItem({ status: 'IGNORED_SOURCE', reservation: null })
     );
@@ -114,12 +116,14 @@ describe('toDepositRow — 출처 앱', () => {
       row.statusLabel,
       row.statusTone,
       row.reasonText,
-      row.canResolve,
+      row.canMatch,
+      row.canIgnore,
     ]).toEqual([
       '판정 안 함',
       'neutral',
       '판정하지 않는 알림(입금 아님·허용 밖 앱)',
       false,
+      true,
     ]);
   });
 });

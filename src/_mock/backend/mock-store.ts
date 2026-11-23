@@ -247,6 +247,13 @@ export interface MockStore {
   pushTestCalls: number;
   /** R2 입금 알림 */
   depositNotifications: MockDepositNotification[];
+  /** U43 입금 알림 기기(해제 안 된 것만 — 목은 해제하면 지운다) */
+  depositDevices: {
+    id: string;
+    name: string;
+    createdAt: string;
+    lastSeenAt: string | null;
+  }[];
 }
 
 function emptyStore(): MockStore {
@@ -284,6 +291,7 @@ function emptyStore(): MockStore {
     pushEnabled: true,
     pushTestCalls: 0,
     depositNotifications: [],
+    depositDevices: [],
   };
 }
 
