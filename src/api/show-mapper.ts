@@ -7,6 +7,7 @@
 import type {
   AdminShowItemResponse,
   BookingShowState,
+  ShowPatchRequest,
   ShowStatus,
   ShowUpsertRequest,
 } from '@/src/types/booking';
@@ -25,6 +26,8 @@ export interface Show {
   venue: string | null;
   status: ShowStatus;
   bookingEnabled: boolean;
+  /** (U48) 회차 출연 팀 — null = 팀 미정 */
+  teamAccountId: string | null;
   bookingOpenAt: string | null;
   totalSeats: number | null;
   pendingQty: number;
@@ -51,6 +54,8 @@ export interface ShowFormInput {
   bookingOpenTime: string;
   bookingEnabled: boolean;
   status: ShowStatus;
+  /** (U48) '' = 팀 미정(수정 때만 보낸다) */
+  teamAccountId: string;
 }
 
 export const EMPTY_SHOW_FORM: ShowFormInput = {
@@ -64,6 +69,7 @@ export const EMPTY_SHOW_FORM: ShowFormInput = {
   bookingOpenTime: '',
   bookingEnabled: true,
   status: 'UPCOMING',
+  teamAccountId: '',
 };
 
 const blankToNull = (value: string): string | null => {
@@ -92,6 +98,7 @@ export function fromAdminShowItemResponse(res: AdminShowItemResponse): Show {
     venue: res.venue ?? null,
     status: res.status,
     bookingEnabled: res.bookingEnabled,
+    teamAccountId: res.teamAccountId ?? null,
     bookingOpenAt: res.bookingOpenAt ?? null,
     totalSeats: res.totalSeats ?? null,
     pendingQty: res.pendingQty,
@@ -126,6 +133,14 @@ export function toShowUpsertRequest(input: ShowFormInput): ShowUpsertRequest {
   };
 }
 
+/** (U48) 회차 수정 PATCH — 등록 본문 + 출연 팀('' → null) */
+export function toShowPatchRequest(input: ShowFormInput): ShowPatchRequest {
+  return {
+    ...toShowUpsertRequest(input),
+    teamAccountId: input.teamAccountId === '' ? null : input.teamAccountId,
+  };
+}
+
 /** 수정 다이얼로그 초기값 */
 export function toShowFormInput(show: Show): ShowFormInput {
   const [openDate = '', openTime = ''] = toKstDateTimeInput(
@@ -142,5 +157,6 @@ export function toShowFormInput(show: Show): ShowFormInput {
     bookingOpenTime: openTime,
     bookingEnabled: show.bookingEnabled,
     status: show.status,
+    teamAccountId: show.teamAccountId ?? '',
   };
 }

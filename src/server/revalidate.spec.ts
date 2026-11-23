@@ -120,6 +120,62 @@ describe('revalidateTargetsFor (develop §12.1 R-1)', () => {
     ).toContain(`/about/staff/${PERF_ID}`);
   });
 
+  it('U48 단체샷·팀샷·팀 구성·회차 팀 지정은 public:cast, 미리보기 토큰은 부르지 않는다', () => {
+    const TEAM_ID = '0190f0a1-2b3c-7000-8000-0000000000aa';
+    expect(
+      revalidateTargetsFor(
+        'POST',
+        `/v1/admin/performances/${PERF_ID}/group-photos`,
+        201
+      )
+    ).toEqual({
+      tags: ['public:cast'],
+      paths: [`/works/${PERF_ID}`, '/actors'],
+    });
+    expect(
+      revalidateTargetsFor(
+        'PUT',
+        `/v1/admin/performances/${PERF_ID}/group-photos/order`,
+        200
+      )?.tags
+    ).toEqual(['public:cast']);
+    expect(
+      revalidateTargetsFor(
+        'PUT',
+        `/v1/admin/team-accounts/${TEAM_ID}/photo`,
+        200
+      )
+    ).toEqual({ tags: ['public:cast'], paths: ['/works'] });
+    expect(
+      revalidateTargetsFor(
+        'DELETE',
+        `/v1/admin/team-accounts/${TEAM_ID}/members/x`,
+        204
+      )?.tags
+    ).toEqual(['public:cast']);
+    expect(
+      revalidateTargetsFor('PATCH', '/v1/admin/shows/abc', 200)?.tags
+    ).toEqual(['public:performances', 'public:cast']);
+    expect(
+      revalidateTargetsFor('PUT', `/v1/admin/roles/r1/photos/p1`, 200)?.tags
+    ).toEqual(['public:cast']);
+    expect(
+      revalidateTargetsFor(
+        'POST',
+        `/v1/admin/performances/${PERF_ID}/preview-token`,
+        201
+      )
+    ).toBeNull();
+    // 팀 비밀번호 재발급·사용 끄기는 공개 무관 그대로
+    expect(
+      revalidateTargetsFor(
+        'POST',
+        `/v1/admin/team-accounts/${TEAM_ID}/reset-password`,
+        200
+      )
+    ).toBeNull();
+  });
+
   it('GET·실패 응답·공개 무관 경로는 부르지 않는다', () => {
     expect(revalidateTargetsFor('GET', '/v1/admin/staff', 200)).toBeNull();
     expect(revalidateTargetsFor('POST', '/v1/admin/staff', 400)).toBeNull();

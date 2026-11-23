@@ -5,6 +5,9 @@
 // 실패·시간 초과(5초)는 console.warn 만 — 관리 작업 응답·상태코드에 영향 없음(이미 응답함). 60초 안전망은 홈페이지가 유지.
 // 경로 → 태그·경로 표는 develop §12.1 표 그대로 + R3: 배역·회차 지정·참여자·배우 쪽 연결·캐스트 공개 스위치는
 // public:cast(홈페이지의 작품 캐스트·배우 상세·연출진 상세 요청이 모두 이 태그를 단다).
+// (U48 back-end §25.12) 단체샷(performances/{id}/group-photos…)·팀샷(team-accounts/{id}/photo)·회차 팀 지정(shows/{id} PATCH)도
+// public:cast. 팀 구성(team-accounts/{id}/members)·팀 추가(performances/{id}/team-accounts)도 공개 캐스트의 팀 탭을 바꾼다(자체 결정).
+// 미리보기 토큰 발급(performances/{id}/preview-token)은 공개 데이터를 바꾸지 않는다 → null.
 // ----------------------------------------------------------------------
 import { readRevalidateConfig } from '@/src/server/server-config';
 
@@ -47,10 +50,15 @@ export function revalidateTargetsFor(
   if (!match) return null;
   const segments = match[1].split('/').filter(Boolean);
   const [resource, id, sub] = segments;
+  if (resource === 'performances' && sub === 'preview-token') return null;
   // R3 — 공연 아래 배역·격자·참여자, 회차 지정(shows/{id}/roles/{roleId}/cast)은 캐스트만 바뀐다
   if (
     (resource === 'performances' &&
-      (sub === 'roles' || sub === 'credits' || sub === 'show-casts')) ||
+      (sub === 'roles' ||
+        sub === 'credits' ||
+        sub === 'show-casts' ||
+        sub === 'group-photos' ||
+        sub === 'team-accounts')) ||
     (resource === 'shows' && sub === 'roles')
   ) {
     return {
@@ -60,6 +68,10 @@ export function revalidateTargetsFor(
         '/actors',
       ],
     };
+  }
+  // U48 — 팀샷 · 팀 구성은 공개 캐스트(팀 탭)만
+  if (resource === 'team-accounts' && (sub === 'photo' || sub === 'members')) {
+    return { tags: ['public:cast'], paths: ['/works'] };
   }
   switch (resource) {
     case 'roles':
@@ -75,8 +87,13 @@ export function revalidateTargetsFor(
     case 'price-tiers':
       return {
         // 공연 행 PATCH 는 캐스트 공개 스위치(castPublic)도 담을 수 있다 → public:cast 함께
+        // U48 — 회차 PATCH 는 출연 팀(teamAccountId)을 담을 수 있다 → 회차 캐스트·팀 묶음이 바뀐다
         tags:
-          resource === 'performances' && id && !sub
+          (resource === 'performances' && id && !sub) ||
+          (resource === 'shows' &&
+            id &&
+            !sub &&
+            method.toUpperCase() === 'PATCH')
             ? ['public:performances', 'public:cast']
             : ['public:performances'],
         paths: [

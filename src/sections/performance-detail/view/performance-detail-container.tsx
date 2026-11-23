@@ -11,12 +11,14 @@ import { usePerformanceDetailViewModel } from '@/src/sections/performance-detail
 
 interface PerformanceDetailContainerProps {
   performanceId: string;
+  clientPublicUrl: string | null;
 }
 
 export function PerformanceDetailContainer({
   performanceId,
+  clientPublicUrl,
 }: PerformanceDetailContainerProps) {
-  const vm = usePerformanceDetailViewModel(performanceId);
+  const vm = usePerformanceDetailViewModel(performanceId, clientPublicUrl);
 
   if (vm.status === 'loading') {
     return (
@@ -44,6 +46,7 @@ export function PerformanceDetailContainer({
       editDialog={vm.editDialog}
       deleteConfirm={vm.deleteConfirm}
       performanceDelete={vm.performanceDelete}
+      preview={vm.preview}
     />
   );
 }

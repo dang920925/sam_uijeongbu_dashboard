@@ -238,4 +238,13 @@ export const MSG_D11 = {
   MEMBER_REQUIRED: '단원을 골라주세요',
   MEMBER_EMPTY: '단원이 없습니다',
   COPY: '복사',
+  /** (U48) 회차 출연 팀(back-end §25.6 — 수정만, 같은 공연의 사용 중인 팀). 제안 문구 */
+  COL_TEAM: '출연 팀',
+  TEAM: '출연 팀',
+  TEAM_NONE: '팀 미정',
+  TEAM_ARIA: (show: string) => `${show} 출연 팀`,
+  TEAM_NAME: (label: string) => `${label}팀`,
+  TEAM_HELP:
+    '고르면 홈페이지 캐스트에서 이 회차가 그 팀 탭에 묶이고, 회차 캐스트도 그 팀 배우로 보여요.',
+  TEAM_CREATE_HELP: '출연 팀은 회차를 등록한 뒤 수정에서 고를 수 있어요.',
 } as const;

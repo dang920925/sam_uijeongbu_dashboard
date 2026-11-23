@@ -61,6 +61,9 @@ export function PerformanceShowsView({
           onDelete={vm.showsSection.onDelete}
           onToggleStop={vm.showsSection.onToggleStop}
           onSeatLayout={vm.showsSection.onSeatLayout}
+          teamOptions={vm.teamOptions}
+          savingTeamId={vm.showsSection.savingTeamId}
+          onTeamChange={vm.showsSection.onTeamChange}
         />
       </>
     );
@@ -75,7 +78,11 @@ export function PerformanceShowsView({
         />
         {body}
       </SectionStack>
-      <ShowDialog dialog={vm.showDialog} classOptions={vm.classOptions} />
+      <ShowDialog
+        dialog={vm.showDialog}
+        classOptions={vm.classOptions}
+        teamOptions={vm.teamOptions}
+      />
       <SeatLayoutDialog {...vm.seatLayout} />
       <ConfirmDialog
         open={vm.deleteConfirm.isOpen}

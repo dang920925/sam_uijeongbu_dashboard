@@ -4,12 +4,16 @@
 import { endpoints } from '@/src/api/endpoints';
 import {
   fromAdminShowItemResponse,
+  toShowPatchRequest,
   toShowUpsertRequest,
   type Show,
   type ShowFormInput,
 } from '@/src/api/show-mapper';
 import { apiDelete, apiFetch, apiPatch, apiPost } from '@/src/lib/api-client';
-import type { AdminShowItemResponse } from '@/src/types/booking';
+import type {
+  AdminShowItemResponse,
+  ShowPatchRequest,
+} from '@/src/types/booking';
 import type { ItemsResponse } from '@/src/types/common';
 
 export async function fetchPerformanceShows(
@@ -40,7 +44,7 @@ export async function saveShow(
   return fromAdminShowItemResponse(
     await apiPatch<AdminShowItemResponse>(
       endpoints.shows.detail(id),
-      toShowUpsertRequest(input)
+      toShowPatchRequest(input)
     )
   );
 }
@@ -54,6 +58,18 @@ export async function saveShowBookingEnabled(
     await apiPatch<AdminShowItemResponse>(endpoints.shows.detail(id), {
       bookingEnabled,
     })
+  );
+}
+
+/** (U48) 회차 출연 팀만 PATCH — null = 팀 미정(같은 공연의 사용 중인 팀만, 아니면 400 SHW_005) */
+export async function saveShowTeam(
+  id: string,
+  teamAccountId: string | null
+): Promise<Show> {
+  return fromAdminShowItemResponse(
+    await apiPatch<AdminShowItemResponse>(endpoints.shows.detail(id), {
+      teamAccountId,
+    } satisfies ShowPatchRequest)
   );
 }
 

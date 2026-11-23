@@ -58,6 +58,8 @@ export interface MockShow {
   bookingEnabled: boolean;
   bookingOpenAt: string | null;
   totalSeats: number | null;
+  /** (U48) 회차 출연 팀 — 없으면 팀 미정 */
+  teamAccountId?: string | null;
   createdAt: string;
 }
 

@@ -8,6 +8,8 @@
 //   남으면 안내 스낵바) · 수정·삭제. 배우 추가·출연자 추가·회차 칸은 배우 고르기(useActorPicker).
 // - 참여자: useCreditSection. 공개 안 됨 이유는 utils/cast-reasons.
 // - (U45) 팀 구성: useTeamRosterSection(배우 × 팀 체크 — 자기 조회 상태를 카드 안에서 보인다).
+// - (U48) 캐스트 사진: useCastPhotoSection(단체샷·팀샷·배역 사진) + 홈페이지 미리보기(useHomepagePreview).
+//   '홈페이지에서 보기' = {CLIENT_PUBLIC_URL}/works/{id}#cast(공개 켜짐일 때만 보인다).
 // ----------------------------------------------------------------------
 import { useState } from 'react';
 
@@ -33,6 +35,8 @@ import {
 import { useActorPicker } from '@/src/sections/performance-cast/view/use-actor-picker';
 import { useCreditSection } from '@/src/sections/performance-cast/view/use-credit-section';
 import { useRoleDialog } from '@/src/sections/performance-cast/view/use-role-dialog';
+import { useCastPhotoSection } from '@/src/sections/performance-cast/view/use-cast-photo-section';
+import { useHomepagePreview } from '@/src/sections/performance-detail/view/use-homepage-preview';
 import { useTeamRosterSection } from '@/src/sections/performance-cast/view/use-team-roster-section';
 import { MSG_D14 } from '@/src/shared/messages/d14';
 import {
@@ -43,7 +47,10 @@ import {
 export type PerformanceCastStatus = 'not-found' | 'error' | 'ready';
 export type PerformanceCastBodyStatus = 'loading' | 'error' | 'ready';
 
-export function usePerformanceCastViewModel(performanceId: string) {
+export function usePerformanceCastViewModel(
+  performanceId: string,
+  clientPublicUrl: string | null
+) {
   const snackbar = useAppSnackbar();
   const performanceQuery = usePerformance(performanceId);
   const rolesQuery = useRoles(performanceId);
@@ -76,6 +83,12 @@ export function usePerformanceCastViewModel(performanceId: string) {
   );
   const onFail = (error: unknown) => snackbar.error(toApiErrorMessage(error));
   const teamSection = useTeamRosterSection(performanceId, snackbar.error);
+  const photoSection = useCastPhotoSection(
+    performanceId,
+    roles,
+    snackbar.error
+  );
+  const preview = useHomepagePreview(performanceId, clientPublicUrl);
 
   const status: PerformanceCastStatus = performanceQuery.isError
     ? isNotFoundError(performanceQuery.error)
@@ -200,6 +213,11 @@ export function usePerformanceCastViewModel(performanceId: string) {
     picker: picker.state,
     creditSection,
     teamSection,
+    photoSection,
+    preview,
+    homepageCastUrl: clientPublicUrl
+      ? `${clientPublicUrl}/works/${encodeURIComponent(performanceId)}#cast`
+      : null,
   };
 }
 

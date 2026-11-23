@@ -19,6 +19,7 @@ import {
   type MockContext,
   type MockRoute,
 } from '@/src/_mock/backend/mock-http';
+import { mockActiveTeams } from '@/src/_mock/backend/handlers/team-accounts';
 import { getStore, type MockShow } from '@/src/_mock/backend/mock-store';
 import type {
   BookingPolicyUpsertRequest,
@@ -278,6 +279,23 @@ export const showRoutes: MockRoute[] = [
       if (read instanceof Response) return read;
       const classError = checkClass(ctx, read.classId);
       if (classError) return classError;
+      // (U48) 회차 출연 팀 — PATCH 만. 같은 공연의 폐기 안 된 팀이 아니면 400 SHW_005
+      if ('teamAccountId' in ctx.body) {
+        const teamId = ctx.body.teamAccountId;
+        if (teamId !== null) {
+          if (
+            typeof teamId !== 'string' ||
+            !mockActiveTeams(show.performanceId).some((t) => t.id === teamId)
+          )
+            return apiError(
+              ctx,
+              400,
+              'SHW_005',
+              '이 공연의 사용 중인 팀만 회차에 지정할 수 있습니다.'
+            );
+        }
+        read.teamAccountId = teamId as string | null;
+      }
       const next = { ...show, ...read };
       if (isDuplicate(next, show.id)) return duplicateError(ctx);
       const { pendingQty, confirmedQty } = showCounts(show);

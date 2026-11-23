@@ -10,6 +10,7 @@ import { PageContainer } from '@/src/components/page-container';
 import { PerformanceFormDialog } from '@/src/components/performance-form-dialog';
 import { SectionStack } from '@/src/components/section-stack';
 import { PerformanceDeleteCard } from '@/src/sections/performance-detail/components/performance-delete-card';
+import { HomepagePreviewButton } from '@/src/sections/performance-detail/components/homepage-preview-button';
 import { PerformanceDetailHead } from '@/src/sections/performance-detail/components/performance-detail-head';
 import { PerformanceDetailClassCard } from '@/src/sections/performance-detail/components/performance-detail-class-card';
 import { PerformanceDetailClassDialog } from '@/src/sections/performance-detail/components/performance-detail-class-dialog';
@@ -27,6 +28,7 @@ interface PerformanceDetailViewProps {
   editDialog: PerformanceDetailViewModel['editDialog'];
   deleteConfirm: PerformanceDetailViewModel['deleteConfirm'];
   performanceDelete: PerformanceDetailViewModel['performanceDelete'];
+  preview: PerformanceDetailViewModel['preview'];
 }
 
 export function PerformanceDetailView({
@@ -37,6 +39,7 @@ export function PerformanceDetailView({
   editDialog,
   deleteConfirm,
   performanceDelete,
+  preview,
 }: PerformanceDetailViewProps) {
   return (
     <PageContainer>
@@ -45,6 +48,7 @@ export function PerformanceDetailView({
           performanceId={performanceId}
           title={info.title}
           current='info'
+          actions={<HomepagePreviewButton preview={preview} />}
         />
         <PerformanceDetailInfoCard info={info} onEdit={editDialog.onOpen} />
         <PerformanceDetailClassCard

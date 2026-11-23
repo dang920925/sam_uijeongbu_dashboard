@@ -13,6 +13,7 @@ import {
   fetchPerformanceShows,
   saveShow,
   saveShowBookingEnabled,
+  saveShowTeam,
 } from '@/src/api/show';
 import type { ShowFormInput } from '@/src/api/show-mapper';
 import { isNotFoundError } from '@/src/utils/api-error-message';
@@ -66,6 +67,21 @@ export function useSaveShowBookingEnabled() {
       bookingEnabled: boolean;
     }) => saveShowBookingEnabled(id, bookingEnabled),
     // 실패해도 목록을 다시 불러와 스위치를 서버 값으로 되돌린다
+    onSettled: invalidate,
+  });
+}
+
+/** (U48) 회차 출연 팀 — 실패해도 목록을 다시 받아 선택을 서버 값으로 되돌린다 */
+export function useSaveShowTeam() {
+  const invalidate = useInvalidateBooking();
+  return useMutation({
+    mutationFn: ({
+      id,
+      teamAccountId,
+    }: {
+      id: string;
+      teamAccountId: string | null;
+    }) => saveShowTeam(id, teamAccountId),
     onSettled: invalidate,
   });
 }

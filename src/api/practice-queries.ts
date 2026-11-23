@@ -23,6 +23,7 @@ import {
   updateRoomBlock,
   updateTeamPrefix,
 } from '@/src/api/practice';
+import { castPhotoKeys } from '@/src/api/cast-photo-queries';
 import { ROOT_KEYS } from '@/src/api/root-keys';
 import type { RoomBlockRequest } from '@/src/types/practice';
 
@@ -65,10 +66,16 @@ function useInvalidateTeams() {
 }
 
 export function useCreateTeamAccount(performanceId: string) {
+  const queryClient = useQueryClient();
   const invalidate = useInvalidateTeams();
   return useMutation({
     mutationFn: () => createTeamAccount(performanceId),
-    onSettled: invalidate,
+    // (U48) 새 팀은 캐스트 사진 카드의 팀샷 칸 · 회차 출연 팀 선택지에도 생긴다
+    onSettled: () =>
+      Promise.all([
+        invalidate(),
+        queryClient.invalidateQueries({ queryKey: castPhotoKeys.all }),
+      ]),
   });
 }
 

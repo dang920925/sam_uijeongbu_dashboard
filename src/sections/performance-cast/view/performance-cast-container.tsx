@@ -11,12 +11,14 @@ import { usePerformanceCastViewModel } from '@/src/sections/performance-cast/vie
 
 interface PerformanceCastContainerProps {
   performanceId: string;
+  clientPublicUrl: string | null;
 }
 
 export function PerformanceCastContainer({
   performanceId,
+  clientPublicUrl,
 }: PerformanceCastContainerProps) {
-  const vm = usePerformanceCastViewModel(performanceId);
+  const vm = usePerformanceCastViewModel(performanceId, clientPublicUrl);
 
   if (vm.status !== 'ready') {
     return (

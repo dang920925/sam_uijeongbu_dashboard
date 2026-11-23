@@ -10,6 +10,8 @@
 // - 회차 삭제: ConfirmDialog → 실패(SHW_004 등)는 닫고 스낵바(designer 시안 snackbar-shw004).
 // - (U35) 좌석 지정 스위치: 공연 PATCH seatSelectionEnabled(진행 중엔 바뀔 값을 미리 보임). 켜져 있으면 회차 행에
 //   "좌석 배치" → 배치 편집기(use-seat-layout-editor).
+// - (U48) 회차 출연 팀: 팀 목록은 캐스트 사진 조회의 teams(폐기 안 된 팀, 라벨 순 — 팀 비밀번호 키와 무관).
+//   목록 칸에서 바꾸면 바로 PATCH teamAccountId(진행 중엔 바뀔 값을 미리 보임), 수정 다이얼로그에도 같은 칸.
 // ----------------------------------------------------------------------
 import { useState } from 'react';
 
@@ -18,10 +20,12 @@ import {
   usePerformance,
   usePerformanceClasses,
 } from '@/src/api/performance-queries';
+import { useCastPhotos } from '@/src/api/cast-photo-queries';
 import {
   useDeleteShow,
   usePerformanceShows,
   useSaveShowBookingEnabled,
+  useSaveShowTeam,
 } from '@/src/api/show-queries';
 import { useSaveSeatSelectionEnabled } from '@/src/api/seat-map-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
@@ -32,6 +36,8 @@ import { useBookingPolicyForm } from '@/src/sections/performance-shows/view/use-
 import { useInviterPriceForm } from '@/src/sections/performance-shows/view/use-inviter-price-form';
 import { useSeatLayoutEditor } from '@/src/sections/performance-shows/view/use-seat-layout-editor';
 import { useShowDialog } from '@/src/sections/performance-shows/view/use-show-dialog';
+import { MSG_COMMON } from '@/src/shared/messages/common';
+import { MSG_D11 } from '@/src/shared/messages/d11';
 import { MSG_SEAT } from '@/src/shared/messages/seat';
 import {
   isNotFoundError,
@@ -48,6 +54,8 @@ export function usePerformanceShowsViewModel(performanceId: string) {
   const showsQuery = usePerformanceShows(performanceId);
   const classesQuery = usePerformanceClasses(performanceId);
   const toggle = useSaveShowBookingEnabled();
+  const saveTeam = useSaveShowTeam();
+  const teamsQuery = useCastPhotos(performanceId);
   const deleteShow = useDeleteShow();
   const policyForm = useBookingPolicyForm(
     performanceId,
@@ -89,8 +97,13 @@ export function usePerformanceShowsViewModel(performanceId: string) {
 
   const shows = showsQuery.data ?? [];
   const pendingToggle = toggle.isPending ? toggle.variables : undefined;
+  const pendingTeam = saveTeam.isPending ? saveTeam.variables : undefined;
   const rows = shows.map((show) => {
-    const row = toShowRowDisplay(show);
+    const base = toShowRowDisplay(show);
+    const row =
+      pendingTeam?.id === show.id
+        ? { ...base, teamAccountId: pendingTeam.teamAccountId ?? '' }
+        : base;
     return pendingToggle?.id === show.id
       ? { ...row, isStopped: !pendingToggle.bookingEnabled }
       : row;
@@ -167,7 +180,20 @@ export function usePerformanceShowsViewModel(performanceId: string) {
       },
       onDelete: (id: string) => setDeleteTargetId(id),
       onToggleStop: handleToggle,
+      savingTeamId: pendingTeam?.id ?? null,
+      onTeamChange: (id: string, teamAccountId: string) =>
+        saveTeam.mutate(
+          { id, teamAccountId: teamAccountId === '' ? null : teamAccountId },
+          {
+            onSuccess: () => snackbar.success(MSG_COMMON.SAVED),
+            onError: (error) => snackbar.error(toApiErrorMessage(error)),
+          }
+        ),
     },
+    teamOptions: (teamsQuery.data?.teams ?? []).map((team) => ({
+      value: team.teamAccountId,
+      label: MSG_D11.TEAM_NAME(team.label),
+    })),
     showDialog,
     classOptions: (classesQuery.data ?? []).map((item) => ({
       value: item.id,

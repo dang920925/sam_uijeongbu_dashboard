@@ -40,6 +40,16 @@ export const endpoints = {
     /** R3 참여자(크레딧) 목록·추가(develop §17.3) */
     credits: (id: string) => `${admin}/performances/${id}/credits`,
     creditsOrder: (id: string) => `${admin}/performances/${id}/credits/order`,
+    /** U48 캐스트 사진 한눈에(back-end §25.2) */
+    castPhotos: (id: string) => `${admin}/performances/${id}/cast-photos`,
+    /** U48 단체샷 추가(POST) · 순서(PUT order) · 교체(PATCH)·삭제(DELETE) */
+    groupPhotos: (id: string) => `${admin}/performances/${id}/group-photos`,
+    groupPhotosOrder: (id: string) =>
+      `${admin}/performances/${id}/group-photos/order`,
+    groupPhoto: (id: string, photoId: string) =>
+      `${admin}/performances/${id}/group-photos/${photoId}`,
+    /** U48 홈페이지 미리보기 토큰(POST, 30분 — §25.9) */
+    previewToken: (id: string) => `${admin}/performances/${id}/preview-token`,
   },
   /** U34 팀 계정 단건 — 재발급·사용 켜기/끄기 */
   teamAccounts: {
@@ -49,6 +59,8 @@ export const endpoints = {
       `${admin}/team-accounts/${id}/members/${memberId}`,
     resetPassword: (id: string) =>
       `${admin}/team-accounts/${id}/reset-password`,
+    /** U48 팀샷 PUT·DELETE */
+    photo: (id: string) => `${admin}/team-accounts/${id}/photo`,
   },
   /** U34 연습실 예약(관리) — 기간 목록·삭제 */
   /** U46 연습실 시간 막기 */
@@ -66,6 +78,9 @@ export const endpoints = {
   roles: {
     detail: (id: string) => `${admin}/roles/${id}`,
     defaultCast: (id: string) => `${admin}/roles/${id}/default-cast`,
+    /** U48 배역 × 배우 개인샷 PUT·DELETE */
+    photo: (id: string, actorProfileId: string) =>
+      `${admin}/roles/${id}/photos/${actorProfileId}`,
   },
   /** R3 회차 지정 캐스트 PUT·DELETE */
   showRoleCast: (showId: string, roleId: string) =>
