@@ -23,6 +23,8 @@ export const MSG_PRINT = {
   COL_NAME: '이름',
   COL_PHONE: '연락처 끝',
   COL_TIERS: '등급별 매수',
+  /** U41 */
+  COL_INVITER: '초대한 사람',
   COL_STATUS: '상태',
   COL_MEMO: '메모',
   COL_CHECK: '입장',

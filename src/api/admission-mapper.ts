@@ -7,6 +7,7 @@
 //   번호 = 검색어 — 화면이 검색어로 쓴다. integration 2026-11-20 실측).
 // ----------------------------------------------------------------------
 import type {
+  ReservationInviterResponse,
   ReservationSeatResponse,
   AdminShowWithTitleResponse,
   AdmissionBoardResponse,
@@ -54,6 +55,9 @@ export interface AdmissionItem {
   version: number;
   /** U35 — 좌석(좌석 미정·꺼짐이면 []) */
   seats: ReservationSeatResponse[];
+  /** U41 — 초대한 사람 · 적용 가격(1매) */
+  inviter: ReservationInviterResponse | null;
+  appliedPrice: number | null;
 }
 
 export type AdmissionSummary = AdmissionSummaryResponse;
@@ -129,6 +133,8 @@ export function fromAdmissionItemResponse(
     memo: res.memo || null,
     version: res.version,
     seats: res.seats ?? [],
+    inviter: res.inviter ?? null,
+    appliedPrice: res.appliedPrice ?? null,
   };
 }
 

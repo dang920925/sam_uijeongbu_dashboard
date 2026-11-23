@@ -11,15 +11,12 @@ import { usePerformanceShowsViewModel } from '@/src/sections/performance-shows/v
 
 interface PerformanceShowsContainerProps {
   performanceId: string;
-  /** 서버 env CLIENT_PUBLIC_URL(등급 링크 앞부분) — 없으면 null */
-  clientPublicUrl: string | null;
 }
 
 export function PerformanceShowsContainer({
   performanceId,
-  clientPublicUrl,
 }: PerformanceShowsContainerProps) {
-  const vm = usePerformanceShowsViewModel(performanceId, clientPublicUrl);
+  const vm = usePerformanceShowsViewModel(performanceId);
 
   if (vm.status !== 'ready') {
     return (

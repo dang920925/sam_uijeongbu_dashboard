@@ -20,6 +20,7 @@ import type {
   InviterCategory,
   SeatKind,
   ConfirmedBy,
+  PriceTierRole,
   PriceTierVisibility,
   ReservationLineResponse,
   ReservationSource,
@@ -67,6 +68,8 @@ export interface MockPriceTier {
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
+  /** U41 — 가격 역할(BASE·SAM_RELATED, 예전 등급 null) */
+  role?: PriceTierRole | null;
 }
 
 /** 예매 행(reservations — develop §11.2 R1) */

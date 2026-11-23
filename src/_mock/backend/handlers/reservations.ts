@@ -21,6 +21,7 @@ import {
   PHONE_PATTERN,
   showCounts,
   toAdminReservationItem,
+  toMockInviter,
 } from '@/src/_mock/backend/booking-model';
 import {
   apiError,
@@ -297,6 +298,14 @@ export const reservationRoutes: MockRoute[] = [
       const showId = ctx.query.get('showId');
       const status = ctx.query.get('status') as ReservationStatus | null;
       const overdueOnly = ctx.query.get('deadlinePassed') === 'true';
+      // U41 §22.1 — 초대한 사람 필터
+      const inviterKind = ctx.query.get('inviterKind');
+      const inviterMemberId = ctx.query.get('inviterMemberId');
+      if (
+        inviterKind &&
+        !['MEMBER', 'STAFF_RELATED', 'SAM_RELATED'].includes(inviterKind)
+      )
+        return validationError(ctx);
       const rows = getStore()
         .reservations.filter(
           (r) => !performanceId || r.performanceId === performanceId
@@ -305,6 +314,10 @@ export const reservationRoutes: MockRoute[] = [
         .filter((r) => !showId || r.showId === showId)
         .filter((r) => !status || r.status === status)
         .filter((r) => !overdueOnly || isDeadlinePassed(r))
+        .filter((r) => !inviterKind || toMockInviter(r)?.kind === inviterKind)
+        .filter(
+          (r) => !inviterMemberId || r.inviterMemberId === inviterMemberId
+        )
         .filter((r) => matchesQuery(r, q))
         .sort(byCreated)
         .map(toAdminReservationItem);
@@ -378,6 +391,7 @@ export const reservationRoutes: MockRoute[] = [
       const groups = new Map<
         string,
         {
+          kind: 'MEMBER' | 'STAFF_RELATED' | 'SAM_RELATED' | 'LEGACY';
           memberId: string | null;
           name: string | null;
           pendingQty: number;
@@ -388,25 +402,33 @@ export const reservationRoutes: MockRoute[] = [
         const member = r.inviterMemberId
           ? store.members.find((m) => m.id === r.inviterMemberId)
           : undefined;
-        const staff = !member && r.inviterCategory === 'STAFF_RELATED';
+        const kind = toMockInviter(r)?.kind ?? null;
         const key = member
           ? member.id
-          : staff
+          : kind === 'STAFF_RELATED'
             ? '__staff'
-            : r.inviterNote
-              ? '__note'
-              : '__none';
+            : kind === 'SAM_RELATED'
+              ? '__sam'
+              : r.inviterNote
+                ? '__note'
+                : '__none';
+        // U41 — 묶음 종류 kind(서버 reservation-summary.util 과 같은 이름)
         const group = groups.get(key) ?? {
+          kind: member
+            ? 'MEMBER'
+            : kind === 'STAFF_RELATED' || kind === 'SAM_RELATED'
+              ? kind
+              : 'LEGACY',
           memberId: member?.id ?? null,
-          // 직접 입력(inviterNote) 묶음은 memberId null + name '직접 입력' — 목 가정(계약 주석 해석, 확인 필요)
-          // U36 STAFF_RELATED 묶음은 memberId null + name '임원·스태프 및 관계자'(back-end §16)
           name: member
             ? member.name
-            : staff
-              ? '임원·스태프 및 관계자'
-              : r.inviterNote
-                ? '직접 입력'
-                : null,
+            : kind === 'STAFF_RELATED'
+              ? '연출·스태프 관계자'
+              : kind === 'SAM_RELATED'
+                ? 'SAM 관계자'
+                : r.inviterNote
+                  ? '직접 입력'
+                  : null,
           pendingQty: 0,
           confirmedQty: 0,
         };
@@ -464,12 +486,23 @@ export const reservationRoutes: MockRoute[] = [
       // U35 좌석(선택) · U36 초대 구분
       const seatIds = readSeatIds(ctx, show.id, quantity);
       if (seatIds instanceof Response) return seatIds;
-      const inviterCategory =
-        ctx.body.inviterCategory === 'STAFF_RELATED' ||
-        ctx.body.inviterCategory === 'MEMBER'
-          ? ctx.body.inviterCategory
-          : null;
-      if (inviterCategory === 'STAFF_RELATED' && ctx.body.inviterMemberId)
+      // U41 — inviter { kind, memberId? }(예전 평면 필드도 받는다)
+      const inviterBody = (ctx.body.inviter ?? null) as {
+        kind?: unknown;
+        memberId?: unknown;
+      } | null;
+      const inviterCategory = (
+        inviterBody ? inviterBody.kind : ctx.body.inviterCategory
+      ) as 'MEMBER' | 'STAFF_RELATED' | 'SAM_RELATED' | null | undefined;
+      const inviterMemberIdIn =
+        str(inviterBody ? inviterBody.memberId : ctx.body.inviterMemberId) ||
+        null;
+      if (
+        inviterCategory &&
+        !['MEMBER', 'STAFF_RELATED', 'SAM_RELATED'].includes(inviterCategory)
+      )
+        return validationError(ctx);
+      if (inviterCategory && inviterCategory !== 'MEMBER' && inviterMemberIdIn)
         return validationError(ctx);
       const code = newReservationCode(show.performanceId);
       // 목 가정: 관리자 등록은 연락처가 있고 입금 대기일 때만 입금자명·기한을 둔다(정본은 back-end.md)
@@ -487,10 +520,10 @@ export const reservationRoutes: MockRoute[] = [
         bookerName: booker.name,
         bookerPhone: booker.phone,
         depositorName: needsDeposit ? depositorNameOf(booker.name, code) : null,
-        inviterMemberId: str(ctx.body.inviterMemberId) || null,
+        inviterMemberId: inviterMemberIdIn,
         inviterNote: null,
         inviterCategory:
-          inviterCategory ?? (str(ctx.body.inviterMemberId) ? 'MEMBER' : null),
+          inviterCategory ?? (inviterMemberIdIn ? 'MEMBER' : null),
         seatIds,
         status,
         source: 'ADMIN',
@@ -664,7 +697,7 @@ export const reservationRoutes: MockRoute[] = [
   },
   {
     // 목 전용 픽스처(공개 예매 흉내 — ONLINE). 본문 { showId, bookerName, bookerPhone, items: [{tierId, quantity}],
-    //   status?, depositDueAt?, admittedCount?, code?, inviteCode?, inviterNote?, memo?, tierTokenUsed? }.
+    //   status?, depositDueAt?, admittedCount?, code?, inviteCode?, inviterMemberId?, inviterCategory?, inviterNote?, memo?, tierTokenUsed? }.
     // 좌석은 검사한다. 상태는 픽스처 편의로 고를 수 있다(공개 예매는 늘 PENDING).
     method: 'POST',
     pattern: /^\/v1\/__mock\/booking\/reservation$/,
@@ -684,11 +717,14 @@ export const reservationRoutes: MockRoute[] = [
       const status = (str(ctx.body.status) ?? 'PENDING') as ReservationStatus;
       const code = str(ctx.body.code) ?? newReservationCode(show.performanceId);
       const inviteCode = str(ctx.body.inviteCode)?.toUpperCase() ?? null;
-      const inviterMemberId = inviteCode
-        ? ([...store.inviteCodes.entries()].find(
-            ([, c]) => c === inviteCode
-          )?.[0] ?? null)
-        : null;
+      // U41 — 픽스처는 단원 id 를 바로 줄 수도 있다(inviterMemberId)
+      const inviterMemberId =
+        str(ctx.body.inviterMemberId) ??
+        (inviteCode
+          ? ([...store.inviteCodes.entries()].find(
+              ([, c]) => c === inviteCode
+            )?.[0] ?? null)
+          : null);
       const created: MockReservation = {
         id: newId(),
         performanceId: show.performanceId,
@@ -719,8 +755,9 @@ export const reservationRoutes: MockRoute[] = [
           ? (ctx.body.seatIds as string[])
           : [],
         inviterCategory:
-          ctx.body.inviterCategory === 'STAFF_RELATED'
-            ? 'STAFF_RELATED'
+          ctx.body.inviterCategory === 'STAFF_RELATED' ||
+          ctx.body.inviterCategory === 'SAM_RELATED'
+            ? ctx.body.inviterCategory
             : inviterMemberId
               ? 'MEMBER'
               : null,

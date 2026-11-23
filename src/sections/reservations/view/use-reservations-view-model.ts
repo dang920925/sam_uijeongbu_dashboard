@@ -39,6 +39,10 @@ import { MSG_D12 } from '@/src/shared/messages/d12';
 import type { ReservationStatus } from '@/src/types/booking';
 import { ADMIN_PAGE_SIZE } from '@/src/types/common';
 import { useReservationSeats } from '@/src/sections/reservations/view/use-reservation-seats';
+import {
+  toInviterFilterOptions,
+  toInviterQuery,
+} from '@/src/sections/reservations/utils/inviter-filter';
 import { toApiErrorMessage } from '@/src/utils/api-error-message';
 
 export type ReservationTab = 'list' | 'summary' | 'invite';
@@ -61,6 +65,8 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
   const [showFilter, setShowFilter] = useState<string>(ALL);
   const [status, setStatus] = useState<StatusFilter>(ALL);
   const [overdueOnly, setOverdueOnly] = useState(false);
+  /** U41 §22.1 — 'ALL' · 'SAM_RELATED' · 'STAFF_RELATED' · 'MEMBER:{id}' */
+  const [inviterFilter, setInviterFilter] = useState<string>(ALL);
   const [searchInput, setSearchInput] = useState(urlQ);
   const [search, setSearch] = useState(urlQ);
   const [page, setPage] = useState(1);
@@ -77,6 +83,7 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
       setShowFilter(ALL);
       setStatus(ALL);
       setOverdueOnly(false);
+      setInviterFilter(ALL);
       setSearchInput(urlQ);
       setSearch(urlQ);
       setPage(1);
@@ -120,6 +127,7 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
     showId: showFilter === ALL ? undefined : showFilter,
     status: status === ALL ? undefined : status,
     deadlinePassed: overdueOnly ? true : undefined,
+    ...toInviterQuery(inviterFilter),
     q: search.trim() || undefined,
     page,
     size: ADMIN_PAGE_SIZE,
@@ -223,8 +231,14 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
     status,
     overdueOnly,
     searchInput,
+    inviterFilter,
+    inviterOptions: summary ? toInviterFilterOptions(summary) : [],
     hasFilter:
-      showFilter !== ALL || status !== ALL || overdueOnly || search !== '',
+      showFilter !== ALL ||
+      status !== ALL ||
+      overdueOnly ||
+      inviterFilter !== ALL ||
+      search !== '',
     rows,
     seatSelection,
     seats,
@@ -271,6 +285,10 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
       setOverdueOnly((value) => !value);
       resetList();
     },
+    onInviterFilterChange: (value: string) => {
+      setInviterFilter(value);
+      resetList();
+    },
     onSearchChange: (value: string) => {
       clearUrlFocus();
       setSearchInput(value);
@@ -281,6 +299,7 @@ export function useReservationsViewModel(clientPublicUrl: string | null) {
       setShowFilter(ALL);
       setStatus(ALL);
       setOverdueOnly(false);
+      setInviterFilter(ALL);
       setSearchInput('');
       setSearch('');
       resetList();

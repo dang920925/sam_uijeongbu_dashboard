@@ -33,6 +33,7 @@ const BASE: Reservation = {
   bookerPhone: null,
   depositorName: null,
   inviter: null,
+  appliedPrice: null,
   inviterNote: null,
   inviterCategory: null,
   seats: [],
@@ -143,14 +144,16 @@ describe('toReservationRow — U35·U36', () => {
     ).toBe(false);
   });
 
-  it('임원·스태프 및 관계자 초대를 초대 칸에 적는다', () => {
-    expect(
-      toReservationRow({
-        ...BASE,
-        inviter: null,
-        inviterNote: null,
-        inviterCategory: 'STAFF_RELATED',
-      }).inviterText
-    ).toBe('임원·스태프 및 관계자');
+  it('연출·스태프 관계자 초대와 적용 가격을 초대 칸에 적는다(U41)', () => {
+    const row = toReservationRow({
+      ...BASE,
+      inviter: { kind: 'STAFF_RELATED', memberId: null, memberName: null },
+      appliedPrice: 20000,
+      inviterNote: null,
+      inviterCategory: 'STAFF_RELATED',
+    });
+    expect(row.inviterText).toBe('연출·스태프 관계자');
+    expect(row.appliedPriceText).toBe('1매 20,000원');
+    expect(row.inviterKind).toBe('STAFF_RELATED');
   });
 });

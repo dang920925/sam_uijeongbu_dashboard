@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Reservation } from '@/src/api/reservation-mapper';
 import {
   admissionTextOf,
+  appliedPriceTextOf,
   inviterTextOf,
   isFreeReservation,
   toReservationDetailFields,
@@ -44,6 +45,7 @@ const BASE: Reservation = {
   bookerPhone: null,
   depositorName: null,
   inviter: null,
+  appliedPrice: null,
   inviterNote: null,
   inviterCategory: null,
   seats: [],
@@ -69,13 +71,20 @@ describe('isFreeReservation', () => {
 });
 
 describe('inviterTextOf', () => {
-  it('단원 이름 > 직접 입력 메모 > - 순으로 보인다', () => {
+  it('배우 이름 · 연출·스태프 · SAM 관계자 > 직접 입력 메모 > - 순으로 보인다(U41)', () => {
     expect(
       inviterTextOf({
-        inviter: { memberId: 'm', name: '김단원' },
+        inviter: { kind: 'MEMBER', memberId: 'm', memberName: '김단원' },
         inviterNote: 'x',
       })
     ).toBe('김단원');
+    expect(
+      inviterTextOf({
+        inviter: { kind: 'SAM_RELATED', memberId: null, memberName: null },
+      })
+    ).toBe('SAM 관계자');
+    expect(appliedPriceTextOf({ appliedPrice: 10000 })).toBe('1매 10,000원');
+    expect(appliedPriceTextOf({ appliedPrice: null })).toBeNull();
     expect(inviterTextOf({ inviter: null, inviterNote: '연출 지인' })).toBe(
       '연출 지인 (직접 입력)'
     );

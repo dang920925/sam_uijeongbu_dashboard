@@ -397,7 +397,7 @@ test.describe('SCR-D12 예매 관리', () => {
     await expect(total).toContainText('확정 1 · 대기 2');
     await expect(total).toContainText('확정 1 · 대기 1');
     await expect(
-      page.getByRole('region', { name: '단원별 초대' })
+      page.getByRole('region', { name: '초대한 사람별' })
     ).toContainText('초대 없음');
   });
 

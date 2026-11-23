@@ -147,6 +147,9 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
                     onStatusChange={vm.onStatusChange}
                     onToggleOverdue={vm.onToggleOverdue}
                     onSearchChange={vm.onSearchChange}
+                    inviterFilter={vm.inviterFilter}
+                    inviterOptions={vm.inviterOptions}
+                    onInviterFilterChange={vm.onInviterFilterChange}
                   />
                 </Box>
                 {vm.countText ? (

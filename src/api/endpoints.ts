@@ -24,6 +24,8 @@ export const endpoints = {
     bookingPolicy: (id: string) => `${admin}/performances/${id}/booking-policy`,
     /** 가격 등급 목록·추가(develop §11.10) */
     priceTiers: (id: string) => `${admin}/performances/${id}/price-tiers`,
+    /** U41 초대 유형별 가격 GET·PUT(develop §22) */
+    inviterPrices: (id: string) => `${admin}/performances/${id}/inviter-prices`,
     /** U34 팀 계정 목록·추가(develop §18.2) */
     teamAccounts: (id: string) => `${admin}/performances/${id}/team-accounts`,
     /** U34 팀 아이디 접두어 변경 */

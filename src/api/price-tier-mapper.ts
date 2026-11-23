@@ -8,6 +8,7 @@ import type {
   InviteCodeItemResponse,
   PriceTierCreateRequest,
   PriceTierPatchRequest,
+  PriceTierRole,
   PriceTierVisibility,
 } from '@/src/types/booking';
 
@@ -20,6 +21,8 @@ export interface PriceTier {
   sortOrder: number;
   isActive: boolean;
   usedQty: number;
+  /** (U41) 가격 역할 — 예전 등급은 null */
+  role: PriceTierRole | null;
 }
 
 /** 등급 다이얼로그 폼 값 — 가격은 입력칸 문자열 그대로 */
@@ -56,6 +59,7 @@ export function fromAdminPriceTierResponse(
     sortOrder: res.sortOrder,
     isActive: res.isActive,
     usedQty: res.usedQty,
+    role: res.role ?? null,
   };
 }
 

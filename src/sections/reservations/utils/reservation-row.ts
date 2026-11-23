@@ -14,6 +14,7 @@ import {
 } from '@/src/api/reservation-mapper';
 import {
   admissionTextOf,
+  appliedPriceTextOf,
   inviterTextOf,
   isFreeReservation,
 } from '@/src/components/reservation-detail-drawer/reservation-detail-fields';
@@ -49,6 +50,9 @@ export interface ReservationRow {
   statusNote: string | null;
   admissionText: string;
   inviterText: string;
+  /** U41 — 초대한 사람 구분(SAM 관계자 Label 강조) · 적용 가격 "1매 n원"(없으면 null) */
+  inviterKind: NonNullable<Reservation['inviter']>['kind'] | null;
+  appliedPriceText: string | null;
   /** U35 좌석 "B3·B4" · 좌석 지정 공연인데 없으면 "좌석 미정" · 아니면 null(칸 '-') */
   seatText: string | null;
   /** 좌석 변경 가능(좌석 지정 공연 · 취소 아님) */
@@ -96,6 +100,8 @@ export function toReservationRow(
     statusNote,
     admissionText: admissionTextOf(r),
     inviterText: inviterTextOf(r),
+    inviterKind: r.inviter?.kind ?? null,
+    appliedPriceText: appliedPriceTextOf(r),
     seatText: toSeatText(r.seats, seatSelection, MSG_SEAT.UNASSIGNED),
     canChangeSeats: seatSelection === true && r.status !== 'CANCELLED',
     hasMemo: Boolean(r.memo),

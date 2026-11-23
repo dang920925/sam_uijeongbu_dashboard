@@ -29,7 +29,7 @@ import { useErrorSnackbar } from '@/src/hooks/use-error-snackbar';
 import { buildReadinessNotice } from '@/src/sections/performance-shows/utils/booking-readiness';
 import { toShowRowDisplay } from '@/src/sections/performance-shows/utils/show-row';
 import { useBookingPolicyForm } from '@/src/sections/performance-shows/view/use-booking-policy-form';
-import { usePriceTierSection } from '@/src/sections/performance-shows/view/use-price-tier-section';
+import { useInviterPriceForm } from '@/src/sections/performance-shows/view/use-inviter-price-form';
 import { useSeatLayoutEditor } from '@/src/sections/performance-shows/view/use-seat-layout-editor';
 import { useShowDialog } from '@/src/sections/performance-shows/view/use-show-dialog';
 import { MSG_SEAT } from '@/src/shared/messages/seat';
@@ -41,10 +41,7 @@ import {
 export type PerformanceShowsStatus = 'not-found' | 'error' | 'ready';
 export type PerformanceShowsBodyStatus = 'loading' | 'error' | 'ready';
 
-export function usePerformanceShowsViewModel(
-  performanceId: string,
-  clientPublicUrl: string | null
-) {
+export function usePerformanceShowsViewModel(performanceId: string) {
   const snackbar = useAppSnackbar();
   const performanceQuery = usePerformance(performanceId);
   const policyQuery = useBookingPolicy(performanceId);
@@ -57,7 +54,8 @@ export function usePerformanceShowsViewModel(
     policyQuery.data ?? null
   );
   const showDialog = useShowDialog(performanceId);
-  const tierSection = usePriceTierSection(performanceId, clientPublicUrl);
+  // U41 — 예전 가격 등급 카드 대신 '가격'(기본가·SAM 관계자가) 카드
+  const price = useInviterPriceForm(performanceId);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const seatSwitch = useSaveSeatSelectionEnabled(performanceId);
   /** 마지막으로 바꾼 값(실패하면 지운다) — 공연을 다시 받기 전에도 스위치가 되돌아가지 않게 */
@@ -68,13 +66,13 @@ export function usePerformanceShowsViewModel(
       ? 'not-found'
       : 'error'
     : 'ready';
-  const failedQuery = [policyQuery, tierSection.query, showsQuery].find(
+  const failedQuery = [policyQuery, price.query, showsQuery].find(
     (q) => q.isError
   );
   const bodyStatus: PerformanceShowsBodyStatus =
     performanceQuery.isPending ||
     policyQuery.isPending ||
-    tierSection.query.isPending ||
+    price.query.isPending ||
     showsQuery.isPending
       ? 'loading'
       : failedQuery
@@ -130,16 +128,15 @@ export function usePerformanceShowsViewModel(
     bodyErrorMessage: bodyError,
     onBodyRetry: () => {
       if (policyQuery.isError) void policyQuery.refetch();
-      if (tierSection.query.isError) void tierSection.query.refetch();
+      if (price.query.isError) void price.query.refetch();
       if (showsQuery.isError) void showsQuery.refetch();
     },
     notice: buildReadinessNotice(
       policyQuery.data?.missingFields ?? [],
-      shows.map((show) => show.missingFields),
-      tierSection.hasActiveLinkOnlyTier
+      shows.map((show) => show.missingFields)
     ),
     policyForm,
-    tierSection,
+    priceForm: price.state,
     seatSelection: {
       enabled: seatSelectionEnabled,
       isSaving: seatSwitch.isPending,

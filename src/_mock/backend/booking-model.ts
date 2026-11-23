@@ -124,13 +124,26 @@ export function activeTiersOf(performanceId: string): MockPriceTier[] {
     );
 }
 
-/** 빈 필드 이름 — 사용 중 PUBLIC 등급이 없으면 `publicTier`(경고만 — develop §11.10) */
+/** 초대 유형별 가격(U41) — 사용 중 역할 등급의 가격(없으면 null) */
+export function inviterPricesOf(performanceId: string): {
+  base: number | null;
+  samRelated: number | null;
+} {
+  const tiers = activeTiersOf(performanceId);
+  return {
+    base: tiers.find((t) => t.role === 'BASE')?.price ?? null,
+    samRelated: tiers.find((t) => t.role === 'SAM_RELATED')?.price ?? null,
+  };
+}
+
+/** 빈 필드 이름 — (U41) 기본가·SAM 관계자가가 없으면 basePrice · samRelatedPrice(예매가 열리지 않는다) */
 export function showMissing(show: MockShow): string[] {
-  const tiers = activeTiersOf(show.performanceId);
+  const prices = inviterPricesOf(show.performanceId);
   return [
     ...SHOW_FIELDS_REQUIRED.filter((key) => show[key] === null),
     ...policyMissing(policyOf(show.performanceId)),
-    ...(tiers.some((t) => t.visibility === 'PUBLIC') ? [] : ['publicTier']),
+    ...(prices.base === null ? ['basePrice'] : []),
+    ...(prices.samRelated === null ? ['samRelatedPrice'] : []),
   ];
 }
 
@@ -139,11 +152,8 @@ export function showState(
   show: MockShow,
   now: number = Date.now()
 ): BookingShowState {
-  // 관리 화면 state = 토큰 없는 방문자 기준이 아니라 "누군가 예매할 수 있는가" — 등급이 하나도 없으면 NOT_READY,
-  // 링크 전용 등급만 있으면 publicTier 경고만(링크로는 열림 — J-73)
-  const missing = showMissing(show).filter((key) => key !== 'publicTier');
-  if (missing.length > 0 || activeTiersOf(show.performanceId).length === 0)
-    return 'NOT_READY';
+  // (U41) 회차·설정·가격 두 개 중 하나라도 비면 NOT_READY(공개와 같은 규칙)
+  if (showMissing(show).length > 0) return 'NOT_READY';
   if (
     show.status === 'COMPLETED' ||
     !show.bookingEnabled ||
@@ -218,7 +228,8 @@ export function toAdminReservationItem(
     bookerName: r.bookerName,
     bookerPhone: r.bookerPhone,
     depositorName: r.depositorName,
-    inviter: member ? { memberId: member.id, name: member.name } : null,
+    inviter: toMockInviter(r),
+    appliedPrice: r.items.length === 1 ? r.items[0].unitPrice : null,
     inviterNote: r.inviterNote,
     inviterCategory: r.inviterCategory ?? (member ? 'MEMBER' : null),
     seats: seatsOfReservation(r),
@@ -260,6 +271,25 @@ export function toAdmissionItem(r: MockReservation): AdmissionItemResponse {
     memo: r.memo,
     version: r.version,
     seats: seatsOfReservation(r),
+    inviter: toMockInviter(r),
+    appliedPrice: r.items.length === 1 ? r.items[0].unitPrice : null,
+  };
+}
+
+/** 초대한 사람(U41) — 구분 없는 옛 예매는 단원이 있으면 MEMBER, 없으면 null */
+export function toMockInviter(
+  r: Pick<MockReservation, 'inviterCategory' | 'inviterMemberId'>
+): AdminReservationItemResponse['inviter'] {
+  const kind = r.inviterCategory ?? (r.inviterMemberId ? 'MEMBER' : null);
+  if (!kind) return null;
+  const member =
+    kind === 'MEMBER' && r.inviterMemberId
+      ? getStore().members.find((m) => m.id === r.inviterMemberId)
+      : undefined;
+  return {
+    kind,
+    memberId: kind === 'MEMBER' ? (r.inviterMemberId ?? null) : null,
+    memberName: member?.name ?? null,
   };
 }
 
@@ -354,6 +384,7 @@ export function toAdminPriceTier(tier: MockPriceTier): AdminPriceTierResponse {
     sortOrder: tier.sortOrder,
     isActive: tier.isActive,
     usedQty,
+    role: tier.role ?? null,
   };
 }
 

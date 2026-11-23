@@ -28,6 +28,7 @@ export function fromAdminReservationItemResponse(
     depositorName: res.depositorName || null,
     depositDueAt: res.depositDueAt ?? null,
     inviter: res.inviter ?? null,
+    appliedPrice: res.appliedPrice ?? null,
     inviterNote: res.inviterNote ?? null,
     inviterCategory: res.inviterCategory ?? null,
     seats: res.seats ?? [],
@@ -59,7 +60,7 @@ export interface ManualReservationFormInput extends ReservationLinesFormInput {
   bookerName: string;
   /** 선택 — 빈 칸이면 null */
   bookerPhone: string;
-  /** 단원 id · INVITER_STAFF_VALUE(임원·스태프 및 관계자 — U36) · null(없음) */
+  /** 단원 id · INVITER_STAFF_VALUE(연출·스태프) · INVITER_SAM_VALUE(SAM 관계자) · null(선택 안 함) — U41 */
   inviterMemberId: string | null;
   /** U35 — 고른 좌석(선택, 비우면 좌석 미정) */
   seatIds?: string[];
@@ -69,8 +70,20 @@ export interface ManualReservationFormInput extends ReservationLinesFormInput {
   admitNow: string;
 }
 
-/** 수동 등록 초대 선택지 "임원·스태프 및 관계자"(U36) — 요청에서 inviterCategory STAFF_RELATED 로 바꾼다 */
+/** 수동 등록 초대 선택지 "연출·스태프 관계자"(U41) — 요청 inviter { kind: STAFF_RELATED } */
 export const INVITER_STAFF_VALUE = '__STAFF_RELATED__';
+/** 수동 등록 초대 선택지 "SAM 관계자"(U41) — 요청 inviter { kind: SAM_RELATED } */
+export const INVITER_SAM_VALUE = '__SAM_RELATED__';
+
+/** 수동 등록 선택값 → 요청 inviter(빈 값 = 보내지 않음 — 관리자 등록은 선택, 자체 결정) */
+export function toManualInviter(
+  value: string | null
+): ManualReservationRequest['inviter'] {
+  if (!value) return null;
+  if (value === INVITER_STAFF_VALUE) return { kind: 'STAFF_RELATED' };
+  if (value === INVITER_SAM_VALUE) return { kind: 'SAM_RELATED' };
+  return { kind: 'MEMBER', memberId: value };
+}
 
 export function toInt(value: string): number {
   const n = Math.trunc(Number(value));
@@ -137,9 +150,7 @@ export function toManualReservationRequest(
     ...toRequestLines(input),
     status: input.status,
     memo: memo === '' ? null : memo,
-    ...(input.inviterMemberId === INVITER_STAFF_VALUE
-      ? { inviterMemberId: null, inviterCategory: 'STAFF_RELATED' as const }
-      : { inviterMemberId: input.inviterMemberId || null }),
+    inviter: toManualInviter(input.inviterMemberId),
     ...(input.seatIds && input.seatIds.length > 0
       ? { seatIds: [...input.seatIds] }
       : {}),

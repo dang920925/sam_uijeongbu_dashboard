@@ -33,6 +33,7 @@ const columnsOf = (hasSeat: boolean) => [
   ...(hasSeat ? [MSG_SEAT.COLUMN] : []),
   MSG_PRINT.COL_PHONE,
   MSG_PRINT.COL_TIERS,
+  MSG_PRINT.COL_INVITER,
   MSG_PRINT.COL_STATUS,
   MSG_PRINT.COL_MEMO,
   MSG_PRINT.COL_CHECK,
@@ -104,6 +105,11 @@ export function PrintRosterTable({
                 <Box component='td' sx={cellSx}>
                   <Typo.Badge.Regular color='inherit'>
                     {row.tierText}
+                  </Typo.Badge.Regular>
+                </Box>
+                <Box component='td' sx={cellSx}>
+                  <Typo.Badge.Regular color='inherit'>
+                    {row.inviterText}
                   </Typo.Badge.Regular>
                 </Box>
                 <Box component='td' sx={cellSx}>

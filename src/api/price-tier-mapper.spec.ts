@@ -18,6 +18,7 @@ const RESPONSE = {
   sortOrder: 1,
   isActive: true,
   usedQty: 2,
+  role: null,
 };
 
 describe('price-tier-mapper', () => {

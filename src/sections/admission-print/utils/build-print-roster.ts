@@ -6,6 +6,10 @@
 import type { AdmissionBoard, AdmissionItem } from '@/src/api/admission-mapper';
 import { formatTierBreakdown } from '@/src/api/reservation-mapper';
 import { toSeatText } from '@/src/api/seat-map-mapper';
+import {
+  appliedPriceTextOf,
+  inviterTextOf,
+} from '@/src/components/reservation-detail-drawer/reservation-detail-fields';
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_SEAT } from '@/src/shared/messages/seat';
 
@@ -17,6 +21,8 @@ export interface PrintRow {
   bookerName: string;
   phoneLast4: string;
   tierText: string;
+  /** U41 — 초대한 사람 · 적용 가격("SAM 관계자 · 1매 10,000원"), 없으면 '-' */
+  inviterText: string;
   /** U35 — 좌석 지정 공연이 아니면 null */
   seatText: string | null;
   quantity: number;
@@ -55,6 +61,11 @@ function toRow(item: AdmissionItem, seatSelection: boolean): PrintRow {
     bookerName: item.bookerName,
     phoneLast4: item.phoneLast4 ?? dash,
     tierText: formatTierBreakdown(item.lines) || `${item.quantity}`,
+    inviterText: item.inviter
+      ? [inviterTextOf(item), appliedPriceTextOf(item)]
+          .filter(Boolean)
+          .join(' · ')
+      : dash,
     quantity: item.quantity,
     admittedCount: Math.min(item.admittedCount, item.quantity),
     memo: item.memo ?? '',

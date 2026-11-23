@@ -12,8 +12,16 @@ import {
   type PriceTier,
   type PriceTierFormInput,
 } from '@/src/api/price-tier-mapper';
-import { apiDelete, apiFetch, apiPatch, apiPost } from '@/src/lib/api-client';
+import {
+  apiDelete,
+  apiFetch,
+  apiPatch,
+  apiPost,
+  apiPut,
+} from '@/src/lib/api-client';
 import type {
+  InviterPricesRequest,
+  InviterPricesResponse,
   AdminPriceTierResponse,
   PriceTierPatchRequest,
 } from '@/src/types/booking';
@@ -73,5 +81,25 @@ export async function deletePriceTier(id: string): Promise<void> {
 export async function reissuePriceTierLink(id: string): Promise<PriceTier> {
   return fromAdminPriceTierResponse(
     await apiPost<AdminPriceTierResponse>(tierPaths.linkToken(id))
+  );
+}
+
+/** (U41) 초대 유형별 가격 — 기본가 · SAM 관계자가(없으면 null) */
+export function fetchInviterPrices(
+  performanceId: string
+): Promise<InviterPricesResponse> {
+  return apiFetch<InviterPricesResponse>(
+    endpoints.performances.inviterPrices(performanceId)
+  );
+}
+
+/** (U41) 초대 유형별 가격 저장 — 역할 등급 2개를 만들거나 고친다(둘 다 1원 이상) */
+export function saveInviterPrices(
+  performanceId: string,
+  body: InviterPricesRequest
+): Promise<InviterPricesResponse> {
+  return apiPut<InviterPricesResponse>(
+    endpoints.performances.inviterPrices(performanceId),
+    body
   );
 }

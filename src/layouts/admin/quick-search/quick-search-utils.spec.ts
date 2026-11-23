@@ -47,6 +47,7 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
     bookerPhone: '010-0000-0000',
     depositorName: '홍길동1234',
     inviter: null,
+    appliedPrice: null,
     inviterNote: null,
     inviterCategory: null,
     seats: [],

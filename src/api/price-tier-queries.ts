@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------
 // 가격 등급 쿼리 키와 훅(develop §11.10). 변경 뒤 ROOT_KEYS.booking 을 무효화한다
-// — 등급이 바뀌면 회차의 missingFields(publicTier)·state 와 예매 화면들이 함께 바뀐다.
+// — 가격이 바뀌면 회차의 missingFields(basePrice·samRelatedPrice)·state 와 예매 화면들이 함께 바뀐다.
 // 단원 초대 코드 조회는 ROOT_KEYS.inviteCode 아래(발급하면 SCR-D12 초대 링크 탭도 갱신).
 // ----------------------------------------------------------------------
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,11 +14,14 @@ import {
 import {
   createPriceTier,
   deletePriceTier,
+  fetchInviterPrices,
   fetchPriceTiers,
   patchPriceTier,
   reissuePriceTierLink,
+  saveInviterPrices,
   savePriceTier,
 } from '@/src/api/price-tier';
+import type { InviterPricesRequest } from '@/src/types/booking';
 import type { PriceTierFormInput } from '@/src/api/price-tier-mapper';
 import { ROOT_KEYS } from '@/src/api/root-keys';
 import { isNotFoundError } from '@/src/utils/api-error-message';
@@ -28,7 +31,17 @@ export const priceTierKeys = {
   list: (performanceId: string) =>
     [...priceTierKeys.all, 'list', performanceId] as const,
   inviteMembers: () => [...ROOT_KEYS.inviteCode, 'tier-link-members'] as const,
+  inviterPrices: (performanceId: string) =>
+    [...priceTierKeys.all, 'inviter-prices', performanceId] as const,
 };
+
+/** (U41) 초대 유형별 가격 */
+export function useInviterPrices(performanceId: string) {
+  return useQuery({
+    queryKey: priceTierKeys.inviterPrices(performanceId),
+    queryFn: () => fetchInviterPrices(performanceId),
+  });
+}
 
 export function usePriceTiers(performanceId: string) {
   return useQuery({
@@ -125,5 +138,15 @@ export function useIssueInviteCode() {
     mutationFn: (memberId: string) => issueInviteCode(memberId),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ROOT_KEYS.inviteCode }),
+  });
+}
+
+/** (U41) 초대 유형별 가격 저장 — 회차 준비 상태(missingFields basePrice·samRelatedPrice)도 바뀌어 booking 전체를 무효화 */
+export function useSaveInviterPrices(performanceId: string) {
+  const invalidate = useInvalidateBooking();
+  return useMutation({
+    mutationFn: (body: InviterPricesRequest) =>
+      saveInviterPrices(performanceId, body),
+    onSuccess: invalidate,
   });
 }
