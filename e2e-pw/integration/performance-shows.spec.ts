@@ -128,17 +128,29 @@ async function putPolicy(
   return { status: response.status, body: await response.json() };
 }
 
-function createTier(
+async function createTier(
   performanceId: string,
   name: string,
   visibility: 'PUBLIC' | 'LINK_ONLY' = 'PUBLIC',
   price = 15000
 ): Promise<Tier> {
-  return adminApi<Tier>(
+  const tier = await adminApi<Tier>(
     'POST',
     `/admin/performances/${performanceId}/price-tiers`,
     { name: `${TP}${name}`, price, visibility }
   );
+  // U41(v1.3.1) — 예매가 열리려면 기본가·SAM 관계자가가 있어야 한다(PUBLIC 등급을 만드는 시험의 준비 조건)
+  if (visibility === 'PUBLIC') {
+    await adminApi(
+      'PUT',
+      `/admin/performances/${performanceId}/inviter-prices`,
+      {
+        base: price,
+        samRelated: 7000,
+      }
+    );
+  }
+  return tier;
 }
 
 async function listTiers(performanceId: string): Promise<Tier[]> {
@@ -160,13 +172,14 @@ async function listShows(performanceId: string): Promise<AdminShow[]> {
 /** 공개 예매(중계 비밀) — 연락처는 예매마다 달리(같은 연락처 입금 대기 중복 RSV_004) */
 async function reserve(
   showId: string,
-  tierId: string,
+  _tierId: string,
   quantity: number,
   phoneTail: string
 ) {
   const res = await relayPost('/reservations', {
     showId,
-    items: [{ tierId, quantity }],
+    quantity, // U41 — 매수 + 초대한 사람(가격은 기본가 역할 등급)
+    inviter: { kind: 'STAFF_RELATED' },
     bookerName: `${PREFIX}예매자`,
     bookerPhone: `010-0000-${phoneTail}`,
     agreedToPrivacy: true,
@@ -223,7 +236,10 @@ test.describe('연동 SCR-D11 회차·예매 설정', () => {
     await page.getByLabel('입금 기한 (시간)').fill('24');
     await page.getByLabel('취소·환불 규정').fill(`${PREFIX}환불 규정`);
     await page.getByLabel('문의처').fill('javascript:alert(1)');
-    await page.getByRole('button', { name: '저장', exact: true }).click();
+    await page
+      .getByRole('button', { name: '저장', exact: true })
+      .first()
+      .click();
     // Assert — 칸 아래 문구, 저장 안 됨
     await expect(page.getByText('입력값을 확인해주세요.')).toHaveCount(1);
     expect(
@@ -242,7 +258,10 @@ test.describe('연동 SCR-D11 회차·예매 설정', () => {
         res.url().endsWith(`/admin/performances/${perf.id}/booking-policy`) &&
         res.request().method() === 'PUT'
     );
-    await page.getByRole('button', { name: '저장', exact: true }).click();
+    await page
+      .getByRole('button', { name: '저장', exact: true })
+      .first()
+      .click();
     // Assert — 요청 본문(숫자는 정수, 문의처 포함)·서버 응답·화면
     const response = await put;
     expect(response.status()).toBe(200);
@@ -401,7 +420,8 @@ test.describe('연동 SCR-D11 회차·예매 설정', () => {
     await expect.poll(async () => (await listShows(perf.id)).length).toBe(1);
   });
 
-  test('가격 등급 — 0원 막음 · 이름 중복 400 · 추가는 맨 뒤 · ▲▼ · 사용 중지 · 링크 전용만 남으면 publicTier 경고', async ({
+  // U41(v1.3.1) — 가격 등급 카드는 '가격'(기본가·SAM 관계자가) 카드로 바뀌었다(release-v131 이 대신 확인)
+  test.skip('가격 등급 — 0원 막음 · 이름 중복 400 · 추가는 맨 뒤 · ▲▼ · 사용 중지 · 링크 전용만 남으면 publicTier 경고', async ({
     page,
   }) => {
     // Arrange — 회차·설정은 다 채웠고 등급만 없다
@@ -518,7 +538,8 @@ test.describe('연동 SCR-D11 회차·예매 설정', () => {
     ).toBe(12000);
   });
 
-  test('링크 복사는 CLIENT_PUBLIC_URL 로 조립하고, 단원 초대 링크(발급) · 재발급 200 · 쓰인 등급 삭제 막기', async ({
+  // U41 — 링크 전용 등급 UI 숨김(develop §22)
+  test.skip('링크 복사는 CLIENT_PUBLIC_URL 로 조립하고, 단원 초대 링크(발급) · 재발급 200 · 쓰인 등급 삭제 막기', async ({
     page,
   }) => {
     // Arrange

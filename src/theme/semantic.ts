@@ -75,6 +75,8 @@ export interface SemanticTokens {
   /** R1 designer §13.2 `--color-success-soft-bg/-border` — D13 입장 완료 행 */
   successSoft: { bg: string; border: string };
   scrim: { dialog: string; image: string; chip: string };
+  /** v1.3.1 일정 캘린더 '연습실 예약' 레이어 — 빗금(공식 일정과 구분), 글자는 두 줄무늬 색 모두에 AA */
+  roomLayer: { bg: string; stripe: string; fg: string; border: string };
   /** U35 좌석 지도·배치 편집 칸 */
   seat: {
     availableBg: string;
@@ -94,6 +96,12 @@ export interface SemanticTokens {
 }
 
 export const SEMANTIC: SemanticTokens = {
+  roomLayer: {
+    bg: RAW.card,
+    stripe: RAW.raised,
+    fg: RAW.text,
+    border: RAW.borderStrong,
+  },
   label: {
     neutral: { bg: ALPHA.labelNeutralBg, fg: RAW.textSoft },
     info: { bg: ALPHA.labelInfoBg, fg: RAW.labelInfo },

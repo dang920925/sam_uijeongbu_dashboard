@@ -65,9 +65,27 @@ const SUMMARY: ReservationSummaryBoardResponse = {
     },
   ],
   inviters: [
-    { memberId: null, name: null, pendingQty: 3, confirmedQty: 1 },
-    { memberId: null, name: '직접 입력', pendingQty: 0, confirmedQty: 2 },
-    { memberId: 'm-1', name: '김단원', pendingQty: 0, confirmedQty: 0 },
+    {
+      kind: 'LEGACY',
+      memberId: null,
+      name: null,
+      pendingQty: 3,
+      confirmedQty: 1,
+    },
+    {
+      kind: 'LEGACY',
+      memberId: null,
+      name: '직접 입력',
+      pendingQty: 0,
+      confirmedQty: 2,
+    },
+    {
+      kind: 'MEMBER',
+      memberId: 'm-1',
+      name: '김단원',
+      pendingQty: 0,
+      confirmedQty: 0,
+    },
   ],
   totals: {
     pendingCount: 2,
@@ -169,27 +187,49 @@ describe('toInviterSummaryTable', () => {
   });
 });
 
-describe('toInviterSummaryTable — U36', () => {
-  it('임원·스태프 및 관계자 묶음을 단원 다음, 직접 입력 앞에 흐리지 않게 둔다(IV-2)', () => {
+describe('toInviterSummaryTable — U41', () => {
+  it('배우 → 연출·스태프 관계자 → SAM 관계자 → 옛 예매 순이고 옛 예매만 흐리다(IP-7)', () => {
     const table = toInviterSummaryTable({
       ...SUMMARY,
       inviters: [
-        { memberId: null, name: null, pendingQty: 1, confirmedQty: 0 },
         {
+          kind: 'LEGACY',
           memberId: null,
-          name: '임원·스태프 및 관계자',
+          name: null,
+          pendingQty: 1,
+          confirmedQty: 0,
+        },
+        {
+          kind: 'SAM_RELATED',
+          memberId: null,
+          name: 'SAM 관계자',
+          pendingQty: 2,
+          confirmedQty: 0,
+        },
+        {
+          kind: 'STAFF_RELATED',
+          memberId: null,
+          name: '연출·스태프 관계자',
           pendingQty: 0,
           confirmedQty: 3,
         },
-        { memberId: 'm1', name: '김단원', pendingQty: 2, confirmedQty: 0 },
+        {
+          kind: 'MEMBER',
+          memberId: 'm1',
+          name: '김단원',
+          pendingQty: 2,
+          confirmedQty: 0,
+        },
       ],
     });
     expect(table.rows.map((r) => r.cells[0])).toEqual([
       '김단원',
-      '임원·스태프 및 관계자',
+      '연출·스태프 관계자',
+      'SAM 관계자',
       '초대 없음',
     ]);
     expect(table.rows.map((r) => Boolean(r.isMuted))).toEqual([
+      false,
       false,
       false,
       true,

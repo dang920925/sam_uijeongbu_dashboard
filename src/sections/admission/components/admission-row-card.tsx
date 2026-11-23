@@ -64,6 +64,14 @@ export function AdmissionRowCard({ row, handlers }: AdmissionRowCardProps) {
                 {row.phoneText}
               </Typo.Badge.Regular>
             ) : null}
+            {row.inviterText ? (
+              <Typo.Badge.Regular
+                color={metaColor}
+                data-testid='admission-inviter'
+              >
+                {row.inviterText}
+              </Typo.Badge.Regular>
+            ) : null}
           </div>
         </div>
         <div className='flex shrink-0 flex-col items-end'>

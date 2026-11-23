@@ -13,8 +13,21 @@ import { SCHEDULE_TYPE_LABEL, type ScheduleType } from '@/src/types/codes';
 import type { Schedule } from '@/src/types/content';
 import { formatKstDateTime } from '@/src/utils/kst-date-format';
 
-export interface CalendarEvent {
+/** 연습실 예약 레이어(v1.3.1 사용자 요청) 칩의 원본 정보 */
+export interface RoomEventInfo {
   id: string;
+  teamName: string;
+  memo: string | null;
+  performanceTitle: string;
+}
+
+export interface CalendarEvent {
+  /** 일정 id · 연습실 예약은 `room:{id}`(일정 id 와 겹치지 않게) */
+  id: string;
+  /** schedule = 공식 일정 · room = 팀 연습실 예약(빗금 — 공식 일정 아님) */
+  kind: 'schedule' | 'room';
+  /** kind room 일 때만 */
+  room: RoomEventInfo | null;
   title: string;
   type: ScheduleType;
   typeLabel: string;
@@ -49,6 +62,8 @@ export function toCalendarEvent(schedule: Schedule): CalendarEvent | null {
   const isCancelled = schedule.status === 'CANCELLED';
   return {
     id: schedule.id,
+    kind: 'schedule',
+    room: null,
     title: schedule.title,
     type: schedule.type,
     typeLabel,
@@ -72,7 +87,7 @@ export function toCalendarEvent(schedule: Schedule): CalendarEvent | null {
   };
 }
 
-function compareEvents(a: CalendarEvent, b: CalendarEvent): number {
+export function compareEvents(a: CalendarEvent, b: CalendarEvent): number {
   if (a.date !== b.date) return a.date < b.date ? -1 : 1;
   if (a.startMinutes !== b.startMinutes) return a.startMinutes - b.startMinutes;
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;

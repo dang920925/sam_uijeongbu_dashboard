@@ -12,6 +12,7 @@ import { MSG_SEAT } from '@/src/shared/messages/seat';
 import { MSG_D12 } from '@/src/shared/messages/d12';
 import type {
   ReservationSummaryBoardResponse,
+  ReservationSummaryInviterRow,
   ReservationSummaryTierQty,
 } from '@/src/types/booking';
 
@@ -214,16 +215,23 @@ export function toTierSummaryTable(
 export function toInviterSummaryTable(
   summary: ReservationSummaryBoardResponse
 ): SummaryTable {
-  // 서버 묶음 순서(back-end §16): 단원 → 임원·스태프 및 관계자(U36, memberId null + 그 이름) → 직접 입력 → 초대 없음
-  const rank = (memberId: string | null, name: string | null) =>
-    memberId ? 0 : name === MSG_SEAT.INVITER_STAFF ? 1 : name ? 2 : 3;
-  const sorted = [...summary.inviters].sort(
-    (a, b) => rank(a.memberId, a.name) - rank(b.memberId, b.name)
-  );
+  // U41 묶음 순서(서버 reservation-summary.util): 배우(가나다) → 연출·스태프 관계자 → SAM 관계자 → 옛 예매(직접 입력 · 초대 없음)
+  const rank = (row: ReservationSummaryInviterRow) =>
+    row.kind === 'MEMBER'
+      ? 0
+      : row.kind === 'STAFF_RELATED'
+        ? 1
+        : row.kind === 'SAM_RELATED'
+          ? 2
+          : row.name
+            ? 3
+            : 4;
+  const sorted = [...summary.inviters].sort((a, b) => rank(a) - rank(b));
   const LABEL: Record<number, string> = {
     1: MSG_SEAT.INVITER_STAFF,
-    2: MSG_D12.SUM_INV_NOTE,
-    3: MSG_D12.SUM_INV_NONE,
+    2: MSG_SEAT.INVITER_SAM,
+    3: MSG_D12.SUM_INV_NOTE,
+    4: MSG_D12.SUM_INV_NONE,
   };
   return {
     columns: [
@@ -232,7 +240,7 @@ export function toInviterSummaryTable(
       MSG_D12.SUM_COL_CONFIRMED,
     ],
     rows: sorted.map((row, index) => {
-      const r = rank(row.memberId, row.name);
+      const r = rank(row);
       return {
         key: row.memberId ?? `group-${r}-${index}`,
         cells: [
@@ -240,8 +248,8 @@ export function toInviterSummaryTable(
           qty(row.pendingQty),
           qty(row.confirmedQty),
         ],
-        // 임원·스태프 묶음은 실제 초대 집계라 흐리게 두지 않는다
-        isMuted: r > 1,
+        // 연출·스태프 · SAM 관계자 묶음은 실제 초대 집계라 흐리게 두지 않는다(옛 예매만 흐림)
+        isMuted: r > 2,
       };
     }),
   };

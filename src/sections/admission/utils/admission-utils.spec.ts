@@ -31,6 +31,8 @@ function item(overrides: Partial<AdmissionItem> = {}): AdmissionItem {
     memo: null,
     version: 1,
     seats: [],
+    inviter: null,
+    appliedPrice: null,
     ...overrides,
   };
 }

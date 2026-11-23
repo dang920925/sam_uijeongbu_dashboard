@@ -3,9 +3,11 @@
 // ----------------------------------------------------------------------
 // 예매 탭 필터(designer §13.7.3 2.1) — 줄 1 회차 pill(전체 + 회차) / 줄 2 상태 pill · "기한 지남만"(aria-pressed) ·
 // 검색(lg 오른쪽 280, 아래는 전체 폭). xs 는 pill 줄을 카드 안에서만 가로 스크롤(페이지 넘침 0).
+// (U41 §22.1 design §17) 줄 3 '초대한 사람' 선택 — 전체 · SAM 관계자 · 연출·스태프 관계자 · 배우(초대한 예매가 있는 배우).
 // ----------------------------------------------------------------------
 import ButtonBase from '@mui/material/ButtonBase';
 import InputAdornment from '@mui/material/InputAdornment';
+import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 
 import { Iconify } from '@/src/components/iconify';
@@ -25,6 +27,10 @@ interface ReservationFilterBarProps {
   onStatusChange: (value: StatusFilter) => void;
   onToggleOverdue: () => void;
   onSearchChange: (value: string) => void;
+  /** U41 — 초대한 사람 필터 값('ALL' · 'SAM_RELATED' · 'STAFF_RELATED' · 'MEMBER:{id}')과 배우 선택지 */
+  inviterFilter: string;
+  inviterOptions: SegmentOption<string>[];
+  onInviterFilterChange: (value: string) => void;
 }
 
 const STATUS_OPTIONS: SegmentOption<StatusFilter>[] = [
@@ -56,6 +62,9 @@ export function ReservationFilterBar({
   onStatusChange,
   onToggleOverdue,
   onSearchChange,
+  inviterFilter,
+  inviterOptions,
+  onInviterFilterChange,
 }: ReservationFilterBarProps) {
   return (
     <div className='flex flex-col gap-3'>
@@ -105,6 +114,39 @@ export function ReservationFilterBar({
               {MSG_D12.FILTER_OVERDUE}
             </Typo.Badge.Medium>
           </ButtonBase>
+        </div>
+        <div className='flex min-w-0 items-center gap-3'>
+          <GroupLabel>{MSG_D12.FILTER_INVITER}</GroupLabel>
+          <TextField
+            select
+            size='small'
+            value={inviterFilter}
+            onChange={(event) => onInviterFilterChange(event.target.value)}
+            sx={{ width: { xs: '100%', md: 220 } }}
+            slotProps={{
+              htmlInput: { 'aria-label': MSG_D12.FILTER_INVITER },
+              select: {
+                SelectDisplayProps: {
+                  'aria-label': MSG_D12.FILTER_INVITER,
+                  // @ts-expect-error data-* 속성 — 테스트 식별
+                  'data-testid': 'reservation-inviter-filter',
+                },
+              },
+            }}
+          >
+            <MenuItem value='ALL'>{MSG_D12.FILTER_INVITER_ALL}</MenuItem>
+            <MenuItem value='SAM_RELATED'>
+              {MSG_D12.FILTER_INVITER_SAM}
+            </MenuItem>
+            <MenuItem value='STAFF_RELATED'>
+              {MSG_D12.FILTER_INVITER_STAFF}
+            </MenuItem>
+            {inviterOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
         </div>
         <TextField
           type='search'

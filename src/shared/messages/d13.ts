@@ -37,6 +37,9 @@ export const MSG_D13 = {
   RESULT: (count: number) => `검색 결과 ${count}건`,
   /** MSG-D13-META(보강2 — 매수 삭제) */
   META_CODE: (code: string) => `예매 ${code}`,
+  /** U41 — 초대한 사람 · 적용 가격 */
+  META_INVITER: (who: string, price: string | null) =>
+    price ? `초대 ${who} · ${price}` : `초대 ${who}`,
   META_PHONE: (last4: string) => `연락처 끝 ${last4}`,
   /** MSG-D13-TIERS 읽기 — "등급별 매수: 일반 3매, 스태프 1매" */
   TIERS_ARIA: (text: string) => `등급별 매수: ${text}`,

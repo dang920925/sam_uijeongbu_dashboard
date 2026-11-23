@@ -91,7 +91,9 @@ export const MSG_SEAT = {
   MANUAL_SEAT_NO_QTY: '매수를 먼저 정하면 좌석을 고를 수 있습니다.',
 
   /** U36 초대자 */
-  INVITER_STAFF: '임원·스태프 및 관계자',
+  INVITER_STAFF: '연출·스태프 관계자',
+  /** U41 — SAM 관계자(design §17) */
+  INVITER_SAM: 'SAM 관계자',
   INVITER_NONE: '없음/모름',
   INVITER_LISTED: '예매 초대자 목록에 표시',
   INVITER_LISTED_HELP:

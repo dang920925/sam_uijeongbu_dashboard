@@ -116,10 +116,12 @@ async function publicReservation(
   items: { tierId: string; quantity: number }[],
   tierToken: string | null = null
 ): Promise<BoardItem> {
+  void tierToken; // U41 — 예전 등급 링크(서버가 받지 않음)
   const res = await relayPost('/reservations', {
     showId: fx.showA,
-    items,
-    tierToken,
+    // U41 — 매수 + 초대한 사람(연출·스태프 관계자), 가격은 기본가 역할 등급
+    quantity: items.reduce((n, i) => n + i.quantity, 0),
+    inviter: { kind: 'STAFF_RELATED' },
     bookerName: name,
     bookerPhone: nextPhone(),
     agreedToPrivacy: true,
@@ -163,6 +165,10 @@ async function createFixture(): Promise<Fixture> {
     }
   );
   expect(policy.status).toBe(200);
+  await adminApi('PUT', `/admin/performances/${perf.id}/inviter-prices`, {
+    base: 20000,
+    samRelated: 10000,
+  });
   const general = await adminApi<Created>(
     'POST',
     `/admin/performances/${perf.id}/price-tiers`,
@@ -287,7 +293,8 @@ test.describe('SCR-D13 입장 체크(실서버)', () => {
     });
   });
 
-  test('회차 목록 항목에 공연 id 가 있고, 명단은 미입장 먼저·이름순에 할인·관리자 등록을 보인다', async ({
+  // U41(v1.3.1) — 공개 예매가 기본가 1줄이 되어 '할인' 줄 시나리오가 없다(입장 명단 초대 줄은 release-v131)
+  test.skip('회차 목록 항목에 공연 id 가 있고, 명단은 미입장 먼저·이름순에 할인·관리자 등록을 보인다', async ({
     page,
   }) => {
     // 계약 — GET /admin/shows?from= 항목의 performanceId(현장 등록 등급 키)

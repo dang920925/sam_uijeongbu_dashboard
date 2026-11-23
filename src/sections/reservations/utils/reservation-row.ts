@@ -14,6 +14,7 @@ import {
 } from '@/src/api/reservation-mapper';
 import {
   admissionTextOf,
+  appliedPriceTextOf,
   inviterTextOf,
   isFreeReservation,
 } from '@/src/components/reservation-detail-drawer/reservation-detail-fields';
@@ -49,6 +50,9 @@ export interface ReservationRow {
   statusNote: string | null;
   admissionText: string;
   inviterText: string;
+  /** U41 — 초대한 사람 구분(SAM 관계자 Label 강조) · 적용 가격 "1매 n원"(없으면 null) */
+  inviterKind: NonNullable<Reservation['inviter']>['kind'] | null;
+  appliedPriceText: string | null;
   /** U35 좌석 "B3·B4" · 좌석 지정 공연인데 없으면 "좌석 미정" · 아니면 null(칸 '-') */
   seatText: string | null;
   /** 좌석 변경 가능(좌석 지정 공연 · 취소 아님) */
@@ -57,6 +61,8 @@ export interface ReservationRow {
   /** 입장 인원 있는 확정 건 — 확인 취소·취소 비활성 */
   isLocked: boolean;
   canEditItems: boolean;
+  /** (R2) 입금 대기인데 입금 알림으로 일부만 받았으면 "받은 금액 N원 / M원" — VM 이 받은 금액 조회로 채운다 */
+  partialDepositText?: string | null;
 }
 
 /** "2099.12.12 14:00" → "12.12 14:00"(표 칸 폭 — designer 보강2) */
@@ -96,6 +102,8 @@ export function toReservationRow(
     statusNote,
     admissionText: admissionTextOf(r),
     inviterText: inviterTextOf(r),
+    inviterKind: r.inviter?.kind ?? null,
+    appliedPriceText: appliedPriceTextOf(r),
     seatText: toSeatText(r.seats, seatSelection, MSG_SEAT.UNASSIGNED),
     canChangeSeats: seatSelection === true && r.status !== 'CANCELLED',
     hasMemo: Boolean(r.memo),

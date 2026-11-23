@@ -1,7 +1,8 @@
 // ----------------------------------------------------------------------
 // 예매 상세 표시 값(순수) — 드로어(공용)와 D12 표·카드가 같은 규칙을 쓴다.
 // 무료 = 확정 + 0원(지휘자 결정 2026-11-20 — 0원 확정 건 보조 "무료"), 관리자 등록 = source ADMIN,
-// 금액 덮어쓴 건 = amountOverridden("직접 입력"), 초대 = 단원 이름 / "{메모} (직접 입력)" / '-'.
+// 금액 덮어쓴 건 = amountOverridden("직접 입력"), 초대한 사람(U41) = 배우 이름 / 연출·스태프 관계자 / SAM 관계자 /
+// "{메모} (직접 입력)"(옛 예매) / '-'. 적용 가격 = "1매 {가격}원"(줄이 1개일 때만).
 // ----------------------------------------------------------------------
 import { MSG_SEAT } from '@/src/shared/messages/seat';
 import {
@@ -23,14 +24,23 @@ export function isFreeReservation(r: Pick<Reservation, 'status' | 'amount'>) {
 }
 
 export function inviterTextOf(
-  r: Pick<Reservation, 'inviter' | 'inviterNote'> &
-    Partial<Pick<Reservation, 'inviterCategory'>>
+  r: Pick<Reservation, 'inviter'> & Partial<Pick<Reservation, 'inviterNote'>>
 ): string {
-  if (r.inviter) return r.inviter.name;
-  // U36 — 임원·스태프 및 관계자(단원 없음)
-  if (r.inviterCategory === 'STAFF_RELATED') return MSG_SEAT.INVITER_STAFF;
+  const kind = r.inviter?.kind;
+  if (kind === 'MEMBER') return r.inviter?.memberName ?? dash;
+  if (kind === 'STAFF_RELATED') return MSG_SEAT.INVITER_STAFF;
+  if (kind === 'SAM_RELATED') return MSG_SEAT.INVITER_SAM;
   if (r.inviterNote) return MSG_D12.INVITER_NOTE(r.inviterNote);
   return dash;
+}
+
+/** 적용 가격 "1매 20,000원"(U41) — 없으면 null */
+export function appliedPriceTextOf(
+  r: Pick<Reservation, 'appliedPrice'>
+): string | null {
+  return r.appliedPrice === null || r.appliedPrice === undefined
+    ? null
+    : MSG_D12.APPLIED_PRICE(formatWon(r.appliedPrice));
 }
 
 /** 입장 "{a}/{q}" — 취소 건은 '-' */
@@ -109,7 +119,12 @@ export function toReservationDetailFields(
       label: MSG_D12.DETAIL_ADMISSION,
       value: admissionTextOf(r),
     },
-    { key: 'inviter', label: MSG_D12.DETAIL_INVITER, value: inviterTextOf(r) },
+    {
+      key: 'inviter',
+      label: MSG_D12.DETAIL_INVITER,
+      value: inviterTextOf(r),
+      sub: appliedPriceTextOf(r) ?? undefined,
+    },
     { key: 'memo', label: MSG_D12.DETAIL_MEMO, value: r.memo ?? dash },
     {
       key: 'created',

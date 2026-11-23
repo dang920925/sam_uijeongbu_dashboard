@@ -14,6 +14,16 @@ import { FONT_FAMILY, TYPO_TIERS } from '@/src/theme/typography';
 
 const XS_ONLY = '@media (max-width: 767.95px)';
 
+/**
+ * 드롭다운 아이콘 여백(v1.3.1 사용자 요청 "패딩값 일정하게") — 입력칸 글자 시작(OutlinedInput 가로 padding 14 · small 도 14)과
+ * 화살표 오른쪽 끝까지의 거리를 같게 둔다. MUI ArrowDropDown 은 24 격자에서 x 7~17 에 그려져 상자 오른쪽에 7 빈칸이 있으므로
+ * 아이콘 상자 right = 14 − 7. 글자가 아이콘에 닿지 않게 오른쪽 padding = 14 + 글리프 10 + 간격 8 = 32.
+ */
+const FIELD_PAD_X = 14;
+const ARROW_GLYPH = { box: 24, inset: 7, width: 10 } as const;
+const SELECT_ICON_RIGHT = FIELD_PAD_X - ARROW_GLYPH.inset;
+const SELECT_PAD_RIGHT = FIELD_PAD_X + ARROW_GLYPH.width + 8;
+
 export const componentOverrides: Components<Theme> = {
   MuiCssBaseline: {
     styleOverrides: {
@@ -164,6 +174,22 @@ export const componentOverrides: Components<Theme> = {
         },
       },
       multiline: { paddingTop: 8, paddingBottom: 8 },
+    },
+  },
+  MuiSelect: {
+    styleOverrides: {
+      // medium·small 모두 같은 규칙(테마에서 한 번에 — 화면 파일은 고치지 않는다)
+      select: {
+        '&.MuiInputBase-input.MuiOutlinedInput-input': {
+          paddingLeft: FIELD_PAD_X,
+          paddingRight: SELECT_PAD_RIGHT,
+        },
+      },
+      icon: {
+        width: ARROW_GLYPH.box,
+        height: ARROW_GLYPH.box,
+        right: SELECT_ICON_RIGHT,
+      },
     },
   },
   MuiFormHelperText: {

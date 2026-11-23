@@ -182,9 +182,23 @@ export function ReservationTable({
                     <Typo.Badge.Regular>{row.admissionText}</Typo.Badge.Regular>
                   </TableCell>
                   <TableCell>
-                    <Typo.Badge.Regular color='text.secondary'>
-                      {row.inviterText}
-                    </Typo.Badge.Regular>
+                    <span
+                      className='flex flex-col'
+                      data-testid='reservation-inviter-cell'
+                    >
+                      <Typo.Badge.Regular
+                        color={
+                          row.inviterKind === 'SAM_RELATED'
+                            ? 'warning.main'
+                            : 'text.secondary'
+                        }
+                      >
+                        {row.inviterText}
+                      </Typo.Badge.Regular>
+                      {row.appliedPriceText
+                        ? secondary(row.appliedPriceText)
+                        : null}
+                    </span>
                   </TableCell>
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <span className='inline-flex items-center gap-2'>

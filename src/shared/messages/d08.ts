@@ -92,6 +92,23 @@ export const MSG_D08 = {
     `${month}월 ${day}일 (${weekday}) ${time}`,
   /** 시간 범위 "{start} – {end}"(SCR-07 MSG-D08-TIME-RANGE) */
   TIME_RANGE: (start: string, end: string) => `${start} – ${end}`,
+  /** v1.3.1 연습실 예약 레이어(design §13 — 제안 문구) */
+  ROOM_LAYER: '연습실 예약',
+  ROOM_LAYER_TOGGLE_ARIA: '연습실 예약 표시',
+  ROOM_CHIP: (team: string) => `${team} 연습실`,
+  ROOM_ARIA: (title: string, month: number, day: number, time: string) =>
+    `연습실 예약 ${title}, ${month}월 ${day}일 ${time}`,
+  ROOM_DETAIL_TEAM: '팀',
+  ROOM_DETAIL_TIME: '시간',
+  ROOM_DETAIL_PERFORMANCE: '작품',
+  ROOM_DETAIL_MEMO: '메모',
+  ROOM_DETAIL_NOTE:
+    '팀이 등록한 연습실 예약입니다. 공식 일정이 아니며 홈페이지에는 보이지 않습니다.',
+  ROOM_DELETE: '예약 삭제',
+  ROOM_DELETE_CONFIRM: '이 연습실 예약을 삭제하시겠습니까?',
+  ROOM_DELETED: '연습실 예약을 삭제했습니다.',
+  ROOM_LIST_TITLE: '다가오는 연습실 예약(30일)',
+  ROOM_LIST_EMPTY: '다가오는 연습실 예약이 없습니다.',
   /** 칩·블록 aria "{유형} {제목}, {M월 D일} {HH:mm}–{HH:mm}"(제안), 취소면 앞에 "취소된 일정, "(designer §14.5) */
   EVENT_ARIA: (
     typeLabel: string,

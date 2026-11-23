@@ -1,9 +1,12 @@
 // ----------------------------------------------------------------------
 // 목 가격 등급(develop §11.10) — 가격 1원 이상(0원 등급 없음 — 사용자 결정) · LINK_ONLY 만 토큰 ·
 // 쓰인 등급 삭제 409 TIER_002 · PUBLIC 재발급 409 TIER_003 · 없는 등급 404 TIER_001.
+// (U41) GET·PUT …/inviter-prices — 역할 등급(BASE '기본가' · SAM_RELATED 'SAM 관계자가')을 만들거나 고친다.
+//   같은 이름의 역할 없는 PUBLIC 등급이 있으면 그 등급을 역할 등급으로 삼는다(서버와 같음).
 // ----------------------------------------------------------------------
 import {
   findPerformanceAlive,
+  inviterPricesOf,
   newTierToken,
   toAdminPriceTier,
 } from '@/src/_mock/backend/booking-model';
@@ -19,7 +22,57 @@ import {
   type MockRoute,
 } from '@/src/_mock/backend/mock-http';
 import { getStore, type MockPriceTier } from '@/src/_mock/backend/mock-store';
-import type { PriceTierVisibility } from '@/src/types/booking';
+import type { PriceTierRole, PriceTierVisibility } from '@/src/types/booking';
+
+const ROLE_NAMES: Record<PriceTierRole, string> = {
+  BASE: '기본가',
+  SAM_RELATED: 'SAM 관계자가',
+};
+
+function isPrice(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 1_000_000
+  );
+}
+
+/** 역할 등급 하나를 만들거나 고친다 */
+function upsertRoleTier(
+  performanceId: string,
+  role: PriceTierRole,
+  price: number,
+  sortOrder: number
+) {
+  const store = getStore();
+  const siblings = store.priceTiers.filter(
+    (t) => t.performanceId === performanceId
+  );
+  const target =
+    siblings.find((t) => t.role === role) ??
+    siblings.find(
+      (t) => !t.role && t.name === ROLE_NAMES[role] && t.visibility === 'PUBLIC'
+    );
+  if (target) {
+    target.role = role;
+    target.price = price;
+    target.isActive = true;
+    return;
+  }
+  store.priceTiers.push({
+    id: newId(),
+    performanceId,
+    name: ROLE_NAMES[role],
+    price,
+    visibility: 'PUBLIC',
+    linkToken: null,
+    sortOrder,
+    isActive: true,
+    createdAt: nowIso(),
+    role,
+  });
+}
 
 const VISIBILITIES: PriceTierVisibility[] = ['PUBLIC', 'LINK_ONLY'];
 
@@ -82,6 +135,32 @@ function byOrder(a: MockPriceTier, b: MockPriceTier) {
 }
 
 export const priceTierRoutes: MockRoute[] = [
+  {
+    method: 'GET',
+    pattern: /^\/v1\/admin\/performances\/(?<id>[^/]+)\/inviter-prices$/,
+    auth: true,
+    handle: (ctx) => {
+      if (!findPerformanceAlive(ctx.params.id))
+        return apiError(ctx, 404, 'PERF_001', '작품 정보를 찾을 수 없습니다.');
+      return json(inviterPricesOf(ctx.params.id));
+    },
+  },
+  {
+    method: 'PUT',
+    pattern: /^\/v1\/admin\/performances\/(?<id>[^/]+)\/inviter-prices$/,
+    auth: true,
+    handle: (ctx) => {
+      const performanceId = ctx.params.id;
+      if (!findPerformanceAlive(performanceId))
+        return apiError(ctx, 404, 'PERF_001', '작품 정보를 찾을 수 없습니다.');
+      const { base, samRelated } = ctx.body;
+      if (!isPrice(base) || !isPrice(samRelated))
+        return validationError(ctx, '가격은 1~1000000원 사이여야 합니다.');
+      upsertRoleTier(performanceId, 'BASE', base, 0);
+      upsertRoleTier(performanceId, 'SAM_RELATED', samRelated, 1);
+      return json(inviterPricesOf(performanceId));
+    },
+  },
   {
     method: 'GET',
     pattern: /^\/v1\/admin\/performances\/(?<id>[^/]+)\/price-tiers$/,

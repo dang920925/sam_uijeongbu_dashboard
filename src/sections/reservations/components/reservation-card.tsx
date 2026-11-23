@@ -65,7 +65,9 @@ export function ReservationCard({
         ) : null}
         <Meta>{`${MSG_D12.ADMISSION} ${row.admissionText}`}</Meta>
         {row.inviterText !== MSG_COMMON.EMPTY_VALUE ? (
-          <Meta>{`${MSG_D12.INVITER} ${row.inviterText}`}</Meta>
+          <Meta>
+            {`${MSG_D12.INVITER} ${row.inviterText}${row.appliedPriceText ? ` · ${row.appliedPriceText}` : ''}`}
+          </Meta>
         ) : null}
       </div>
       <ReservationStatusCell row={row} />

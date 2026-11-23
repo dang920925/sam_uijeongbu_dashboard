@@ -42,6 +42,8 @@ function itemRes(
     memo: null,
     version: 1,
     seats: [],
+    inviter: null,
+    appliedPrice: null,
     ...overrides,
   };
 }

@@ -68,8 +68,9 @@ export const MSG_D11 = {
     maxTicketsPerBooking: '1인 최대 매수',
     depositDeadlineHours: '입금 기한',
     refundPolicyText: '취소·환불 규정',
-    /** develop §11.10 publicTier(사용 중 PUBLIC 등급 없음) — design §6.1b(제안) */
-    publicTier: '누구나 고를 수 있는 가격 등급',
+    /** U41 develop §22 — 가격 두 개(design §17 제안) */
+    basePrice: '기본가',
+    samRelatedPrice: 'SAM 관계자가',
     /** U35 — 좌석 지정 공연인데 회차 좌석 배치 없음(develop §19.2 missingFields seatMap) */
     seatMap: '좌석 배치',
     totalSeats: '좌석 수',
@@ -217,6 +218,18 @@ export const MSG_D11 = {
   /** 필수 — D09 "이름을 입력해주세요" · D08 패턴(자체 결정) */
   TIER_NAME_REQUIRED: '이름을 입력해주세요',
   TIER_PRICE_REQUIRED: '가격을 입력해주세요',
+
+  /** U41 가격 카드(design §17 SCR-D11 — "가격"·"기본가"·"SAM 관계자가" 제안) */
+  PRICE_TITLE: '가격',
+  PRICE_SUBTITLE:
+    '초대한 사람에 따라 1매 가격이 정해집니다. 두 가격이 모두 있어야 예매가 열립니다.',
+  PRICE_BASE: '기본가',
+  PRICE_BASE_HELP: '이 작품 배우 · 연출·스태프 관계자가 초대한 예매',
+  PRICE_SAM: 'SAM 관계자가',
+  PRICE_SAM_HELP: 'SAM 관계자 예매(확인 체크를 받습니다)',
+  PRICE_REQUIRED: '가격을 입력해주세요',
+  PRICE_RANGE: '1원부터 1,000,000원까지 입력해주세요',
+  PRICE_SAVED_NOTE: '가격을 바꿔도 이미 접수된 예매 금액은 그대로입니다.',
 
   /** 단원 고르기 다이얼로그 — designer 미작성(§13.11 5 "그리지 않음"), 자체 결정 문구 */
   MEMBER: '단원',

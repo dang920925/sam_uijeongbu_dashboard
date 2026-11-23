@@ -24,6 +24,8 @@ import { ScheduleDetailPopover } from '@/src/sections/schedules/components/sched
 import { ScheduleFormDialog } from '@/src/sections/schedules/components/schedule-form-dialog';
 import { ScheduleMorePopover } from '@/src/sections/schedules/components/schedule-more-popover';
 import { ScheduleToolbar } from '@/src/sections/schedules/components/schedule-toolbar';
+import { RoomReservationDetailDialog } from '@/src/sections/schedules/components/room-reservation-detail-dialog';
+import { ScheduleRoomList } from '@/src/sections/schedules/components/schedule-room-list';
 import type { SchedulesViewModel } from '@/src/sections/schedules/view/use-schedules-view-model';
 import { MSG_COMMON } from '@/src/shared/messages/common';
 import { MSG_D08 } from '@/src/shared/messages/d08';
@@ -63,6 +65,8 @@ export function SchedulesView({ vm, body }: SchedulesViewProps) {
             onPrev={calendar.onPrev}
             onNext={calendar.onNext}
             onViewChange={vm.onViewChange}
+            showRooms={vm.showRooms}
+            onToggleRooms={vm.onToggleRooms}
           />
           <SegmentPill
             ariaLabel={MSG_D08.COL_TYPE}
@@ -79,6 +83,12 @@ export function SchedulesView({ vm, body }: SchedulesViewProps) {
           }}
         >
           <Card sx={{ overflow: 'hidden' }}>{body}</Card>
+          {vm.roomListEvents ? (
+            <ScheduleRoomList
+              events={vm.roomListEvents}
+              onOpenEvent={vm.onOpenDetail}
+            />
+          ) : null}
           {calendar.view === 'list' ? (
             <Pagination
               page={vm.page}
@@ -125,6 +135,20 @@ export function SchedulesView({ vm, body }: SchedulesViewProps) {
         onCancel={vm.onCancelDelete}
       />
       <ScheduleCancelDialog state={cancel} />
+      <RoomReservationDetailDialog
+        event={vm.roomDetail}
+        isDeleting={vm.isRoomDeleting}
+        onDelete={vm.onRoomDelete}
+        onClose={vm.onCloseRoomDetail}
+      />
+      <ConfirmDialog
+        open={vm.isRoomDeleteOpen}
+        message={MSG_D08.ROOM_DELETE_CONFIRM}
+        confirmLabel={MSG_D08.ROOM_DELETE}
+        isLoading={vm.isRoomDeleting}
+        onConfirm={vm.onConfirmRoomDelete}
+        onCancel={vm.onCancelRoomDelete}
+      />
       <ConfirmDialog
         open={cancel.isRestoreOpen}
         message={MSG_D08.CONFIRM_RESTORE}

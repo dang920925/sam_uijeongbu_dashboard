@@ -74,8 +74,12 @@ export function useSetTeamAccountActive() {
   });
 }
 
-export function useAdminRoomReservations(range: { from: string; to: string }) {
+export function useAdminRoomReservations(
+  range: { from: string; to: string },
+  enabled = true
+) {
   return useQuery({
+    enabled,
     queryKey: roomReservationKeys.range(range.from, range.to),
     queryFn: () => fetchAdminRoomReservations(range),
   });

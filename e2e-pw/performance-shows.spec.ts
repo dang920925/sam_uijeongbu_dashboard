@@ -106,19 +106,19 @@ const FULL_POLICY = {
   refundPolicyText: `${PREFIX}환불 규정`,
 };
 
-async function createTier(
+/** (U41) 기본가·SAM 관계자가 저장 — 역할 등급 2개(기본가 15,000 · SAM 10,000) */
+async function putPrices(
   request: APIRequestContext,
-  performanceId: string,
-  name: string,
-  visibility: 'PUBLIC' | 'LINK_ONLY' = 'PUBLIC',
-  price = 15000
+  performanceId: string
 ): Promise<Tier> {
-  return adminApi<Tier>(
+  await adminApi(
     request,
-    'POST',
-    `/admin/performances/${performanceId}/price-tiers`,
-    { name: `${PREFIX}${name}`, price, visibility }
+    'PUT',
+    `/admin/performances/${performanceId}/inviter-prices`,
+    { base: 15000, samRelated: 10000 }
   );
+  const tiers = await listTiers(request, performanceId);
+  return tiers.find((t) => t.name === '기본가') as Tier;
 }
 
 async function listTiers(
@@ -145,13 +145,6 @@ async function reserve(
     bookerName: `${PREFIX}예매자`,
     bookerPhone: '010-0000-0000',
   });
-}
-
-/** 등급 줄(표 행 / 카드) */
-function tierEntryOf(page: Page, isMobile: boolean, name: string) {
-  return (isMobile ? page.getByRole('listitem') : page.getByRole('row'))
-    .filter({ hasText: `${PREFIX}${name}` })
-    .filter({ visible: true });
 }
 
 /** 표(desktop)·카드(mobile) 중 보이는 쪽에서 해당 회차 줄 */
@@ -215,7 +208,7 @@ test.describe('SCR-D11 회차·예매 설정', () => {
     const perf = await createPerformance(request, `${PREFIX}설정 저장`);
     const date = kstDate(30);
     await createShow(request, perf.id, readyShow(date, '14:00'));
-    await createTier(request, perf.id, '일반');
+    await putPrices(request, perf.id);
     await gotoShows(page, perf.id);
     const notice = noticeOf(page);
     await expect(notice).toHaveAttribute('data-tone', 'warning');
@@ -227,7 +220,10 @@ test.describe('SCR-D11 회차·예매 설정', () => {
     await page.getByLabel('1인 최대 매수').fill('21');
     await page.getByLabel('입금 기한 (시간)').fill('24');
     await page.getByRole('button', { name: '기본 문구 넣기' }).click();
-    await page.getByRole('button', { name: '저장', exact: true }).click();
+    await page
+      .getByRole('button', { name: '저장', exact: true })
+      .first()
+      .click();
     // Assert — 저장하지 않고 칸 아래 문구
     await expect(page.getByText('입력값을 확인해주세요.')).toHaveCount(3);
     await expect(notice).toHaveAttribute('data-tone', 'warning');
@@ -235,7 +231,10 @@ test.describe('SCR-D11 회차·예매 설정', () => {
     await page.getByLabel('계좌번호').fill(FAKE_ACCOUNT);
     await page.getByLabel('1인 최대 매수').fill('4');
     await page.getByLabel('문의처').fill('https://fixture.example/chat');
-    await page.getByRole('button', { name: '저장', exact: true }).click();
+    await page
+      .getByRole('button', { name: '저장', exact: true })
+      .first()
+      .click();
     // Assert
     await expect(page.getByText('저장되었습니다')).toBeVisible();
     await expect(notice).toHaveAttribute('data-tone', 'info');
@@ -261,7 +260,7 @@ test.describe('SCR-D11 회차·예매 설정', () => {
     // Arrange
     const perf = await createPerformance(request, `${PREFIX}회차 추가`);
     await putPolicy(request, perf.id, FULL_POLICY);
-    await createTier(request, perf.id, '일반');
+    await putPrices(request, perf.id);
     const date = kstDate(40);
     await gotoShows(page, perf.id);
     // Act — 빈 값 제출
@@ -328,7 +327,7 @@ test.describe('SCR-D11 회차·예매 설정', () => {
     const date = kstDate(50);
     const booked = await createShow(request, perf.id, readyShow(date, '14:00'));
     await createShow(request, perf.id, readyShow(date, '18:00'));
-    const tier = await createTier(request, perf.id, '일반');
+    const tier = await putPrices(request, perf.id);
     await reserve(request, booked.id, tier.id, 4);
     await gotoShows(page, perf.id);
     const bookedEntry = entryOf(page, isMobile, date, '14:00');
@@ -385,7 +384,7 @@ test.describe('SCR-D11 회차·예매 설정', () => {
     await putPolicy(request, perf.id, FULL_POLICY);
     const date = kstDate(60);
     const show = await createShow(request, perf.id, readyShow(date, '19:30'));
-    await createTier(request, perf.id, '일반');
+    await putPrices(request, perf.id);
     await gotoShows(page, perf.id);
     const entry = entryOf(page, isMobile, date, '19:30');
     await expect(entry).toContainText('열림');
@@ -408,184 +407,6 @@ test.describe('SCR-D11 회차·예매 설정', () => {
     // Assert
     await expect(entry).toContainText('열림');
     await expect(toggle).not.toBeChecked();
-  });
-
-  test('가격 등급을 추가하면(0원은 막음) 누구나 등급 경고가 사라지고, 순서·사용 스위치를 바로 저장한다', async ({
-    page,
-    request,
-    isMobile,
-  }) => {
-    // Arrange — 회차·설정은 다 채웠고 등급만 없다
-    const perf = await createPerformance(request, `${PREFIX}등급 추가`);
-    await putPolicy(request, perf.id, FULL_POLICY);
-    await createShow(request, perf.id, readyShow(kstDate(45), '15:00'));
-    await gotoShows(page, perf.id);
-    await expect(noticeOf(page)).toHaveText(
-      '예매를 열려면 다음 항목을 채워주세요: 누구나 고를 수 있는 가격 등급'
-    );
-    await expect(page.getByText('등록된 가격 등급이 없습니다')).toBeVisible();
-    // Act — 0원 등급
-    await page.getByRole('button', { name: '가격 등급 추가' }).click();
-    const dialog = page.getByRole('dialog', { name: '가격 등급 추가' });
-    await dialog.getByLabel(/^이름/).fill(`${PREFIX}일반`);
-    await dialog.getByLabel(/^가격/).fill('0');
-    await dialog.getByRole('button', { name: '추가' }).click();
-    // Assert
-    await expect(dialog.getByText('입력값을 확인해주세요.')).toBeVisible();
-    // Act — 1원
-    await dialog.getByLabel(/^가격/).fill('1');
-    await dialog.getByRole('button', { name: '추가' }).click();
-    // Assert
-    await expect(dialog).toBeHidden();
-    const general = tierEntryOf(page, isMobile, '일반');
-    await expect(general).toContainText('1원');
-    await expect(general).toContainText('누구나');
-    await expect(noticeOf(page)).toHaveAttribute('data-tone', 'info');
-
-    // Act — 링크 전용 등급 추가
-    await page.getByRole('button', { name: '가격 등급 추가' }).click();
-    const second = page.getByRole('dialog', { name: '가격 등급 추가' });
-    await second.getByLabel(/^이름/).fill(`${PREFIX}스태프`);
-    await second.getByLabel(/^가격/).fill('10000');
-    await second.getByRole('radio', { name: '링크로 들어온 사람만' }).check();
-    await second.getByRole('button', { name: '추가' }).click();
-    // Assert
-    await expect(second).toBeHidden();
-    const staff = tierEntryOf(page, isMobile, '스태프');
-    await expect(staff).toContainText('링크 전용');
-    await expect(staff).toContainText('10,000원');
-
-    // Act — 순서: 스태프를 위로
-    await staff
-      .getByRole('button', { name: `위로 이동 — ${PREFIX}스태프` })
-      .click();
-    // Assert
-    await expect
-      .poll(async () => (await listTiers(request, perf.id))[0]?.name)
-      .toBe(`${PREFIX}스태프`);
-    // Act — 사용 끄기
-    await staff.getByRole('switch', { name: `사용 — ${PREFIX}스태프` }).click();
-    // Assert
-    await expect
-      .poll(
-        async () =>
-          (await listTiers(request, perf.id)).find(
-            (t) => t.name === `${PREFIX}스태프`
-          )?.isActive
-      )
-      .toBe(false);
-  });
-
-  test('링크 전용 등급만 있으면 링크 안내를 보이고, 등급 링크·단원 초대 링크를 복사하고 재발급한다', async ({
-    page,
-    request,
-    isMobile,
-  }) => {
-    // Arrange
-    const perf = await createPerformance(request, `${PREFIX}등급 링크`);
-    await putPolicy(request, perf.id, FULL_POLICY);
-    await createShow(request, perf.id, readyShow(kstDate(55), '16:00'));
-    const tier = await createTier(request, perf.id, '스태프', 'LINK_ONLY');
-    const member = await adminApi<{ id: string }>(
-      request,
-      'POST',
-      '/admin/members',
-      { name: `${PREFIX}단원`, type: 'GENERAL', phone: null }
-    );
-    await gotoShows(page, perf.id);
-    const origin = new URL(page.url()).origin;
-    const linkBase = `${origin}/api/backend/v1/__mock/client/works/${perf.id}/book?tier=`;
-    const readClipboard = () =>
-      page.evaluate(() => navigator.clipboard.readText());
-    // Assert — 링크 전용만 → 안내(info)
-    await expect(noticeOf(page)).toHaveText(
-      '링크로 들어온 사람만 예매할 수 있습니다.'
-    );
-    const entry = tierEntryOf(page, isMobile, '스태프');
-    // Act — 등급 링크 복사
-    await entry
-      .getByRole('button', { name: `링크 복사 — ${PREFIX}스태프` })
-      .click();
-    await page.getByRole('menuitem', { name: '등급 링크 복사' }).click();
-    // Assert
-    await expect(page.getByText('복사되었습니다').first()).toBeVisible();
-    expect(await readClipboard()).toBe(`${linkBase}${tier.linkToken}`);
-
-    // Act — 등급 링크 + 단원 초대 링크(코드 없는 단원 → 발급)
-    await entry
-      .getByRole('button', { name: `링크 복사 — ${PREFIX}스태프` })
-      .click();
-    await page
-      .getByRole('menuitem', { name: /등급 링크 \+ 단원 초대 링크/ })
-      .click();
-    const pick = page.getByRole('dialog', {
-      name: `등급 링크 + 단원 초대 링크 — ${PREFIX}스태프`,
-    });
-    await pick.getByRole('combobox').fill(`${PREFIX}단`);
-    await page.getByRole('option', { name: `${PREFIX}단원` }).click();
-    await pick.getByRole('button', { name: '복사' }).click();
-    // Assert
-    await expect(pick).toBeHidden();
-    const codes = await adminApi<{
-      items: { memberId: string; inviteCode: string | null }[];
-    }>(request, 'GET', '/admin/members/invite-codes');
-    const code = codes.items.find((m) => m.memberId === member.id)?.inviteCode;
-    expect(code).toBeTruthy();
-    expect(await readClipboard()).toBe(
-      `${linkBase}${tier.linkToken}&ref=${code}`
-    );
-
-    // Act — 재발급
-    await entry
-      .getByRole('button', { name: `링크 재발급 — ${PREFIX}스태프` })
-      .click();
-    const confirm = page.getByRole('alertdialog');
-    await expect(confirm).toContainText(
-      '이전 링크는 더 이상 쓸 수 없습니다. 재발급하시겠습니까?'
-    );
-    await expect(confirm).toContainText(`${PREFIX}스태프 등급 링크`);
-    await confirm.getByRole('button', { name: '재발급' }).click();
-    // Assert
-    await expect(confirm).toBeHidden();
-    await expect
-      .poll(async () => (await listTiers(request, perf.id))[0]?.linkToken)
-      .not.toBe(tier.linkToken);
-  });
-
-  test('예매에 쓰인 등급은 삭제할 수 없고, 안 쓰인 등급은 확인 후 삭제된다', async ({
-    page,
-    request,
-    isMobile,
-  }) => {
-    // Arrange
-    const perf = await createPerformance(request, `${PREFIX}등급 삭제`);
-    await putPolicy(request, perf.id, FULL_POLICY);
-    const show = await createShow(
-      request,
-      perf.id,
-      readyShow(kstDate(65), '17:00')
-    );
-    const used = await createTier(request, perf.id, '일반');
-    await createTier(request, perf.id, '학생', 'PUBLIC', 10000);
-    await reserve(request, show.id, used.id, 2);
-    await gotoShows(page, perf.id);
-    // Assert — 쓰인 등급
-    const usedEntry = tierEntryOf(page, isMobile, '일반');
-    await expect(usedEntry).toContainText('2매');
-    await expect(
-      usedEntry.getByRole('button', { name: `삭제 — ${PREFIX}일반` })
-    ).toBeDisabled();
-    // Act — 안 쓰인 등급 삭제
-    const freeEntry = tierEntryOf(page, isMobile, '학생');
-    await freeEntry
-      .getByRole('button', { name: `삭제 — ${PREFIX}학생` })
-      .click();
-    const confirm = page.getByRole('alertdialog');
-    await expect(confirm).toContainText('가격 등급을 삭제하시겠습니까?');
-    await confirm.getByRole('button', { name: '삭제' }).click();
-    // Assert
-    await expect(freeEntry).toHaveCount(0);
-    await expect(usedEntry).toBeVisible();
   });
 
   test('탭으로 기본 정보 ↔ 회차·예매를 오가고, 없는 공연은 상태 카드를 보인다', async ({

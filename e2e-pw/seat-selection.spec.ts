@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------
 // U35 좌석 지정 · U36 초대자(develop §19 SE-1·SE-5·SE-7 · §20 IV-2·IV-5 · design §14·§15) — 목 백엔드.
-// D11 스위치·배치 편집기·복사 · D12 좌석 열·좌석 변경·현황 지도·수동 등록(좌석·임원·스태프)·집계 묶음 ·
+// D11 스위치·배치 편집기·복사 · D12 좌석 열·좌석 변경·현황 지도·수동 등록(좌석·연출/스태프 관계자)·집계 묶음 ·
 // D13 입장 체크·인쇄 명단 좌석 · D05 초대자 목록 스위치. 픽스처 접두사 fixture-seat-.
 // ----------------------------------------------------------------------
 import {
@@ -291,7 +291,7 @@ test.describe('U35·U36 좌석 지정 — 대시보드', () => {
     ).toHaveValue(`${PREFIX}지정`);
   });
 
-  test('D12 수동 등록 — 좌석을 고르고(선택) 임원·스태프 및 관계자로 등록하면 좌석·초대가 보이고 집계에 묶인다(IV-2)', async ({
+  test('D12 수동 등록 — 좌석을 고르고(선택) 연출·스태프 관계자로 등록하면 좌석·초대가 보이고 집계에 묶인다(IV-2)', async ({
     page,
     request,
   }) => {
@@ -310,12 +310,13 @@ test.describe('U35·U36 좌석 지정 — 대시보드', () => {
     await expect(dialog.getByTestId('manual-seat-picked')).toContainText(
       'A2 (1/1석)'
     );
-    // 초대 — 맨 위 임원·스태프 및 관계자
-    await dialog.getByRole('combobox', { name: '초대 단원' }).click();
+    // 초대한 사람(U41) — 맨 위 SAM 관계자 · 연출·스태프 관계자 … 맨 아래 선택 안 함
+    await dialog.getByRole('combobox', { name: '초대한 사람' }).click();
     const options = page.getByRole('option');
-    await expect(options.first()).toHaveText('임원·스태프 및 관계자');
-    await expect(options.last()).toHaveText('없음/모름');
-    await options.first().click();
+    await expect(options.first()).toHaveText('SAM 관계자');
+    await expect(options.nth(1)).toHaveText('연출·스태프 관계자');
+    await expect(options.last()).toHaveText('선택 안 함');
+    await options.nth(1).click();
     await dialog.getByRole('button', { name: '등록', exact: true }).click();
     // Assert
     await expect(page.getByText(/예매를 등록했습니다\./)).toBeVisible();
@@ -324,11 +325,11 @@ test.describe('U35·U36 좌석 지정 — 대시보드', () => {
       .filter({ visible: true })
       .filter({ hasText: `${PREFIX}현장` });
     await expect(created).toContainText('A2');
-    await expect(created).toContainText('임원·스태프 및 관계자');
+    await expect(created).toContainText('연출·스태프 관계자');
     await page.getByRole('tab', { name: '집계' }).click();
     await expect(
-      page.getByRole('region', { name: '단원별 초대' })
-    ).toContainText('임원·스태프 및 관계자');
+      page.getByRole('region', { name: '초대한 사람별' })
+    ).toContainText('연출·스태프 관계자');
   });
 
   test('SE-7 D13 입장 체크·인쇄 명단에 좌석 번호, 좌석 없는 예매는 "좌석 미정"', async ({

@@ -21,6 +21,7 @@ import { Pagination } from '@/src/components/pagination';
 import { ReservationDetailDrawer } from '@/src/components/reservation-detail-drawer';
 import { SectionStack } from '@/src/components/section-stack';
 import { Typo } from '@/src/components/typo';
+import { DepositNotificationsContainer } from '@/src/sections/deposit-notifications/view/deposit-notifications-container';
 import { InviteLinkTab } from '@/src/sections/reservations/components/invite-link-tab';
 import { PerformanceSelect } from '@/src/sections/reservations/components/performance-select';
 import { ReservationActionButtons } from '@/src/sections/reservations/components/reservation-action-buttons';
@@ -40,6 +41,7 @@ import type {
   ReservationsViewModel,
 } from '@/src/sections/reservations/view/use-reservations-view-model';
 import { MSG_D12 } from '@/src/shared/messages/d12';
+import { MSG_DEP } from '@/src/shared/messages/deposit-notifications';
 
 interface ReservationsViewProps {
   vm: ReservationsViewModel;
@@ -127,6 +129,7 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
               <Tab value='list' label={MSG_D12.TAB_LIST} />
               <Tab value='summary' label={MSG_D12.TAB_SUMMARY} />
               <Tab value='invite' label={MSG_D12.TAB_INVITE} />
+              <Tab value='deposits' label={MSG_DEP.TAB} />
             </Tabs>
             {vm.tab === 'list' ? (
               <Card>
@@ -147,6 +150,9 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
                     onStatusChange={vm.onStatusChange}
                     onToggleOverdue={vm.onToggleOverdue}
                     onSearchChange={vm.onSearchChange}
+                    inviterFilter={vm.inviterFilter}
+                    inviterOptions={vm.inviterOptions}
+                    onInviterFilterChange={vm.onInviterFilterChange}
                   />
                 </Box>
                 {vm.countText ? (
@@ -183,6 +189,7 @@ export function ReservationsView({ vm, gate, list }: ReservationsViewProps) {
               />
             ) : null}
             {vm.tab === 'invite' ? <InviteLinkTab invite={invite} /> : null}
+            {vm.tab === 'deposits' ? <DepositNotificationsContainer /> : null}
           </>
         )}
       </SectionStack>

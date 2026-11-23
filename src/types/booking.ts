@@ -91,6 +91,23 @@ export interface AdminPriceTierResponse {
   isActive: boolean;
   /** PENDING·CONFIRMED 매수 */
   usedQty: number;
+  /** (U41) 가격 역할 — BASE 기본가 · SAM_RELATED SAM 관계자가 · null 예전 등급(화면에서 숨김) */
+  role: PriceTierRole | null;
+}
+
+/** (U41 develop §22) 가격 역할 */
+export type PriceTierRole = 'BASE' | 'SAM_RELATED';
+
+/** `GET·PUT /admin/performances/{id}/inviter-prices` — 없으면 null(둘 중 하나라도 없으면 예매 NOT_READY) */
+export interface InviterPricesResponse {
+  base: number | null;
+  samRelated: number | null;
+}
+
+/** 둘 다 1원 이상 */
+export interface InviterPricesRequest {
+  base: number;
+  samRelated: number;
 }
 
 export interface PriceTierCreateRequest {
@@ -135,8 +152,21 @@ export interface ReservationCustomLineRequest {
 // ─── 좌석(U35 — develop §19 · back-end §16) ────────────────────────
 export type SeatKind = 'SEAT' | 'AISLE' | 'VOID';
 
-/** 초대 구분(U36) — null = 기존 예매·초대 없음 */
-export type InviterCategory = 'MEMBER' | 'STAFF_RELATED';
+/** 초대한 사람 구분(U41) — 배우 · 연출·스태프 관계자 · SAM 관계자. null = 기존 예매·초대 없음 */
+export type InviterCategory = 'MEMBER' | 'STAFF_RELATED' | 'SAM_RELATED';
+
+/** 관리 예매·입장 명단의 초대한 사람(U41) */
+export interface ReservationInviterResponse {
+  kind: InviterCategory;
+  memberId: string | null;
+  memberName: string | null;
+}
+
+/** 수동 등록의 초대한 사람(공개 예매와 같은 모양 — 관리자는 모든 배우 단원) */
+export type ReservationInviterRequest =
+  | { kind: 'MEMBER'; memberId: string }
+  | { kind: 'STAFF_RELATED' }
+  | { kind: 'SAM_RELATED' };
 
 /** 예매 좌석 — 좌석 지정이 꺼졌거나 좌석 미정이면 [] */
 export interface ReservationSeatResponse {
@@ -200,6 +230,9 @@ export interface ReservationListQuery {
   showId?: string;
   status?: ReservationStatus;
   deadlinePassed?: boolean;
+  /** U41 §22.1 — 초대한 사람 구분 · 초대한 배우 단원 id */
+  inviterKind?: InviterCategory;
+  inviterMemberId?: string;
   /** 이름 포함 · 연락처 숫자 포함 · code 일치 */
   q?: string;
   page?: number;
@@ -230,9 +263,12 @@ export interface AdminReservationItemResponse {
   /** 관리자 등록이면 null 가능 */
   bookerPhone: string | null;
   depositorName: string | null;
-  inviter: { memberId: string; name: string } | null;
+  /** U41 — 초대한 사람(구분 없는 옛 예매는 단원이 있으면 MEMBER, 없으면 null) */
+  inviter: ReservationInviterResponse | null;
+  /** U41 — 적용 가격(1매 단가, 줄이 1개일 때만 — 여러 줄·직접 입력은 null) */
+  appliedPrice: number | null;
   inviterNote: string | null;
-  /** U36 — MEMBER · STAFF_RELATED · null(기존·초대 없음) */
+  /** U41 — MEMBER · STAFF_RELATED · SAM_RELATED · null(기존·초대 없음) */
   inviterCategory: InviterCategory | null;
   /** U35 — 좌석(좌석 미정·꺼짐이면 []) */
   seats: ReservationSeatResponse[];
@@ -266,9 +302,8 @@ export interface ManualReservationRequest {
   status: 'PENDING' | 'CONFIRMED';
   /** ≤500 */
   memo?: string | null;
-  inviterMemberId?: string | null;
-  /** U36 — STAFF_RELATED 면 inviterMemberId 없이 */
-  inviterCategory?: InviterCategory | null;
+  /** U41 — 초대한 사람(관리자는 모든 배우 단원) */
+  inviter?: ReservationInviterRequest | null;
   /** U35 — 선택(비우면 좌석 미정, J-104). 보내면 개수 = 합계 매수 */
   seatIds?: string[];
   /** 0~매수, CONFIRMED 일 때만 */
@@ -331,7 +366,11 @@ export interface ReservationSummaryTierRow extends ReservationSummaryTierQty {
   confirmedAmount: number;
 }
 
+/** 집계 초대 묶음 종류(U41) — 옛 예매(직접 입력·초대 없음)는 LEGACY */
+export type SummaryInviterKind = InviterCategory | 'LEGACY';
+
 export interface ReservationSummaryInviterRow {
+  kind: SummaryInviterKind;
   memberId: string | null;
   /** null = 초대 없음(memberId 도 null) — inviterNote 는 '직접 입력' 한 묶음 */
   name: string | null;
@@ -395,6 +434,9 @@ export interface AdmissionItemResponse {
   version: number;
   /** U35 — 좌석(좌석 미정·꺼짐이면 []) */
   seats: ReservationSeatResponse[];
+  /** U41 — 초대한 사람 · 적용 가격 */
+  inviter: ReservationInviterResponse | null;
+  appliedPrice: number | null;
 }
 
 export interface AdmissionSummaryResponse {

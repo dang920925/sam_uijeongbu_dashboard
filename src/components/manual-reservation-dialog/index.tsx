@@ -7,7 +7,7 @@
 // "금액 직접 정하기"(0원 허용) · 상태 "입금 대기 / 확정" · 초대 단원(선택) · 메모 · (확정이면) 입장 인원.
 // 남은 좌석보다 많으면 저장 불가. D13 은 입장 인원을 상태 바로 아래에 둔다(designer §13.11 남은 확인 6).
 // U35: seatPicker 를 주면(좌석 지정 공연) 매수 아래 "좌석(선택)" — 고르면 매수만큼, 비우면 좌석 미정(J-104).
-// U36: 초대 선택지 맨 위 "임원·스태프 및 관계자"(INVITER_STAFF_VALUE).
+// U41: 초대한 사람 선택지 맨 위 "SAM 관계자"(INVITER_SAM_VALUE) · "연출·스태프 관계자"(INVITER_STAFF_VALUE) · 배우 · 선택 안 함.
 // props 계약은 리드가 고정(W3·W4 가 같은 props 로 쓴다). 검증은 validate-manual-reservation.ts(+spec).
 // ----------------------------------------------------------------------
 import Button from '@mui/material/Button';
@@ -19,6 +19,7 @@ import { useId, useState } from 'react';
 
 import {
   formatWon,
+  INVITER_SAM_VALUE,
   INVITER_STAFF_VALUE,
   previewLinesAmount,
   type ManualReservationFormInput,
@@ -498,6 +499,9 @@ function ManualReservationDialogBody({
               },
             }}
           >
+            <MenuItem value={INVITER_SAM_VALUE}>
+              {MSG_SEAT.INVITER_SAM}
+            </MenuItem>
             <MenuItem value={INVITER_STAFF_VALUE}>
               {MSG_SEAT.INVITER_STAFF}
             </MenuItem>
@@ -506,7 +510,7 @@ function ManualReservationDialogBody({
                 {option.name}
               </MenuItem>
             ))}
-            <MenuItem value=''>{MSG_SEAT.INVITER_NONE}</MenuItem>
+            <MenuItem value=''>{MSG_D12.MANUAL_INVITER_NONE}</MenuItem>
           </TextField>
         </FormField>
       ) : null}

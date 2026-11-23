@@ -72,6 +72,14 @@ export function AdmissionTable({ rows, handlers }: AdmissionTableProps) {
                       {row.phoneText}
                     </Typo.Badge.Regular>
                   ) : null}
+                  {row.inviterText ? (
+                    <Typo.Badge.Regular
+                      color={metaColor}
+                      data-testid='admission-inviter'
+                    >
+                      {row.inviterText}
+                    </Typo.Badge.Regular>
+                  ) : null}
                 </div>
               </TableCell>
               <TableCell>

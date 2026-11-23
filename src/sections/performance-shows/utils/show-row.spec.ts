@@ -64,7 +64,7 @@ describe('show-row', () => {
         'totalSeats',
         'bookingOpenAt',
         'depositBank',
-        'publicTier',
+        'basePrice',
       ],
     });
     expect(notReady).toMatchObject({
