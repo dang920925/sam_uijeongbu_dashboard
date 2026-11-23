@@ -44,7 +44,12 @@ describe('prepareImageForUpload', () => {
     // Act
     const prepared = await prepareImageForUpload('POPUP', file);
     // Assert
-    expect(prepared).toEqual({ file, originalSize: null });
+    expect(prepared).toEqual({
+      file,
+      originalSize: null,
+      width: null,
+      height: null,
+    });
   });
 
   it('열 수 없는 HEIC(확장자만 있어도)·한도 초과 원본은 ImageDecodeError 를 던진다', async () => {

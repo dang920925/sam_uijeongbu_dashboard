@@ -23,6 +23,26 @@ const role = (id: string, name: string | null, ids: string[]): AdminRole => ({
   defaultCast: ids.map((m) => actor(m, m !== 'hidden')),
 });
 
+const NO_DISPLAY = { size: null, crop: null };
+const group = (id: string, sortOrder: number) => ({
+  id,
+  imageUrl: `https://x/${id}.jpg`,
+  sortOrder,
+  display: NO_DISPLAY,
+  ratio: null,
+});
+const team = (
+  teamAccountId: string,
+  label: string,
+  photoUrl: string | null
+) => ({
+  teamAccountId,
+  label,
+  photoUrl,
+  display: NO_DISPLAY,
+  ratio: null,
+});
+
 function input(over: Partial<CastPhotoBoardInput> = {}): CastPhotoBoardInput {
   return {
     roles: [
@@ -32,16 +52,17 @@ function input(over: Partial<CastPhotoBoardInput> = {}): CastPhotoBoardInput {
     ],
     photos: {
       castPublic: true,
-      groupPhotos: [
-        { id: 'g1', imageUrl: 'https://x/g1.jpg', sortOrder: 0 },
-        { id: 'g2', imageUrl: 'https://x/g2.jpg', sortOrder: 1 },
-      ],
+      castCardRatio: '3:4',
+      groupPhotos: [group('g1', 0), group('g2', 1)],
       groupPhotoMax: 4,
-      teams: [
-        { teamAccountId: 'tA', label: 'A', photoUrl: 'https://x/a.jpg' },
-        { teamAccountId: 'tB', label: 'B', photoUrl: null },
-      ],
-      rolePhotoUrls: { 'r1:ap-m1': 'https://x/r1m1.jpg' },
+      teams: [team('tA', 'A', 'https://x/a.jpg'), team('tB', 'B', null)],
+      rolePhotos: {
+        'r1:ap-m1': {
+          imageUrl: 'https://x/r1m1.jpg',
+          display: NO_DISPLAY,
+          thumbCrop: null,
+        },
+      },
     },
     profileUrls: { m1: null, m2: 'https://x/p2.jpg', m3: null },
     teamMembers: { tA: ['m1', 'm3'], tB: ['m2', 'm3'] },
@@ -114,16 +135,41 @@ describe('toCastPhotoBoard (U48 designer §19.4)', () => {
         },
         photos: {
           ...input().photos,
-          groupPhotos: [0, 1, 2, 3].map((n) => ({
-            id: `g${n}`,
-            imageUrl: `https://x/${n}.jpg`,
-            sortOrder: n,
-          })),
+          groupPhotos: [0, 1, 2, 3].map((n) => group(`g${n}`, n)),
         },
       })
     );
     expect(board.blocks[0].rows[1].upload?.progress).toBe(40);
     expect(board.teams[1].upload?.phase).toBe('error');
     expect(board.groupAdd.canAdd).toBe(false);
+  });
+
+  it('(U51) 배역 카드 비율을 싣고, 위치를 옮겼거나 썸네일을 따로 맞춘 배역 사진만 위치 조정됨으로 본다', () => {
+    // Arrange
+    const photo = (crop: { x: number; y: number; zoom: number } | null) => ({
+      imageUrl: 'https://x/r.jpg',
+      display: { size: { width: 1600, height: 1200 }, crop },
+      thumbCrop: null,
+    });
+    // Act
+    const board = toCastPhotoBoard(
+      input({
+        photos: {
+          ...input().photos,
+          castCardRatio: '2:3',
+          rolePhotos: {
+            'r1:ap-m1': photo({ x: 26, y: 40, zoom: 1.3 }),
+            'r1:ap-m2': photo({ x: 50, y: 50, zoom: 1 }),
+          },
+        },
+      })
+    );
+    // Assert
+    expect(board.cardRatio).toBe('2:3');
+    expect(board.blocks[0].rows.map((r) => r.isAdjusted)).toEqual([
+      true,
+      false,
+    ]);
+    expect(board.blocks[0].rows[0].rolePhoto?.display.size?.width).toBe(1600);
   });
 });

@@ -176,6 +176,38 @@ describe('revalidateTargetsFor (develop §12.1 R-1)', () => {
     ).toBeNull();
   });
 
+  it('U51 배역 카드 비율·사진 위치(display) 저장은 public:cast 를 다시 불러온다', () => {
+    const TEAM_ID = '0190f0a1-2b3c-7000-8000-0000000000aa';
+    expect(
+      revalidateTargetsFor(
+        'PUT',
+        `/v1/admin/performances/${PERF_ID}/cast-card-ratio`,
+        200
+      )
+    ).toEqual({
+      tags: ['public:cast'],
+      paths: [`/works/${PERF_ID}`, '/actors'],
+    });
+    expect(
+      revalidateTargetsFor(
+        'PATCH',
+        `/v1/admin/performances/${PERF_ID}/group-photos/g1/display`,
+        200
+      )?.tags
+    ).toEqual(['public:cast']);
+    expect(
+      revalidateTargetsFor(
+        'PATCH',
+        `/v1/admin/team-accounts/${TEAM_ID}/photo/display`,
+        200
+      )?.tags
+    ).toEqual(['public:cast']);
+    expect(
+      revalidateTargetsFor('PATCH', '/v1/admin/roles/r1/photos/p1/display', 200)
+        ?.tags
+    ).toEqual(['public:cast']);
+  });
+
   it('GET·실패 응답·공개 무관 경로는 부르지 않는다', () => {
     expect(revalidateTargetsFor('GET', '/v1/admin/staff', 200)).toBeNull();
     expect(revalidateTargetsFor('POST', '/v1/admin/staff', 400)).toBeNull();

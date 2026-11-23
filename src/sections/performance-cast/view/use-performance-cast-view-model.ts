@@ -86,7 +86,8 @@ export function usePerformanceCastViewModel(
   const photoSection = useCastPhotoSection(
     performanceId,
     roles,
-    snackbar.error
+    snackbar.error,
+    snackbar.success
   );
   const preview = useHomepagePreview(performanceId, clientPublicUrl);
 

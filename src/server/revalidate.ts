@@ -7,6 +7,7 @@
 // public:cast(홈페이지의 작품 캐스트·배우 상세·연출진 상세 요청이 모두 이 태그를 단다).
 // (U48 back-end §25.12) 단체샷(performances/{id}/group-photos…)·팀샷(team-accounts/{id}/photo)·회차 팀 지정(shows/{id} PATCH)도
 // public:cast. 팀 구성(team-accounts/{id}/members)·팀 추가(performances/{id}/team-accounts)도 공개 캐스트의 팀 탭을 바꾼다(자체 결정).
+// (U51 §27.8) 배역 카드 비율(performances/{id}/cast-card-ratio PUT)도 public:cast. 사진 위치(…/display)는 기존 갈래 그대로.
 // 미리보기 토큰 발급(performances/{id}/preview-token)은 공개 데이터를 바꾸지 않는다 → null.
 // ----------------------------------------------------------------------
 import { readRevalidateConfig } from '@/src/server/server-config';
@@ -58,6 +59,7 @@ export function revalidateTargetsFor(
         sub === 'credits' ||
         sub === 'show-casts' ||
         sub === 'group-photos' ||
+        sub === 'cast-card-ratio' ||
         sub === 'team-accounts')) ||
     (resource === 'shows' && sub === 'roles')
   ) {

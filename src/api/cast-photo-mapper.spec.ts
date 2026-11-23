@@ -34,10 +34,73 @@ describe('fromCastPhotosResponse (U48 §25.2)', () => {
     // Assert
     expect(model.groupPhotos.map((g) => g.id)).toEqual(['g1', 'g2']);
     expect(model.teams[1].photoUrl).toBeNull();
-    expect(model.rolePhotoUrls[rolePhotoKey('r1', 'p1')]).toBe(
+    expect(model.rolePhotos[rolePhotoKey('r1', 'p1')].imageUrl).toBe(
       'https://x/r.jpg'
     );
     expect(model.groupPhotoMax).toBe(4);
+    // U51 필드가 없으면 3:4 · 원본 · 가운데 · 크기 모름
+    expect(model.castCardRatio).toBe('3:4');
+    expect(model.groupPhotos[0].ratio).toBeNull();
+    expect(model.groupPhotos[0].display).toEqual({ size: null, crop: null });
+  });
+
+  it('(U51 §27.5) 비율·위치·크기를 화면 모델로 옮기고 허용 밖 비율은 버린다', () => {
+    // Arrange
+    const res = {
+      castPublic: true,
+      castCardRatio: '2:3' as const,
+      groupPhotos: [
+        {
+          id: 'g1',
+          imageUrl: 'https://x/g1.jpg',
+          sortOrder: 0,
+          width: 2400,
+          height: 1350,
+          displayRatio: '4:3' as const,
+          crop: { x: 40, y: 50, zoom: 1.2 },
+        },
+      ],
+      groupPhotoMax: 4,
+      teams: [
+        {
+          teamAccountId: 't1',
+          label: 'A',
+          photoUrl: 'https://x/a.jpg',
+          photoWidth: 1600,
+          photoHeight: 0,
+          photoRatio: '21:9' as unknown as '16:9',
+          photoCrop: null,
+        },
+      ],
+      rolePhotos: [
+        {
+          roleId: 'r1',
+          actorProfileId: 'p1',
+          memberId: 'm1',
+          imageUrl: 'https://x/r.jpg',
+          width: 1600,
+          height: 1200,
+          crop: { x: 26, y: 40, zoom: 1.3 },
+          thumbCrop: null,
+        },
+      ],
+    };
+
+    // Act
+    const model = fromCastPhotosResponse(res);
+
+    // Assert
+    expect(model.castCardRatio).toBe('2:3');
+    expect(model.groupPhotos[0].ratio).toBe('4:3');
+    expect(model.groupPhotos[0].display).toEqual({
+      size: { width: 2400, height: 1350 },
+      crop: { x: 40, y: 50, zoom: 1.2 },
+    });
+    expect(model.teams[0].ratio).toBeNull();
+    expect(model.teams[0].display.size).toBeNull();
+    const role = model.rolePhotos[rolePhotoKey('r1', 'p1')];
+    expect(role.display.crop).toEqual({ x: 26, y: 40, zoom: 1.3 });
+    expect(role.thumbCrop).toBeNull();
   });
 });
 

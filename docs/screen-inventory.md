@@ -14,7 +14,7 @@
 | SCR-D09 | 연출진 관리 | `/staff` | `src/sections/staff` | 테이블 / xs 카드 + Dialog | — |
 | SCR-D10 | 팝업 관리 | `/popups` | `src/sections/popups` | 테이블(lg) / 카드 + Dialog | — |
 | SCR-D11 | 회차·예매 설정(R1) | `/performances/[id]/shows` | `src/sections/performance-shows` | 공연 상세 탭 · 설정 카드(폼) + 가격 등급 표 + 회차 표(lg)/카드(U48 출연 팀 선택 열) + Dialog | — |
-| SCR-D14 | 배역·캐스팅(R3·U45·U48) | `/performances/[id]/cast` | `src/sections/performance-cast` | 공연 상세 탭 · 공개 스위치 · 배역 · 팀 구성 표 · U48 캐스트 사진 카드(단체샷·팀샷 16:9 그리드 + 배역 블록 × 배우 줄 3:4) · 회차 격자 · 참여자 + Dialog | 사진 슬롯(올리기·교체·삭제·실패) 정본 |
+| SCR-D14 | 배역·캐스팅(R3·U45·U48) | `/performances/[id]/cast` | `src/sections/performance-cast` | 공연 상세 탭 · 공개 스위치 · 배역 · 팀 구성 표 · U48 캐스트 사진 카드(U51 배역 카드 비율 선택 · 단체샷·팀샷 16:9 그리드(고른 비율로 잘라 보기) + 배역 블록 × 배우 줄(카드 비율 · 저장된 위치)) · U51 '보이는 위치 조정' 창(lg 960 / xs 전체 화면) · 회차 격자 · 참여자 + Dialog | 사진 슬롯(올리기·교체·삭제·실패) 정본 · 크롭 편집기(`photo-crop-dialog`) 정본 |
 | SCR-D12 | 예매 관리(R1) | `/reservations` | `src/sections/reservations` | KPI 4 + 탭(예매·집계·초대 링크) · 표(lg)/카드 + 상세 드로어 | — |
 | SCR-D13 | 입장 체크(R1) | `/admission` | `src/sections/admission` | 휴대폰 우선 리스트(현황·검색 고정, 터치 48) · md 2열 · lg 표 + 현황 패널 | 현장 리스트 정본 |
 | SCR-D15 | 계정 설정(R1) | `/account` | `src/sections/account` | 전체 페이지 폼(카드 1, 최대 480) + U37 예매 알림 카드(토글·기기 목록·시험 알림·iOS 안내) | — |

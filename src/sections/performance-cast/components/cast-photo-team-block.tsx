@@ -3,6 +3,7 @@
 // ----------------------------------------------------------------------
 // (U48) '캐스트 사진' ② 팀샷 — 팀마다 1장(16:9). 머리 "A팀 · 8명" + 교체·삭제(44), 없으면 점선 "A팀 사진 올리기".
 // 팀이 없으면 안내 한 줄('팀 계정' 탭에서 만든다).
+// (U51) 사진이 있으면 [보이는 비율·위치 조정](crop 아이콘) + 아래 "4:3로 잘라 보여요 / 원본 전체가 보여요".
 // ----------------------------------------------------------------------
 import IconButton from '@mui/material/IconButton';
 
@@ -61,6 +62,14 @@ export function CastPhotoTeamBlock({
                   {team.photoUrl ? (
                     <span className='flex items-center gap-1'>
                       <IconButton
+                        aria-label={MSG_D14.ADJUST_TEAM_ARIA(team.label)}
+                        disabled={isBusy}
+                        onClick={() => section.onAdjustTeam(team)}
+                        sx={{ ...ICON_SX, color: 'text.secondary' }}
+                      >
+                        <Iconify icon='solar:crop-linear' />
+                      </IconButton>
+                      <IconButton
                         aria-label={MSG_D14.PHOTO_TEAM_REPLACE_ARIA(team.label)}
                         disabled={isBusy}
                         onClick={open}
@@ -79,8 +88,9 @@ export function CastPhotoTeamBlock({
                   ) : null}
                 </div>
                 <CastPhotoFrame
-                  ratio='16 / 9'
+                  ratio={16 / 9}
                   imageUrl={team.photoUrl}
+                  inner={team.cropped}
                   alt={MSG_D14.PHOTO_TEAM_ALT(team.label)}
                   upload={team.upload}
                 >
@@ -90,6 +100,24 @@ export function CastPhotoTeamBlock({
                     onClick={open}
                   />
                 </CastPhotoFrame>
+                {team.photoUrl ? (
+                  <span className='flex items-center gap-1'>
+                    <Iconify
+                      icon={
+                        team.cropped
+                          ? 'solar:crop-linear'
+                          : 'solar:gallery-linear'
+                      }
+                      size='sm'
+                      sx={{ color: 'text.secondary', flexShrink: 0 }}
+                    />
+                    <Typo.Caption.Regular color='text.secondary'>
+                      {team.ratio
+                        ? MSG_D14.TILE_CROPPED(team.ratio)
+                        : MSG_D14.TILE_ORIGINAL}
+                    </Typo.Caption.Regular>
+                  </span>
+                ) : null}
                 {team.upload?.phase === 'error' ? (
                   <PhotoUploadError
                     message={team.upload.errorMessage ?? MSG_D14.PHOTO_FAILED}

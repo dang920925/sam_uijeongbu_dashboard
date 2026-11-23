@@ -4,6 +4,7 @@
 //   단체샷 추가·순서·삭제, 팀샷 올리기. 홈페이지 대체 표시(프로필 / 실루엣).
 // - SCR-D11 회차 목록 '출연 팀' 선택 → 새로고침해도 유지.
 // - [홈페이지 미리보기] → 새 탭 `{홈페이지}/works/{id}?preview=<token>`.
+// - (U51) 올린 직후 '보이는 위치 조정' 창이 자동으로 열린다 — 여기서는 닫거나(Esc) 그대로 저장하고 넘어간다.
 // desktop 은 표, mobile 은 카드 — 보이는 요소만 골라 같은 테스트로 돈다. 접두사 fixture-u48-.
 // ----------------------------------------------------------------------
 import { expect, test, type Page } from '@playwright/test';
@@ -16,6 +17,13 @@ const API = '/api/backend/v1';
 const card = (page: Page) => page.getByTestId('cast-photos-card');
 const fileInput = (page: Page, label: string) =>
   page.locator(`input[type=file][aria-label="${label}"]`);
+const cropDialog = (page: Page) => page.getByTestId('photo-crop-dialog');
+/** 올린 직후 자동으로 열린 조정 창을 Esc 로 닫는다(취소 = 가운데·원본) */
+async function closeCrop(page: Page) {
+  await expect(cropDialog(page)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(cropDialog(page)).toBeHidden();
+}
 
 test.describe('U48 캐스트 사진', () => {
   let performanceId = '';
@@ -48,6 +56,7 @@ test.describe('U48 캐스트 사진', () => {
     await fileInput(page, `에반 ${PREFIX}배우2 사진 올리기`).setInputFiles(
       pngFile(`${PREFIX}role.png`)
     );
+    await closeCrop(page);
     await expect(card(page).getByText('1 / 2')).toBeVisible();
     await expect(
       card(page).getByRole('img', { name: `에반 · ${PREFIX}배우2 배역 사진` })
@@ -79,6 +88,7 @@ test.describe('U48 캐스트 사진', () => {
     const alert = card(page).getByRole('alert');
     await expect(alert).toContainText('서버 오류가 발생했습니다');
     await card(page).getByRole('button', { name: '다시 시도' }).click();
+    await closeCrop(page);
     await expect(alert).toBeHidden();
     await expect(card(page).getByText('1 / 2')).toBeVisible();
   });
@@ -90,10 +100,15 @@ test.describe('U48 캐스트 사진', () => {
     await fileInput(page, '단체샷 올리기').setInputFiles(
       pngFile(`${PREFIX}g1.png`)
     );
-    await expect(card(page).getByText('대표')).toBeVisible();
+    // 단체샷은 기본 '원본' — 바로 저장해도 된다
+    await expect(cropDialog(page)).toBeVisible();
+    await cropDialog(page).getByRole('button', { name: '저장' }).click();
+    await expect(cropDialog(page)).toBeHidden();
+    await expect(card(page).getByText('대표', { exact: true })).toBeVisible();
     await fileInput(page, '단체샷 추가').setInputFiles(
       pngFile(`${PREFIX}g2.png`)
     );
+    await closeCrop(page);
     await expect(card(page).getByText('2장 더')).toBeVisible();
 
     const before = await adminApi<{ groupPhotos: { id: string }[] }>(
@@ -123,6 +138,7 @@ test.describe('U48 캐스트 사진', () => {
     await fileInput(page, 'A팀 사진 올리기').setInputFiles(
       pngFile(`${PREFIX}team.png`)
     );
+    await closeCrop(page);
     await expect(
       card(page).getByRole('button', { name: 'A팀 팀샷 교체' })
     ).toBeVisible();

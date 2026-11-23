@@ -3,10 +3,12 @@
 // ----------------------------------------------------------------------
 // (U48) '캐스트 사진' ① 단체샷 — 최대 n장 그리드(xs 1 · md 2 · xl 4열), 16:9 + 순서 칩(첫 장 '대표').
 // 장마다 ◀▶ 순서 · 교체 · 삭제(44). 남은 자리가 있으면 "단체샷 추가 n장 더". 한 장도 없으면 가로 점선 "단체샷 올리기".
+// (U51) 장마다 [보이는 비율·위치 조정](crop 아이콘) + 아래 "4:3로 잘라 보여요 / 원본 전체가 보여요".
 // ----------------------------------------------------------------------
 import IconButton from '@mui/material/IconButton';
 
 import { Iconify } from '@/src/components/iconify';
+import { Typo } from '@/src/components/typo';
 import { CastPhotoFrame } from '@/src/sections/performance-cast/components/cast-photo-frame';
 import { PhotoDropButton } from '@/src/sections/performance-cast/components/photo-drop-button';
 import { PhotoFilePicker } from '@/src/sections/performance-cast/components/photo-file-picker';
@@ -27,6 +29,7 @@ interface CastPhotoGroupBlockProps {
 
 const ICON_SX = { width: LAYOUT.touch, height: LAYOUT.touch };
 const GRID = 'grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4';
+const WIDE = 16 / 9;
 
 export function CastPhotoGroupBlock({
   board,
@@ -68,12 +71,25 @@ export function CastPhotoGroupBlock({
   const tile = (item: GroupPhotoTile) => (
     <div key={item.id} className='flex min-w-0 flex-col gap-2'>
       <CastPhotoFrame
-        ratio='16 / 9'
+        ratio={WIDE}
         imageUrl={item.imageUrl}
+        inner={item.cropped}
         alt={MSG_D14.PHOTO_GROUP_ALT(item.position)}
         upload={item.upload}
         badge={item.orderLabel}
       />
+      <span className='flex items-center gap-1'>
+        <Iconify
+          icon={item.cropped ? 'solar:crop-linear' : 'solar:gallery-linear'}
+          size='sm'
+          sx={{ color: 'text.secondary', flexShrink: 0 }}
+        />
+        <Typo.Caption.Regular color='text.secondary'>
+          {item.ratio
+            ? MSG_D14.TILE_CROPPED(item.ratio)
+            : MSG_D14.TILE_ORIGINAL}
+        </Typo.Caption.Regular>
+      </span>
       <PhotoFilePicker
         onFile={(file) => section.onReplaceGroup(item, file)}
         inputLabel={MSG_D14.PHOTO_GROUP_REPLACE_ARIA(item.position)}
@@ -97,6 +113,14 @@ export function CastPhotoGroupBlock({
               <Iconify icon='solar:alt-arrow-right-linear' />
             </IconButton>
             <span className='flex-1' />
+            <IconButton
+              aria-label={MSG_D14.ADJUST_GROUP_ARIA(item.position)}
+              disabled={item.upload !== null && item.upload.phase !== 'error'}
+              onClick={() => section.onAdjustGroup(item)}
+              sx={{ ...ICON_SX, color: 'text.secondary' }}
+            >
+              <Iconify icon='solar:crop-linear' />
+            </IconButton>
             <IconButton
               aria-label={MSG_D14.PHOTO_GROUP_REPLACE_ARIA(item.position)}
               disabled={item.upload !== null && item.upload.phase !== 'error'}
@@ -132,7 +156,7 @@ export function CastPhotoGroupBlock({
       {add.canAdd ? (
         <div className='flex min-w-0 flex-col gap-2'>
           <CastPhotoFrame
-            ratio='16 / 9'
+            ratio={WIDE}
             imageUrl={null}
             alt=''
             upload={add.upload}

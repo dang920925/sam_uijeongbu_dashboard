@@ -53,6 +53,8 @@ describe('uploadImage', () => {
     mockedPrepare.mockImplementation(async (_purpose, file) => ({
       file,
       originalSize: null,
+      width: 800,
+      height: 600,
     }));
   });
 
@@ -140,13 +142,15 @@ describe('uploadImageWithCompress', () => {
     mockedPrepare.mockReset();
   });
 
-  it('줄인 파일로 발급·PUT 하고 원본·결과 크기를 돌려준다', async () => {
+  it('줄인 파일로 발급·PUT 하고 원본·결과 크기와 축소 후 가로·세로를 돌려준다', async () => {
     // Arrange
     const original = fileOf('image/jpeg', 15 * MB);
     const compressed = fileOf('image/jpeg', 2 * MB);
     mockedPrepare.mockResolvedValue({
       file: compressed,
       originalSize: 15 * MB,
+      width: 2400,
+      height: 1800,
     });
     mockedPost.mockResolvedValue(TICKET);
     mockedPut.mockResolvedValue(undefined);
@@ -174,6 +178,8 @@ describe('uploadImageWithCompress', () => {
       url: TICKET.publicUrl,
       originalSize: 15 * MB,
       uploadedSize: 2 * MB,
+      width: 2400,
+      height: 1800,
     });
   });
 

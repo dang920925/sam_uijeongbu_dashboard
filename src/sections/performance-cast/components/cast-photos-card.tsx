@@ -5,6 +5,7 @@
 // 머리: 제목 + 도움말 | "배역 사진 n / 총" 진행 막대 · "홈페이지에서 보기"(공개 켜짐 + 홈페이지 주소 있을 때).
 // 본문: 공개 안내(켜짐 info / 꺼짐 warning) → ① 단체샷 → ② 팀샷 → ③ 배역 사진(보기 pill 전체 / 사진 없음).
 // 로딩 스켈레톤 · 조회 실패 "다시 시도". props 만으로 렌더.
+// (U51) 본문 맨 위 '배역 카드 비율'(공연 하나 — 3:4 | 2:3 | 4:5 | 1:1) + '보이는 위치 조정' 창(열렸을 때만).
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -21,6 +22,8 @@ import { CastPhotoGroupBlock } from '@/src/sections/performance-cast/components/
 import { CastPhotoRoleBlock } from '@/src/sections/performance-cast/components/cast-photo-role-block';
 import { CastPhotoTeamBlock } from '@/src/sections/performance-cast/components/cast-photo-team-block';
 import type { CastPhotoFilter } from '@/src/sections/performance-cast/utils/cast-photo-rows';
+import { ROLE_CARD_RATIOS } from '@/src/sections/performance-cast/utils/photo-crop';
+import { PhotoCropDialogContainer } from '@/src/sections/performance-cast/view/photo-crop-dialog-container';
 import type { CastPhotoSection } from '@/src/sections/performance-cast/view/use-cast-photo-section';
 import { MSG_D14 } from '@/src/shared/messages/d14';
 
@@ -88,6 +91,22 @@ export function CastPhotosCard({
       )
     ) : (
       <>
+        <div className='mb-6 flex flex-col gap-2' data-testid='cast-card-ratio'>
+          <div className='flex flex-wrap items-baseline gap-x-3 gap-y-1'>
+            <Typo.Badge.Bold component='h3'>
+              {MSG_D14.CARD_RATIO_LABEL}
+            </Typo.Badge.Bold>
+            <Typo.Caption.Regular color='text.secondary'>
+              {MSG_D14.CARD_RATIO_HELP}
+            </Typo.Caption.Regular>
+          </div>
+          <SegmentPill
+            options={ROLE_CARD_RATIOS.map((value) => ({ value, label: value }))}
+            value={board.cardRatio}
+            onChange={section.cardRatio.onChange}
+            ariaLabel={MSG_D14.CARD_RATIO_LABEL}
+          />
+        </div>
         <Box
           role='note'
           className='mb-6 flex items-start gap-2 px-4 py-3'
@@ -138,7 +157,11 @@ export function CastPhotosCard({
                   {MSG_D14.PHOTO_ROLE_MISSING_NONE}
                 </Typo.Badge.Regular>
               ) : (
-                <CastPhotoRoleBlock blocks={board.blocks} section={section} />
+                <CastPhotoRoleBlock
+                  blocks={board.blocks}
+                  cardAspect={board.cardAspect}
+                  section={section}
+                />
               )}
             </div>
           ) : (
@@ -200,6 +223,14 @@ export function CastPhotosCard({
         ) : null}
       </div>
       <div className='px-4 pb-4 md:px-6 md:pb-6'>{body}</div>
+      {section.editor.request ? (
+        <PhotoCropDialogContainer
+          key={section.editor.request.key}
+          request={section.editor.request}
+          onSave={section.editor.onSave}
+          onClose={section.editor.onClose}
+        />
+      ) : null}
     </Card>
   );
 }

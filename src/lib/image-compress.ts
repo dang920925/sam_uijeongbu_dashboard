@@ -25,6 +25,9 @@ export interface PreparedUpload {
   file: File;
   /** 압축했으면 원본 바이트 수, 원본 그대로면 null */
   originalSize: number | null;
+  /** (U51) 올리는 파일의 가로·세로 px(EXIF 방향 반영). 브라우저가 못 열면 null */
+  width: number | null;
+  height: number | null;
 }
 
 type Canvas2D = OffscreenCanvas | HTMLCanvasElement;
@@ -163,14 +166,15 @@ export async function prepareImageForUpload(
 
   const bitmap = await decode(file);
   if (!bitmap) {
-    if (allowed && file.size <= maxBytes) return { file, originalSize: null };
+    if (allowed && file.size <= maxBytes)
+      return { file, originalSize: null, width: null, height: null };
     throw new ImageDecodeError();
   }
 
   try {
     const source = { width: bitmap.width, height: bitmap.height };
     if (shouldKeepOriginal(file, source, maxBytes)) {
-      return { file, originalSize: null };
+      return { file, originalSize: null, ...source };
     }
 
     const type = await pickOutputType(file, bitmap);
@@ -180,6 +184,8 @@ export async function prepareImageForUpload(
         return {
           file: new File([blob], renamed(file.name, type), { type }),
           originalSize: file.size,
+          width: attempt.width,
+          height: attempt.height,
         };
       }
     }

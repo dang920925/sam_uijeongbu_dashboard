@@ -48,6 +48,12 @@ export const endpoints = {
       `${admin}/performances/${id}/group-photos/order`,
     groupPhoto: (id: string, photoId: string) =>
       `${admin}/performances/${id}/group-photos/${photoId}`,
+    /** U51 단체샷 보이는 비율·위치 PATCH(back-end §27.4) */
+    groupPhotoDisplay: (id: string, photoId: string) =>
+      `${admin}/performances/${id}/group-photos/${photoId}/display`,
+    /** U51 배역 카드 비율 PUT(공연 하나) */
+    castCardRatio: (id: string) =>
+      `${admin}/performances/${id}/cast-card-ratio`,
     /** U48 홈페이지 미리보기 토큰(POST, 30분 — §25.9) */
     previewToken: (id: string) => `${admin}/performances/${id}/preview-token`,
   },
@@ -61,6 +67,8 @@ export const endpoints = {
       `${admin}/team-accounts/${id}/reset-password`,
     /** U48 팀샷 PUT·DELETE */
     photo: (id: string) => `${admin}/team-accounts/${id}/photo`,
+    /** U51 팀샷 보이는 비율·위치 PATCH */
+    photoDisplay: (id: string) => `${admin}/team-accounts/${id}/photo/display`,
   },
   /** U34 연습실 예약(관리) — 기간 목록·삭제 */
   /** U46 연습실 시간 막기 */
@@ -81,6 +89,9 @@ export const endpoints = {
     /** U48 배역 × 배우 개인샷 PUT·DELETE */
     photo: (id: string, actorProfileId: string) =>
       `${admin}/roles/${id}/photos/${actorProfileId}`,
+    /** U51 배역 사진 위치(crop·thumbCrop) PATCH */
+    photoDisplay: (id: string, actorProfileId: string) =>
+      `${admin}/roles/${id}/photos/${actorProfileId}/display`,
   },
   /** R3 회차 지정 캐스트 PUT·DELETE */
   showRoleCast: (showId: string, roleId: string) =>
