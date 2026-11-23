@@ -75,6 +75,15 @@ export const MSG_D04 = {
   NOT_FOUND: '공연을 찾을 수 없습니다',
   /** xs 반 카드의 마감일 접두 — designer W3 신규(사용자 확정 2026-11-19 "제안 문구 그대로"), 표 머리 "마감일" 재사용 */
   CARD_DEADLINE_PREFIX: '마감일',
+  /** (U47) 공연 삭제 — 위험 동작(제안 문구) */
+  DANGER_TITLE: '공연 삭제',
+  DANGER_DESC:
+    '삭제하면 공연·회차가 관리 화면과 홈페이지에서 사라지고 팀 계정은 폐기됩니다. 예매(입금 대기·확정)가 있으면 삭제할 수 없습니다.',
+  DELETE_PERFORMANCE: '공연 삭제',
+  DELETE_PERFORMANCE_CONFIRM: (title: string) =>
+    `'${title}'을 삭제합니다. 되돌릴 수 없습니다.`,
+  DELETE_PERFORMANCE_CHECK: '되돌릴 수 없다는 것을 확인했습니다.',
+  DELETE_PERFORMANCE_DONE: '공연을 삭제했습니다.',
 } as const;
 
 /** 상세 이미지 [n]장 — designer W3 신규 표기(사용자 확정 2026-11-19 "제안 문구 그대로") */

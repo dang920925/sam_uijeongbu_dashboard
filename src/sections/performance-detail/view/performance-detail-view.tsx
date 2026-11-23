@@ -3,12 +3,13 @@
 // ----------------------------------------------------------------------
 // SCR-D04 공연 상세·반 관리 View — props 만으로 렌더(가공·API 없음).
 // 머리(← "공연 관리로 돌아가기" + h1 공연명 + "공연 상세 정보" + 탭 — R1) → 공연 정보 카드 → 반 관리 카드
-// + 공연 수정(공용 PerformanceFormDialog edit) · 반 다이얼로그 · 반 삭제 확인.
+// + 공연 수정(공용 PerformanceFormDialog edit) · 반 다이얼로그 · 반 삭제 확인 · (U47) 맨 아래 공연 삭제(위험) 카드.
 // ----------------------------------------------------------------------
 import { ConfirmDialog } from '@/src/components/confirm-dialog';
 import { PageContainer } from '@/src/components/page-container';
 import { PerformanceFormDialog } from '@/src/components/performance-form-dialog';
 import { SectionStack } from '@/src/components/section-stack';
+import { PerformanceDeleteCard } from '@/src/sections/performance-detail/components/performance-delete-card';
 import { PerformanceDetailHead } from '@/src/sections/performance-detail/components/performance-detail-head';
 import { PerformanceDetailClassCard } from '@/src/sections/performance-detail/components/performance-detail-class-card';
 import { PerformanceDetailClassDialog } from '@/src/sections/performance-detail/components/performance-detail-class-dialog';
@@ -25,6 +26,7 @@ interface PerformanceDetailViewProps {
   classDialog: PerformanceDetailViewModel['classDialog'];
   editDialog: PerformanceDetailViewModel['editDialog'];
   deleteConfirm: PerformanceDetailViewModel['deleteConfirm'];
+  performanceDelete: PerformanceDetailViewModel['performanceDelete'];
 }
 
 export function PerformanceDetailView({
@@ -34,6 +36,7 @@ export function PerformanceDetailView({
   classDialog,
   editDialog,
   deleteConfirm,
+  performanceDelete,
 }: PerformanceDetailViewProps) {
   return (
     <PageContainer>
@@ -53,6 +56,7 @@ export function PerformanceDetailView({
           onEdit={classSection.onEdit}
           onDelete={classSection.onDelete}
         />
+        <PerformanceDeleteCard state={performanceDelete} />
       </SectionStack>
       {editDialog.initialValue ? (
         <PerformanceFormDialog

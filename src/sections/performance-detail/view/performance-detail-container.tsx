@@ -43,6 +43,7 @@ export function PerformanceDetailContainer({
       classDialog={vm.classDialog}
       editDialog={vm.editDialog}
       deleteConfirm={vm.deleteConfirm}
+      performanceDelete={vm.performanceDelete}
     />
   );
 }
