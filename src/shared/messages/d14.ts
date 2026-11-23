@@ -94,4 +94,14 @@ export const MSG_D14 = {
   /** 연결 해제 뒤 회차 지정이 남았을 때(develop §17.5 안내 문구) */
   overrideLeft: (n: number) =>
     `회차별 캐스팅 ${n}칸은 배역·캐스팅 탭에서 정리해주세요.`,
+  /** (U45) 팀 구성 — 배우 × 팀(제안 문구) */
+  TEAMS_TITLE: '팀 구성',
+  TEAMS_HELP:
+    '배우가 속한 팀을 고르면 그 팀이 연습실을 예약할 때 참석자로 체크할 수 있습니다. 한 배우가 여러 팀에 속할 수 있습니다.',
+  TEAMS_TABLE_ARIA: '팀 구성(배우 × 팀)',
+  TEAMS_COL_ACTOR: '배우',
+  TEAMS_NO_TEAMS: '팀 계정이 없습니다. 팀 계정 탭에서 먼저 만들어주세요.',
+  TEAMS_NO_ACTORS: '배역에 배우를 넣으면 여기서 팀을 정할 수 있습니다.',
+  TEAMS_CHECK_ARIA: (name: string, team: string) => `${name} — ${team} 팀`,
+  TEAMS_ERROR: '팀 구성을 불러오지 못했습니다.',
 } as const;

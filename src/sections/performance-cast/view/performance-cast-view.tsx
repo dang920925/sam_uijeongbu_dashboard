@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------
 // SCR-D14 배역·캐스팅 View(R3 — design §6 SCR-D14 · §12) — props 만으로 렌더(가공·API 없음).
-// 머리(공연 상세 머리 + 탭 '배역·캐스팅') → 본문: 로딩 / 오류 "다시 시도" / 공개 스위치 → 배역 → 회차별 캐스팅 → 참여자.
+// 머리(공연 상세 머리 + 탭 '배역·캐스팅') → 본문: 로딩 / 오류 "다시 시도" / 공개 스위치 → 배역 → 팀 구성(U45) → 회차별 캐스팅 → 참여자.
 // + 배역 다이얼로그 · 배우 고르기 · 참여자 다이얼로그 · 배역/참여자 삭제 확인.
 // ----------------------------------------------------------------------
 import Card from '@mui/material/Card';
@@ -18,6 +18,7 @@ import { CastCreditsCard } from '@/src/sections/performance-cast/components/cast
 import { CastGridCard } from '@/src/sections/performance-cast/components/cast-grid-card';
 import { CastPublicCard } from '@/src/sections/performance-cast/components/cast-public-card';
 import { CastRolesCard } from '@/src/sections/performance-cast/components/cast-roles-card';
+import { CastTeamsCard } from '@/src/sections/performance-cast/components/cast-teams-card';
 import { CreditDialog } from '@/src/sections/performance-cast/components/credit-dialog';
 import { RoleDialog } from '@/src/sections/performance-cast/components/role-dialog';
 import type { PerformanceCastViewModel } from '@/src/sections/performance-cast/view/use-performance-cast-view-model';
@@ -53,6 +54,7 @@ export function PerformanceCastView({
           onChange={vm.publicSwitch.onChange}
         />
         <CastRolesCard {...vm.roleSection} />
+        <CastTeamsCard section={vm.teamSection} />
         <CastGridCard
           grid={vm.grid}
           onEditCell={vm.grid.onEditCell}

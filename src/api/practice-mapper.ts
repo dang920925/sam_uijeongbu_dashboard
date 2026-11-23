@@ -2,12 +2,20 @@
 // 팀 계정·연습실 예약(관리) 매퍼(U34) + 전체 복사 문구(사용자 승인 형식 — 팀마다 한 줄, '비밀번호:').
 // ----------------------------------------------------------------------
 import type {
+  AdminRoomSchedule,
+  AdminRoomScheduleResponse,
+  RoomBlock,
+  RoomBlockOccurrence,
+  RoomBlockOccurrenceResponse,
+  RoomBlockResponse,
   AdminRoomReservation,
   AdminRoomReservationResponse,
   TeamAccount,
   TeamAccountList,
   TeamAccountListResponse,
   TeamAccountResponse,
+  TeamRoster,
+  TeamRosterResponse,
 } from '@/src/types/practice';
 
 export function fromTeamAccountResponse(res: TeamAccountResponse): TeamAccount {
@@ -37,7 +45,26 @@ export function fromAdminRoomReservationResponse(
     teamName: res.teamName,
     memo: res.memo,
     performanceTitle: res.performanceTitle,
+    attendeeNames: (res.attendees ?? []).map((a) => a.name),
   };
+}
+
+/** (U45) 팀 구성 표 — 응답 그대로(배열은 복사) */
+export function fromTeamRosterResponse(res: TeamRosterResponse): TeamRoster {
+  return {
+    teams: res.teams.map((t) => ({ ...t, memberIds: [...t.memberIds] })),
+    members: res.members.map((m) => ({ ...m, roleNames: [...m.roleNames] })),
+  };
+}
+
+/** (U45) 참석자 글자 — "2명 · 김가, 이나", 없으면 emptyText */
+export function formatAttendees(
+  names: readonly string[],
+  emptyText: string
+): string {
+  return names.length === 0
+    ? emptyText
+    : `${names.length}명 · ${names.join(', ')}`;
 }
 
 /** 한 팀 줄 — "A - 아이디: Dear-A, 비밀번호: xxxx"(사용자 승인 형식 2026-11-20 — PR-8 보정) */
@@ -59,4 +86,43 @@ export function toTeamCopyAll(teams: readonly TeamAccount[]): string {
     .sort((a, b) => compareTeamLabels(a.label, b.label))
     .map(toTeamCopyLine)
     .join('\n');
+}
+
+/** (U46) 막은 시간 발생분 */
+export function fromRoomBlockOccurrenceResponse(
+  res: RoomBlockOccurrenceResponse
+): RoomBlockOccurrence {
+  return {
+    blockId: res.blockId,
+    title: res.title,
+    date: res.date,
+    startAt: new Date(res.startAt),
+    endAt: new Date(res.endAt),
+  };
+}
+
+/** 관리 연습실 일정 — 예약 + (U46) 막은 시간(없으면 빈 배열) */
+export function fromAdminRoomScheduleResponse(
+  res: AdminRoomScheduleResponse
+): AdminRoomSchedule {
+  return {
+    reservations: res.items.map(fromAdminRoomReservationResponse),
+    blocks: (res.blocks ?? []).map(fromRoomBlockOccurrenceResponse),
+  };
+}
+
+/** (U46) 막은 시간 규칙 */
+export function fromRoomBlockResponse(res: RoomBlockResponse): RoomBlock {
+  return {
+    id: res.id,
+    title: res.title,
+    memo: res.memo,
+    repeat: res.repeat,
+    weekdays: [...res.weekdays],
+    startTime: res.startTime,
+    endTime: res.endTime,
+    startDate: res.startDate,
+    endDate: res.endDate,
+    skipDates: [...res.skipDates],
+  };
 }

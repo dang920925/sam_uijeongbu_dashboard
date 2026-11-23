@@ -63,3 +63,17 @@ describe('toTeamRows · isValidTeamPrefix', () => {
     expect(isValidTeamPrefix('a'.repeat(21))).toBe(false);
   });
 });
+
+describe('소속 배우(U45)', () => {
+  it('이름을 쉼표로 잇고, 없으면 미배정이다', () => {
+    expect(toTeamRowDisplay(TEAM, false, ['김가', '이나']).membersText).toBe(
+      '김가, 이나'
+    );
+    expect(toTeamRowDisplay(TEAM, false).membersText).toBe('미배정');
+  });
+
+  it('toTeamRows 는 팀 id 로 이름을 찾는다', () => {
+    const rows = toTeamRows([TEAM], new Set(), new Map([['a', ['김가']]]));
+    expect(rows[0].membersText).toBe('김가');
+  });
+});

@@ -264,6 +264,19 @@ export const performanceRoutes: MockRoute[] = [
       const p = findPerformance(ctx.params.id);
       if (!p)
         return apiError(ctx, 404, 'PERF_001', '작품 정보를 찾을 수 없습니다.');
+      // (U47) 살아 있는 예매(입금 대기·확정)가 있으면 409 PERF_002
+      const live = getStore().reservations.some(
+        (r) =>
+          r.performanceId === p.id &&
+          (r.status === 'PENDING' || r.status === 'CONFIRMED')
+      );
+      if (live)
+        return apiError(
+          ctx,
+          409,
+          'PERF_002',
+          '예매가 있는 공연은 삭제할 수 없습니다. 노출을 끄거나 예매를 먼저 취소하세요.'
+        );
       p.deletedAt = nowIso();
       return noContent();
     },

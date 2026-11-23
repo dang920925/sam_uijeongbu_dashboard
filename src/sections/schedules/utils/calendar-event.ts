@@ -19,6 +19,11 @@ export interface RoomEventInfo {
   teamName: string;
   memo: string | null;
   performanceTitle: string;
+  /** (U45) 팀이 체크한 참석자 이름 */
+  attendeeNames: string[];
+  /** (U46) 막은 시간 발생분이면 블록 id·발생 날짜(이 날만 해제), 팀 예약이면 null */
+  blockId: string | null;
+  blockDate: string | null;
 }
 
 export interface CalendarEvent {

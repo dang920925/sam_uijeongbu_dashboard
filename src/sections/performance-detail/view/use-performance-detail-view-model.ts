@@ -6,12 +6,17 @@
 // - 공연 수정: 공용 PerformanceFormDialog(mode='edit'), 초기값 toPerformanceFormInput. 실패는 다이얼로그 안 문구.
 // - 반 삭제: ConfirmDialog → 실패 시 닫고 스낵바(designer W3 ConfirmDialog 규격).
 // - 저장 성공(다이얼로그가 닫히는 동작)은 스낵바 "저장되었습니다"(designer W3 스낵바 규격·확인 4).
+// - (U47) 공연 삭제: 확인 체크 뒤 DELETE → 성공하면 목록으로(홈페이지 재검증은 BFF 가 DELETE 2xx 뒤 자동 — U27),
+//   실패(PERF_002 예매 있음 등)는 창 안 문구.
 // ----------------------------------------------------------------------
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { paths } from '@/app/paths';
 import { toPerformanceFormInput } from '@/src/api/performance-mapper';
 import {
   useDeleteClass,
+  useDeletePerformance,
   usePerformance,
   usePerformanceClasses,
   useSavePerformance,
@@ -27,6 +32,7 @@ import {
 } from '@/src/sections/performance-detail/utils/performance-detail-display';
 import { usePerformanceClassDialog } from '@/src/sections/performance-detail/view/use-performance-class-dialog';
 import { MSG_COMMON } from '@/src/shared/messages/common';
+import { MSG_D04 } from '@/src/shared/messages/d04';
 import type { PerformanceFormInput } from '@/src/types/performance';
 import { useErrorSnackbar } from '@/src/hooks/use-error-snackbar';
 import {
@@ -47,6 +53,12 @@ export function usePerformanceDetailViewModel(performanceId: string) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const router = useRouter();
+  const deletePerformance = useDeletePerformance();
+  const [performanceDelete, setPerformanceDelete] = useState<{
+    isChecked: boolean;
+    errorMessage: string | null;
+  } | null>(null);
 
   const performance = performanceQuery.data ?? null;
   const status: PerformanceDetailStatus = performanceQuery.isPending
@@ -130,6 +142,32 @@ export function usePerformanceDetailViewModel(performanceId: string) {
       },
       onClose: () => setIsEditOpen(false),
       onSubmit: handleEditSubmit,
+    },
+    performanceDelete: {
+      title: performance?.title ?? '',
+      isOpen: performanceDelete !== null,
+      isChecked: performanceDelete?.isChecked ?? false,
+      isDeleting: deletePerformance.isPending,
+      errorMessage: performanceDelete?.errorMessage ?? null,
+      onOpen: () =>
+        setPerformanceDelete({ isChecked: false, errorMessage: null }),
+      onToggleCheck: (checked: boolean) =>
+        setPerformanceDelete((s) => (s ? { ...s, isChecked: checked } : s)),
+      onConfirm: () => {
+        if (!performanceDelete?.isChecked) return;
+        deletePerformance.mutate(performanceId, {
+          onSuccess: () => {
+            setPerformanceDelete(null);
+            snackbar.success(MSG_D04.DELETE_PERFORMANCE_DONE);
+            router.push(paths.performances.root);
+          },
+          onError: (error) =>
+            setPerformanceDelete((s) =>
+              s ? { ...s, errorMessage: toApiErrorMessage(error) } : s
+            ),
+        });
+      },
+      onClose: () => setPerformanceDelete(null),
     },
     deleteConfirm: {
       isOpen: deleteTargetId !== null,

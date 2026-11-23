@@ -102,11 +102,22 @@ export const MSG_D08 = {
   ROOM_DETAIL_TIME: '시간',
   ROOM_DETAIL_PERFORMANCE: '작품',
   ROOM_DETAIL_MEMO: '메모',
+  /** (U45) 팀이 체크한 참석자 */
+  ROOM_DETAIL_ATTENDEES: '참석자',
+  ROOM_NO_ATTENDEES: '체크 안 함',
   ROOM_DETAIL_NOTE:
     '팀이 등록한 연습실 예약입니다. 공식 일정이 아니며 홈페이지에는 보이지 않습니다.',
   ROOM_DELETE: '예약 삭제',
   ROOM_DELETE_CONFIRM: '이 연습실 예약을 삭제하시겠습니까?',
   ROOM_DELETED: '연습실 예약을 삭제했습니다.',
+  /** (U46) 관리자가 막은 시간 — 레이어 칩·상세(제안 문구) */
+  BLOCK_LAYER: '막은 시간',
+  BLOCK_DETAIL_TITLE: '제목',
+  BLOCK_DETAIL_NOTE:
+    '관리자가 막은 연습실 시간입니다. 팀은 이 시간에 예약할 수 없습니다. 규칙 전체는 연습실 예약 › 시간 막기에서 고칩니다.',
+  BLOCK_SKIP: '이 날만 해제',
+  BLOCK_SKIP_CONFIRM: '이 날만 막은 시간을 해제하시겠습니까?',
+  BLOCK_SKIPPED: '이 날은 막은 시간을 해제했습니다.',
   ROOM_LIST_TITLE: '다가오는 연습실 예약(30일)',
   ROOM_LIST_EMPTY: '다가오는 연습실 예약이 없습니다.',
   /** 칩·블록 aria "{유형} {제목}, {M월 D일} {HH:mm}–{HH:mm}"(제안), 취소면 앞에 "취소된 일정, "(designer §14.5) */

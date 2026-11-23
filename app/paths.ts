@@ -18,6 +18,8 @@ export const paths = {
   },
   /** U34 연습실 예약 목록(관리자 — U23 캘린더 레이어는 T-SA 배포 뒤 연결) */
   roomReservations: '/room-reservations',
+  /** U46 연습실 시간 막기(연습실 예약 메뉴 안 탭) */
+  roomBlocks: '/room-reservations/blocks',
   members: {
     root: '/members',
     /** 신청서 "단원 등록됨" 링크 → 해당 단원 패널을 연다(designer W4 제안 — front-end 판단, 자체 결정) */

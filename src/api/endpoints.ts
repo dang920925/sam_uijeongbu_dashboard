@@ -30,6 +30,8 @@ export const endpoints = {
     teamAccounts: (id: string) => `${admin}/performances/${id}/team-accounts`,
     /** U34 팀 아이디 접두어 변경 */
     teamPrefix: (id: string) => `${admin}/performances/${id}/team-prefix`,
+    /** U45 팀 구성 표(배우 × 팀) */
+    teamMembers: (id: string) => `${admin}/performances/${id}/team-members`,
     /** R3 배역 목록·추가(develop §11.7) */
     roles: (id: string) => `${admin}/performances/${id}/roles`,
     rolesOrder: (id: string) => `${admin}/performances/${id}/roles/order`,
@@ -42,10 +44,20 @@ export const endpoints = {
   /** U34 팀 계정 단건 — 재발급·사용 켜기/끄기 */
   teamAccounts: {
     detail: (id: string) => `${admin}/team-accounts/${id}`,
+    /** U45 팀 소속 배우 넣기(PUT)·빼기(DELETE) */
+    member: (id: string, memberId: string) =>
+      `${admin}/team-accounts/${id}/members/${memberId}`,
     resetPassword: (id: string) =>
       `${admin}/team-accounts/${id}/reset-password`,
   },
   /** U34 연습실 예약(관리) — 기간 목록·삭제 */
+  /** U46 연습실 시간 막기 */
+  roomBlocks: {
+    list: `${admin}/room-blocks`,
+    conflicts: `${admin}/room-blocks/conflicts`,
+    detail: (id: string) => `${admin}/room-blocks/${id}`,
+    skip: (id: string) => `${admin}/room-blocks/${id}/skip`,
+  },
   roomReservations: {
     list: `${admin}/room-reservations`,
     detail: (id: string) => `${admin}/room-reservations/${id}`,

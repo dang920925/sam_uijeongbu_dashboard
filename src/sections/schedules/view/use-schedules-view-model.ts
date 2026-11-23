@@ -14,7 +14,10 @@ import { useTheme } from '@mui/material/styles';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useAllClasses, usePerformances } from '@/src/api/performance-queries';
-import { useDeleteAdminRoomReservation } from '@/src/api/practice-queries';
+import {
+  useDeleteAdminRoomReservation,
+  useSkipRoomBlockDate,
+} from '@/src/api/practice-queries';
 import { toScheduleFormInput } from '@/src/api/schedule-mapper';
 import { useDeleteSchedule, useSchedules } from '@/src/api/schedule-queries';
 import type { SegmentOption } from '@/src/components/segment-pill';
@@ -85,6 +88,7 @@ export function useSchedulesViewModel(today: string) {
   const [roomDetailId, setRoomDetailId] = useState<string | null>(null);
   const [roomDeleteOpen, setRoomDeleteOpen] = useState(false);
   const removeRoom = useDeleteAdminRoomReservation();
+  const skipBlock = useSkipRoomBlockDate();
   const type = typeFilter === 'ALL' ? undefined : typeFilter;
 
   const calendar = useScheduleCalendar({ today, type, isXs, isLg, showRooms });
@@ -173,8 +177,27 @@ export function useSchedulesViewModel(today: string) {
   const roomDetail =
     calendar.roomEvents.find((event) => event.id === roomDetailId) ?? null;
 
+  // (U46) 막은 시간 상세의 동작은 '이 날만 해제', 팀 예약은 '예약 삭제'
   const handleConfirmRoomDelete = () => {
     if (!roomDetail?.room) return;
+    const { blockId, blockDate } = roomDetail.room;
+    if (blockId && blockDate) {
+      skipBlock.mutate(
+        { id: blockId, date: blockDate },
+        {
+          onSuccess: () => {
+            setRoomDeleteOpen(false);
+            setRoomDetailId(null);
+            snackbar.success(MSG_D08.BLOCK_SKIPPED);
+          },
+          onError: (error) => {
+            setRoomDeleteOpen(false);
+            snackbar.error(toErrorMessage(error));
+          },
+        }
+      );
+      return;
+    }
     removeRoom.mutate(roomDetail.room.id, {
       onSuccess: () => {
         setRoomDeleteOpen(false);
@@ -281,7 +304,9 @@ export function useSchedulesViewModel(today: string) {
     roomListEvents: showRooms && isList ? calendar.roomEvents : null,
     roomDetail,
     isRoomDeleteOpen: roomDeleteOpen,
-    isRoomDeleting: removeRoom.isPending,
+    isRoomDeleting: removeRoom.isPending || skipBlock.isPending,
+    /** (U46) 막은 시간 상세면 확인 창이 '이 날만 해제' */
+    isRoomBlock: Boolean(roomDetail?.room?.blockId),
     onCloseRoomDetail: () => setRoomDetailId(null),
     onRoomDelete: () => setRoomDeleteOpen(true),
     onConfirmRoomDelete: handleConfirmRoomDelete,

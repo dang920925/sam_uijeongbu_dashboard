@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  formatAttendees,
   fromAdminRoomReservationResponse,
   fromTeamAccountListResponse,
+  fromTeamRosterResponse,
   toTeamCopyAll,
   toTeamCopyLine,
 } from '@/src/api/practice-mapper';
@@ -90,7 +92,58 @@ describe('fromTeamAccountListResponse · fromAdminRoomReservationResponse', () =
         memo: null,
         performanceId: 'p',
         performanceTitle: 'Dear',
+        attendees: [],
+        attendeeCount: 0,
       }).startAt
     ).toEqual(new Date('2026-12-01T10:00:00.000Z'));
+  });
+
+  it('(U45) 관리 예약의 참석자는 이름 목록으로 바꾼다', () => {
+    expect(
+      fromAdminRoomReservationResponse({
+        id: 'r',
+        startAt: '2026-12-01T10:00:00.000Z',
+        endAt: '2026-12-01T11:00:00.000Z',
+        teamName: 'Dear-A',
+        memo: null,
+        performanceId: 'p',
+        performanceTitle: 'Dear',
+        attendees: [
+          { memberId: 'm1', name: '김가' },
+          { memberId: 'm2', name: '이나' },
+        ],
+        attendeeCount: 2,
+      }).attendeeNames
+    ).toEqual(['김가', '이나']);
+  });
+});
+
+describe('fromTeamRosterResponse (U45)', () => {
+  it('팀·배우를 복사해 담는다(원본 배열을 공유하지 않는다)', () => {
+    const res = {
+      teams: [
+        {
+          teamAccountId: 'ta',
+          label: 'A',
+          username: 'Dear-A',
+          isActive: true,
+          memberIds: ['m1'],
+        },
+      ],
+      members: [{ memberId: 'm1', name: '김가', roleNames: ['디어'] }],
+    };
+    const roster = fromTeamRosterResponse(res);
+    expect(roster).toEqual(res);
+    expect(roster.teams[0].memberIds).not.toBe(res.teams[0].memberIds);
+  });
+});
+
+describe('formatAttendees (U45)', () => {
+  it('인원 수와 이름을 쉼표로 잇는다', () => {
+    expect(formatAttendees(['김가', '이나'], '-')).toBe('2명 · 김가, 이나');
+  });
+
+  it('없으면 대체 문구(경계)', () => {
+    expect(formatAttendees([], '체크 안 함')).toBe('체크 안 함');
   });
 });

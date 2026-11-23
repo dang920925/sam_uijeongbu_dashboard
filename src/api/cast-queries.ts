@@ -28,6 +28,7 @@ import {
   replaceShowCast,
   saveCastPublic,
 } from '@/src/api/cast';
+import { teamRosterKeys } from '@/src/api/practice-queries';
 import { ROOT_KEYS } from '@/src/api/root-keys';
 import type {
   CastActorRequest,
@@ -94,6 +95,8 @@ function useInvalidateCast() {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ROOT_KEYS.cast }),
       queryClient.invalidateQueries({ queryKey: ROOT_KEYS.member }),
+      // (U45) 캐스트가 바뀌면 팀 구성 표의 배우 목록도 바뀐다
+      queryClient.invalidateQueries({ queryKey: teamRosterKeys.all }),
     ]);
 }
 
