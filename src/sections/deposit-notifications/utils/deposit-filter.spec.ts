@@ -16,6 +16,7 @@ describe('depositFilterOptions', () => {
       '입금 완료',
       '직접 연결',
       '무시함',
+      '판정 안 함',
     ]);
   });
 });

@@ -83,12 +83,13 @@ export function DepositPreviewCard({ preview }: DepositPreviewCardProps) {
           >
             <div className='flex flex-wrap items-center gap-2'>
               <Label tone={result.statusTone}>{result.statusLabel}</Label>
-              {result.reasonText ? (
-                <Typo.Caption.Regular color='text.secondary'>
-                  {result.reasonText}
-                </Typo.Caption.Regular>
-              ) : null}
             </div>
+            {result.reasonText ? (
+              <ResultLine
+                label={MSG_DEP.PREVIEW_REASON}
+                value={result.reasonText}
+              />
+            ) : null}
             <ResultLine
               label={MSG_DEP.PREVIEW_AMOUNT}
               value={result.amountText}

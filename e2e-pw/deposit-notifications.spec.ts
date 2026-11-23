@@ -215,4 +215,47 @@ test.describe('SCR-D12 입금 알림(R2)', () => {
     );
     expect(after.totalCount).toBe(before.totalCount);
   });
+
+  test('알림 문구 시험은 예매번호만 일치하면 불일치 이유를 보여 준다', async ({
+    page,
+  }) => {
+    await openDeposits(page);
+
+    await page
+      .getByRole('textbox', { name: '알림 문구' })
+      .fill('입금 20,000원 다른사람7333');
+    await page.getByRole('button', { name: '판정 미리 보기' }).click();
+
+    const result = page.getByRole('status', { name: '판정' });
+    await expect(result.getByText('확인 안 된 입금')).toBeVisible();
+    await expect(
+      result.getByText('입금자명 불일치(예매번호만 일치)')
+    ).toBeVisible();
+  });
+
+  test('출처 앱 열을 보이고, 허용 밖 앱 알림은 판정 안 함으로 남는다', async ({
+    page,
+    request,
+  }) => {
+    const response = await request.post(`${API}/__mock/deposit`, {
+      data: {
+        appPackage: 'com.example.sms',
+        appName: '문자',
+        title: '알림',
+        text: '알투다7333님이 20,000원을 보내셨습니다',
+      },
+    });
+    expect(response.status()).toBe(202);
+    await openDeposits(page);
+
+    await expect(visible(page, '판정 안 함').first()).toBeVisible();
+    await expect(visible(page, '문자').first()).toBeVisible();
+    await page.getByRole('tab', { name: '예매', exact: true }).click();
+    await expect(
+      page
+        .locator('[data-reservation-code="7333"]')
+        .filter({ visible: true })
+        .getByText('확정', { exact: true })
+    ).toHaveCount(0);
+  });
 });

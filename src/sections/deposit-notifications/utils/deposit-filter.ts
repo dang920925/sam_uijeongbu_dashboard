@@ -14,6 +14,7 @@ const ORDER: DepositNotificationStatus[] = [
   'AUTO_CONFIRMED',
   'MANUALLY_MATCHED',
   'IGNORED',
+  'IGNORED_SOURCE',
 ];
 
 export function depositFilterOptions(): SegmentOption<DepositFilter>[] {

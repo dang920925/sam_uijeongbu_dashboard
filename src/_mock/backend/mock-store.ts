@@ -114,6 +114,8 @@ export interface MockDepositNotification {
   id: string;
   receivedAt: string;
   source: string | null;
+  appPackage: string | null;
+  appName: string | null;
   title: string | null;
   text: string | null;
   parsedAmount: number | null;

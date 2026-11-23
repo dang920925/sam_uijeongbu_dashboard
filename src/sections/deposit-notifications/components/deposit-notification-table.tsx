@@ -1,7 +1,7 @@
 'use client';
 
 // ----------------------------------------------------------------------
-// '입금 알림' 목록 — 받은 시각 · 알림 원문(출처) · 금액 · 판정(라벨 + 이유) · 연결된 예매(+ 일부 입금 받은 금액) · 처리.
+// '입금 알림' 목록 — 받은 시각 · 출처 앱 · 알림 원문 · 금액 · 판정(라벨 + 이유) · 연결된 예매(+ 일부 입금 받은 금액) · 처리.
 // 처리(예매에 연결 · 무시)는 일부 입금 · 확인 필요 · 확인 안 된 입금만. lg 표 / lg 미만 카드.
 // ----------------------------------------------------------------------
 import Button from '@mui/material/Button';
@@ -64,11 +64,6 @@ function MessageCell({ row }: { row: DepositRow }) {
       >
         {row.messageText}
       </Typo.Body.Regular>
-      {row.sourceText ? (
-        <Typo.Caption.Regular color='text.secondary'>
-          {row.sourceText}
-        </Typo.Caption.Regular>
-      ) : null}
     </span>
   );
 }
@@ -111,6 +106,15 @@ export function DepositNotificationTable({
       render: (r) => <Typo.Body.Regular>{r.receivedText}</Typo.Body.Regular>,
     },
     {
+      key: 'app',
+      header: MSG_DEP.COL_APP,
+      render: (r) => (
+        <Typo.Body.Regular>
+          {r.appText ?? MSG_DEP.NO_RESERVATION}
+        </Typo.Body.Regular>
+      ),
+    },
+    {
       key: 'message',
       header: MSG_DEP.COL_MESSAGE,
       render: (r) => <MessageCell row={r} />,
@@ -149,7 +153,7 @@ export function DepositNotificationTable({
         <div className='flex flex-col gap-2'>
           <div className='flex flex-wrap items-center justify-between gap-2'>
             <Typo.Caption.Regular color='text.secondary'>
-              {r.receivedText}
+              {r.appText ? `${r.receivedText} · ${r.appText}` : r.receivedText}
             </Typo.Caption.Regular>
             <StatusCell row={r} />
           </div>

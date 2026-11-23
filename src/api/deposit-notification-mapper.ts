@@ -1,7 +1,8 @@
 // ----------------------------------------------------------------------
 // R2 입금 알림 매퍼 — 서버 응답 → '입금 알림' 탭 표시 모델.
 // - 판정 라벨·색: 입금 완료·직접 연결(success) · 일부 입금·확인 필요(warning) · 확인 안 된 입금(error) · 무시함(neutral)
-// - 출처: 패키지 이름을 앱 이름으로(카카오뱅크 · 알림톡 · 카카오페이), 모르면 받은 값 그대로
+// - 출처 앱: appName, 없으면 패키지 이름을 앱 이름으로(카카오뱅크 · 알림톡 · 카카오페이), 모르면 받은 값 그대로
+// - 문구 시험 이유: 확인 필요 이유, 불일치면 단서("입금자명 불일치(예매번호만 일치)")
 // - 일부 입금: 예매가 입금 대기이고 받은 금액 < 예매 금액이면 "받은 금액 N원 / M원"
 // - 처리(연결·무시)는 일부 입금·확인 필요·확인 안 된 입금에서만
 // ----------------------------------------------------------------------
@@ -30,6 +31,7 @@ export const DEPOSIT_STATUS_TONE: Record<DepositNotificationStatus, LabelTone> =
     NEEDS_REVIEW: 'warning',
     UNMATCHED: 'error',
     IGNORED: 'neutral',
+    IGNORED_SOURCE: 'neutral',
   };
 
 export interface DepositReservationView {
@@ -44,7 +46,8 @@ export interface DepositReservationView {
 export interface DepositRow {
   id: string;
   receivedText: string;
-  sourceText: string | null;
+  /** 출처 앱 이름 — appName, 없으면 패키지·source 를 앱 이름으로 */
+  appText: string | null;
   /** 제목 + 내용(줄바꿈) */
   messageText: string;
   amountText: string;
@@ -107,7 +110,8 @@ export function toDepositRow(item: DepositNotificationItem): DepositRow {
   return {
     id: item.id,
     receivedText: formatKstDateTime(item.receivedAt),
-    sourceText: toSourceText(item.source),
+    appText:
+      item.appName?.trim() || toSourceText(item.appPackage ?? item.source),
     messageText: [item.title, item.text]
       .filter((part): part is string => Boolean(part))
       .join('\n'),
@@ -115,7 +119,11 @@ export function toDepositRow(item: DepositNotificationItem): DepositRow {
     status: item.status,
     statusLabel: MSG_DEP.STATUS[item.status],
     statusTone: DEPOSIT_STATUS_TONE[item.status],
-    reasonText: item.reviewReason ? MSG_DEP.REASON[item.reviewReason] : null,
+    reasonText: item.reviewReason
+      ? MSG_DEP.REASON[item.reviewReason]
+      : item.status === 'IGNORED_SOURCE'
+        ? MSG_DEP.IGNORED_SOURCE_REASON
+        : null,
     reservation: item.reservation
       ? toDepositReservationView(item.reservation)
       : null,
@@ -148,7 +156,9 @@ export function toDepositPreviewView(
     statusTone: DEPOSIT_STATUS_TONE[preview.status],
     reasonText: preview.reviewReason
       ? MSG_DEP.REASON[preview.reviewReason]
-      : null,
+      : preview.unmatchedHint
+        ? MSG_DEP.HINT[preview.unmatchedHint]
+        : null,
     matches: preview.matches.map(toDepositReservationView),
   };
 }

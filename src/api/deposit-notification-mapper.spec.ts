@@ -32,6 +32,8 @@ function buildItem(
     id: 'fixture-r2-dn-1',
     receivedAt: '2026-11-23T05:07:00.000Z',
     source: 'com.kakaobank.channel',
+    appPackage: null,
+    appName: null,
     title: '입금',
     text: '홍길동1234 10,000원 잔액 ***',
     parsedAmount: 10000,
@@ -48,7 +50,7 @@ describe('toDepositRow', () => {
     expect(toDepositRow(buildItem())).toEqual({
       id: 'fixture-r2-dn-1',
       receivedText: '2026.11.23 14:07',
-      sourceText: '카카오뱅크',
+      appText: '카카오뱅크',
       messageText: '입금\n홍길동1234 10,000원 잔액 ***',
       amountText: '10,000원',
       status: 'PARTIAL',
@@ -90,6 +92,31 @@ describe('toDepositRow', () => {
       expect(toDepositRow(buildItem({ status })).canResolve).toBe(false);
     }
   );
+});
+
+describe('toDepositRow — 출처 앱', () => {
+  it('앱 이름이 있으면 그것, 없으면 패키지를 앱 이름으로', () => {
+    expect(
+      toDepositRow(buildItem({ appName: '카카오뱅크', source: null })).appText
+    ).toBe('카카오뱅크');
+    expect(
+      toDepositRow(buildItem({ appPackage: 'com.kakao.talk', source: null }))
+        .appText
+    ).toBe('알림톡');
+  });
+
+  it('판정 안 함(다른 앱)은 neutral 라벨과 이유, 처리 불가', () => {
+    const row = toDepositRow(
+      buildItem({ status: 'IGNORED_SOURCE', reservation: null })
+    );
+
+    expect([
+      row.statusLabel,
+      row.statusTone,
+      row.reasonText,
+      row.canResolve,
+    ]).toEqual(['판정 안 함', 'neutral', '판정하지 않는 앱 알림', false]);
+  });
 });
 
 describe('toSourceText', () => {
@@ -136,6 +163,7 @@ describe('toDepositPreviewView', () => {
         amount: null,
         amountCandidates: [],
         matchedBy: null,
+        unmatchedHint: 'CODE_ONLY',
         status: 'UNMATCHED',
         reviewReason: null,
         autoConfirm: true,
@@ -147,7 +175,7 @@ describe('toDepositPreviewView', () => {
       matchedByText: '못 찾음',
       statusLabel: '확인 안 된 입금',
       statusTone: 'error',
-      reasonText: null,
+      reasonText: '입금자명 불일치(예매번호만 일치)',
       matches: [],
     });
   });
@@ -158,6 +186,7 @@ describe('toDepositPreviewView', () => {
       amount: 15000,
       amountCandidates: [15000, 2000],
       matchedBy: 'DEPOSITOR',
+      unmatchedHint: null,
       status: 'NEEDS_REVIEW',
       reviewReason: 'MULTIPLE_MATCH',
       autoConfirm: true,
@@ -169,7 +198,12 @@ describe('toDepositPreviewView', () => {
       view.matchedByText,
       view.reasonText,
       view.matches.length,
-    ]).toEqual(['15,000원, 2,000원', '입금자명', '맞는 예매가 여러 건', 2]);
+    ]).toEqual([
+      '15,000원, 2,000원',
+      '입금자명 일치',
+      '맞는 예매가 여러 건',
+      2,
+    ]);
   });
 });
 

@@ -11,6 +11,7 @@ export const DEPOSIT_NOTIFICATION_STATUSES = [
   'UNMATCHED',
   'MANUALLY_MATCHED',
   'IGNORED',
+  'IGNORED_SOURCE',
 ] as const;
 export type DepositNotificationStatus =
   (typeof DEPOSIT_NOTIFICATION_STATUSES)[number];
@@ -41,6 +42,9 @@ export interface DepositNotificationItem {
   id: string;
   receivedAt: string;
   source: string | null;
+  /** 알림 앱 패키지·이름(MacroDroid %not_app_package · %not_app_name) */
+  appPackage: string | null;
+  appName: string | null;
   title: string | null;
   /** 잔액 숫자는 서버가 지운 본문 */
   text: string | null;
@@ -69,8 +73,14 @@ export interface DepositPreview {
   text: string;
   amount: number | null;
   amountCandidates: number[];
-  matchedBy: 'DEPOSITOR' | 'CODE' | null;
-  status: Exclude<DepositNotificationStatus, 'MANUALLY_MATCHED' | 'IGNORED'>;
+  /** 입금자명 전체 일치만 인정 */
+  matchedBy: 'DEPOSITOR' | null;
+  /** 불일치 단서 — 예매번호만 · 이름만 */
+  unmatchedHint: 'CODE_ONLY' | 'NAME_ONLY' | null;
+  status: Exclude<
+    DepositNotificationStatus,
+    'MANUALLY_MATCHED' | 'IGNORED' | 'IGNORED_SOURCE'
+  >;
   reviewReason: DepositReviewReason | null;
   autoConfirm: boolean;
   matches: DepositReservationSummary[];

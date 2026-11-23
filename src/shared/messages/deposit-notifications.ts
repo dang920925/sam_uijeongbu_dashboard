@@ -14,6 +14,7 @@ export const MSG_DEP = {
   EMPTY_FILTERED: '이 조건의 입금 알림이 없습니다.',
   COL_RECEIVED: '받은 시각',
   COL_MESSAGE: '알림 원문',
+  COL_APP: '출처 앱',
   COL_AMOUNT: '금액',
   COL_RESULT: '판정',
   COL_RESERVATION: '연결된 예매',
@@ -29,7 +30,14 @@ export const MSG_DEP = {
     UNMATCHED: '확인 안 된 입금',
     MANUALLY_MATCHED: '직접 연결',
     IGNORED: '무시함',
+    IGNORED_SOURCE: '판정 안 함',
   },
+  /** 불일치 단서(사용자 결정 2026-11-23 보강 — 입금자명 전체가 있어야 일치) */
+  HINT: {
+    CODE_ONLY: '입금자명 불일치(예매번호만 일치)',
+    NAME_ONLY: '입금자명 불일치(이름만 일치)',
+  },
+  IGNORED_SOURCE_REASON: '판정하지 않는 앱 알림',
   REASON: {
     MULTIPLE_MATCH: '맞는 예매가 여러 건',
     OVERPAID: '금액이 더 많음',
@@ -65,11 +73,11 @@ export const MSG_DEP = {
   PREVIEW_CANDIDATES: '금액 후보',
   PREVIEW_MATCHED_BY: '찾은 방법',
   PREVIEW_MATCHED_BY_VALUE: {
-    DEPOSITOR: '입금자명',
-    CODE: '예매번호',
+    DEPOSITOR: '입금자명 일치',
     NONE: '못 찾음',
   },
   PREVIEW_RESULT: '판정',
+  PREVIEW_REASON: '이유',
   PREVIEW_MATCHES: '맞는 예매',
   PREVIEW_NOT_SAVED: '시험 결과는 저장하지 않습니다.',
 } as const;
