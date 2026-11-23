@@ -5,12 +5,15 @@
 // 표: 날짜·시각·장소·좌석 예매/확정/남은(+총 n석)·오픈 시각·예매 상태(+빈 칸)·예매 중지 스위치·수정/삭제.
 // 빈 회차 "등록된 회차가 없습니다", 바닥 안내(일정 자동 연동 없음). props 만으로 렌더.
 // (U35) 좌석 지정이 켜진 공연은 행 동작에 "좌석 배치"(의자 아이콘).
+// (U48) 공연에 팀이 있으면 '출연 팀' 열(선택 칸 — 팀 미정 · A팀 …, 바꾸면 바로 저장). 카드도 같은 칸.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
+import MenuItem from '@mui/material/MenuItem';
 import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
 import { useId } from 'react';
 
 import { DataTable, type DataTableColumn } from '@/src/components/data-table';
@@ -33,6 +36,10 @@ interface ShowsCardProps {
   onToggleStop: (id: string, isStopped: boolean) => void;
   /** U35 — 좌석 지정 공연일 때만 */
   onSeatLayout?: (id: string) => void;
+  /** (U48) 이 공연의 팀(없으면 열 없음) */
+  teamOptions: { value: string; label: string }[];
+  savingTeamId: string | null;
+  onTeamChange: (id: string, teamAccountId: string) => void;
 }
 
 const ICON_BUTTON_SX = { width: LAYOUT.controlSm, height: LAYOUT.controlSm };
@@ -45,8 +52,38 @@ export function ShowsCard({
   onDelete,
   onToggleStop,
   onSeatLayout,
+  teamOptions,
+  savingTeamId,
+  onTeamChange,
 }: ShowsCardProps) {
   const titleId = useId();
+  const hasTeams = teamOptions.length > 0;
+
+  const teamSelect = (row: ShowRowDisplay) => (
+    <TextField
+      select
+      size='small'
+      value={row.teamAccountId}
+      disabled={savingTeamId === row.id}
+      onChange={(event) => onTeamChange(row.id, event.target.value)}
+      sx={{ minWidth: 120 }}
+      slotProps={{
+        select: {
+          displayEmpty: true,
+          SelectDisplayProps: {
+            'aria-label': MSG_D11.TEAM_ARIA(row.titleText),
+          } as object,
+        },
+      }}
+    >
+      <MenuItem value=''>{MSG_D11.TEAM_NONE}</MenuItem>
+      {teamOptions.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
 
   const actions = (row: ShowRowDisplay) => (
     <div className='flex justify-end gap-1'>
@@ -140,6 +177,9 @@ export function ShowsCard({
       header: MSG_D11.COL_OPEN,
       render: (row) => secondary(row.openText),
     },
+    ...(hasTeams
+      ? [{ key: 'team', header: MSG_D11.COL_TEAM, render: teamSelect }]
+      : []),
     { key: 'state', header: MSG_D11.COL_STATE, render: stateCell },
     { key: 'stop', header: MSG_D11.COL_STOP, render: stopSwitch },
     {
@@ -176,6 +216,12 @@ export function ShowsCard({
         <Typo.Caption.Regular color='text.secondary'>
           {row.missingText}
         </Typo.Caption.Regular>
+      ) : null}
+      {hasTeams ? (
+        <div className='flex items-center gap-3'>
+          <Typo.Badge.Medium>{MSG_D11.COL_TEAM}</Typo.Badge.Medium>
+          {teamSelect(row)}
+        </div>
       ) : null}
       <div className='flex items-center justify-between gap-2'>
         <FormControlLabel

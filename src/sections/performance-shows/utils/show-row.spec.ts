@@ -15,6 +15,7 @@ const SHOW: Show = {
   venue: 'fixture-소극장',
   status: 'UPCOMING',
   bookingEnabled: true,
+  teamAccountId: null,
   bookingOpenAt: '2026-12-01T11:00:00.000Z',
   totalSeats: 80,
   pendingQty: 2,

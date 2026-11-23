@@ -33,11 +33,18 @@ interface ClassOption {
 interface ShowDialogProps {
   dialog: ShowDialogState;
   classOptions: ClassOption[];
+  /** (U48) 이 공연의 팀(없으면 칸 없음) — value = 팀 계정 id */
+  teamOptions: ClassOption[];
 }
 
 const STATUS_OPTIONS: ShowStatus[] = ['UPCOMING', 'BOOKING_OPEN', 'COMPLETED'];
 
-export function ShowDialog({ dialog, classOptions }: ShowDialogProps) {
+export function ShowDialog({
+  dialog,
+  classOptions,
+  teamOptions,
+}: ShowDialogProps) {
+  const teamId = useId();
   const dateId = useId();
   const startId = useId();
   const endId = useId();
@@ -144,6 +151,41 @@ export function ShowDialog({ dialog, classOptions }: ShowDialogProps) {
             ))}
           </TextField>
         </FormField>
+        {teamOptions.length > 0 ? (
+          <FormField
+            label={MSG_D11.TEAM}
+            htmlFor={teamId}
+            labelId={`${teamId}-label`}
+            helper={
+              dialog.isEdit ? MSG_D11.TEAM_HELP : MSG_D11.TEAM_CREATE_HELP
+            }
+          >
+            <TextField
+              id={teamId}
+              select
+              disabled={!dialog.isEdit}
+              value={form.teamAccountId}
+              onChange={(e) =>
+                dialog.onFieldChange('teamAccountId', e.target.value)
+              }
+              slotProps={{
+                select: {
+                  displayEmpty: true,
+                  SelectDisplayProps: {
+                    'aria-labelledby': `${teamId}-label`,
+                  } as object,
+                },
+              }}
+            >
+              <MenuItem value=''>{MSG_D11.TEAM_NONE}</MenuItem>
+              {teamOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </FormField>
+        ) : null}
         <FormField label={MSG_D11.VENUE} htmlFor={venueId}>
           <TextField
             id={venueId}

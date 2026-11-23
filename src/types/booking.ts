@@ -48,6 +48,11 @@ export interface ShowUpsertRequest {
   status?: ShowStatus;
 }
 
+/** (U48) 회차 수정(PATCH)만 — 등록(POST)에는 teamAccountId 가 없다(back-end §25.6). null = 팀 미정 */
+export type ShowPatchRequest = Partial<ShowUpsertRequest> & {
+  teamAccountId?: string | null;
+};
+
 export interface AdminShowItemResponse {
   id: string;
   classId: string | null;
@@ -57,6 +62,8 @@ export interface AdminShowItemResponse {
   venue: string | null;
   status: ShowStatus;
   bookingEnabled: boolean;
+  /** (U48) 회차 출연 팀(팀 계정 id) — 미정·폐기 팀이면 null(옛 서버는 키 없음) */
+  teamAccountId?: string | null;
   bookingOpenAt: string | null;
   totalSeats: number | null;
   pendingQty: number;

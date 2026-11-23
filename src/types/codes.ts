@@ -36,7 +36,9 @@ export type UploadPurpose =
   | 'ACTOR_PROFILE'
   | 'STAFF_PROFILE'
   | 'GALLERY'
-  | 'POPUP';
+  | 'POPUP'
+  /** (U48) 캐스트 사진 — 단체샷 · 팀샷 · 배역 개인샷(back-end §25.1) */
+  | 'CAST_PHOTO';
 
 export const PERFORMANCE_TYPE_LABEL: Record<PerformanceType, string> = {
   MUSICAL: '뮤지컬',
@@ -206,6 +208,7 @@ export const UPLOAD_MAX_BYTES: Record<UploadPurpose, number> = {
   STAFF_PROFILE: 5 * MB,
   GALLERY: 10 * MB,
   POPUP: 5 * MB,
+  CAST_PHOTO: 10 * MB,
 };
 
 // ─── 예매(U24 R1) — 라벨은 design §6 SCR-D11·D12 "제안"(designer 시안에서 확정) ───

@@ -133,6 +133,19 @@ export function provisionMockTeam(performance: {
   addTeam(performance.id);
 }
 
+/** (U48) 캐스트 사진·회차 팀 지정용 — 폐기 안 된 팀(라벨 순) */
+export function mockActiveTeams(
+  performanceId: string
+): { id: string; label: string }[] {
+  return state()
+    .teams.filter((t) => t.performanceId === performanceId && !t.revokedAt)
+    .sort(
+      (a, b) =>
+        a.label.length - b.label.length || a.label.localeCompare(b.label)
+    )
+    .map((t) => ({ id: t.id, label: t.label }));
+}
+
 const toItem = ({
   performanceId: _performanceId,
   ...team

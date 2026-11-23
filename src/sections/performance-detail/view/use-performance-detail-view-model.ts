@@ -39,12 +39,17 @@ import {
   classesErrorSnackbar,
   detailErrorSnackbar,
 } from '@/src/sections/performance-detail/utils/detail-error-snackbar';
+import { useHomepagePreview } from '@/src/sections/performance-detail/view/use-homepage-preview';
 
 export type PerformanceDetailStatus =
   'loading' | 'not-found' | 'error' | 'ready';
 
-export function usePerformanceDetailViewModel(performanceId: string) {
+export function usePerformanceDetailViewModel(
+  performanceId: string,
+  clientPublicUrl: string | null
+) {
   const snackbar = useAppSnackbar();
+  const preview = useHomepagePreview(performanceId, clientPublicUrl);
   const performanceQuery = usePerformance(performanceId);
   const classesQuery = usePerformanceClasses(performanceId);
   const savePerformance = useSavePerformance(performanceId);
@@ -169,6 +174,7 @@ export function usePerformanceDetailViewModel(performanceId: string) {
       },
       onClose: () => setPerformanceDelete(null),
     },
+    preview,
     deleteConfirm: {
       isOpen: deleteTargetId !== null,
       isDeleting: deleteClass.isPending,

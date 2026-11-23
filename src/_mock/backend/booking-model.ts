@@ -178,6 +178,7 @@ export function toAdminShowItem(show: MockShow): AdminShowItemResponse {
     venue: show.venue,
     status: show.status,
     bookingEnabled: show.bookingEnabled,
+    teamAccountId: show.teamAccountId ?? null,
     bookingOpenAt: show.bookingOpenAt,
     totalSeats: show.totalSeats,
     pendingQty: counts.pendingQty,

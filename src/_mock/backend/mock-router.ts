@@ -8,6 +8,7 @@ import { admissionRoutes } from '@/src/_mock/backend/handlers/admission';
 import { applicationRoutes } from '@/src/_mock/backend/handlers/applications';
 import { authRoutes } from '@/src/_mock/backend/handlers/auth';
 import { castRoutes } from '@/src/_mock/backend/handlers/cast';
+import { castPhotoRoutes } from '@/src/_mock/backend/handlers/cast-photos';
 import { dashboardRoutes } from '@/src/_mock/backend/handlers/dashboard';
 import { depositDeviceRoutes } from '@/src/_mock/backend/handlers/deposit-devices';
 import { depositNotificationRoutes } from '@/src/_mock/backend/handlers/deposit-notifications';
@@ -50,6 +51,8 @@ const ROUTES: MockRoute[] = [
   ...priceTierRoutes,
   ...reservationRoutes,
   ...admissionRoutes,
+  // U48 캐스트 사진 — `team-accounts/{id}/photo` 가 팀 계정 단건 라우트보다 먼저
+  ...castPhotoRoutes,
   // U34 — `performances/{id}/team-accounts` 를 공연 라우트보다 먼저
   ...teamAccountRoutes,
   // R3 배역·참여자 — `members/{id}/cast-roles` 등이 단원 라우트보다 먼저(경로가 더 길어 겹치진 않지만 묶음을 한곳에)

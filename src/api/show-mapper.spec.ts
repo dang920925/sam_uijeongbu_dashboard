@@ -6,6 +6,7 @@ import {
   toBookingOpenAt,
   toIntOrNull,
   toShowFormInput,
+  toShowPatchRequest,
   toShowUpsertRequest,
 } from '@/src/api/show-mapper';
 import type { AdminShowItemResponse } from '@/src/types/booking';
@@ -19,6 +20,7 @@ const RESPONSE: AdminShowItemResponse = {
   venue: 'fixture-소극장',
   status: 'UPCOMING',
   bookingEnabled: false,
+  teamAccountId: 't-a',
   // KST 2026-12-01 20:00
   bookingOpenAt: '2026-12-01T11:00:00.000Z',
   totalSeats: 80,
@@ -88,7 +90,30 @@ describe('show-mapper', () => {
       bookingOpenTime: '20:00',
       bookingEnabled: false,
       status: 'UPCOMING',
+      teamAccountId: 't-a',
     });
+  });
+
+  it('(U48) 등록 요청에는 출연 팀을 넣지 않고, 수정 요청은 팀(미정이면 null)을 함께 보낸다', () => {
+    // Arrange
+    const form = {
+      ...EMPTY_SHOW_FORM,
+      showDate: '2026-12-12',
+      startTime: '14:00',
+    };
+    // Act · Assert
+    expect(
+      toShowUpsertRequest({ ...form, teamAccountId: 't-a' })
+    ).not.toHaveProperty('teamAccountId');
+    expect(toShowPatchRequest(form).teamAccountId).toBeNull();
+    expect(
+      toShowPatchRequest({ ...form, teamAccountId: 't-a' }).teamAccountId
+    ).toBe('t-a');
+  });
+
+  it('(U48) 옛 응답에 teamAccountId 가 없으면 팀 미정(null)이다', () => {
+    const { teamAccountId: _omit, ...old } = RESPONSE;
+    expect(fromAdminShowItemResponse(old).teamAccountId).toBeNull();
   });
 
   it('오픈 시각이 없으면 폼의 날짜·시각 칸은 빈 문자열이다', () => {

@@ -47,6 +47,8 @@ export interface ShowRowDisplay {
   /** '빈 칸: 가격, 오픈 시각' — 없으면 null */
   missingText: string | null;
   isStopped: boolean;
+  /** (U48) 출연 팀 id — '' = 팀 미정(선택 칸 값) */
+  teamAccountId: string;
 }
 
 /** 'YYYY-MM-DD' → 'YYYY.MM.DD (요일)' */
@@ -93,5 +95,6 @@ export function toShowRowDisplay(show: Show): ShowRowDisplay {
     missingText:
       show.state === 'NOT_READY' ? toRowMissingText(show.missingFields) : null,
     isStopped: !show.bookingEnabled,
+    teamAccountId: show.teamAccountId ?? '',
   };
 }
