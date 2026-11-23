@@ -4,7 +4,7 @@
 // - 출처 앱: appName, 없으면 패키지 이름을 앱 이름으로(카카오뱅크 · 알림톡 · 카카오페이), 모르면 받은 값 그대로
 // - 문구 시험 이유: 확인 필요 이유, 불일치면 단서("입금자명 불일치(예매번호만 일치)")
 // - 일부 입금: 예매가 입금 대기이고 받은 금액 < 예매 금액이면 "받은 금액 N원 / M원"
-// - 처리(연결·무시)는 일부 입금·확인 필요·확인 안 된 입금에서만
+// - 연결은 일부 입금·확인 필요·확인 안 된 입금에서만, 무시는 거기에 판정 안 함(IGNORED_SOURCE)까지(운영 스모크 2026-11-23)
 // ----------------------------------------------------------------------
 import { formatWon } from '@/src/api/reservation-mapper';
 import { MSG_DEP } from '@/src/shared/messages/deposit-notifications';
@@ -21,6 +21,10 @@ const OPEN_STATUSES: DepositNotificationStatus[] = [
   'PARTIAL',
   'NEEDS_REVIEW',
   'UNMATCHED',
+];
+const IGNORABLE_STATUSES: DepositNotificationStatus[] = [
+  ...OPEN_STATUSES,
+  'IGNORED_SOURCE',
 ];
 
 export const DEPOSIT_STATUS_TONE: Record<DepositNotificationStatus, LabelTone> =
@@ -56,7 +60,10 @@ export interface DepositRow {
   statusTone: LabelTone;
   reasonText: string | null;
   reservation: DepositReservationView | null;
-  canResolve: boolean;
+  /** 예매에 연결할 수 있는가(열린 알림) */
+  canMatch: boolean;
+  /** 무시(목록에서 숨김)할 수 있는가(열린 알림 + 판정 안 함) */
+  canIgnore: boolean;
 }
 
 export function toSourceText(source: string | null): string | null {
@@ -127,7 +134,8 @@ export function toDepositRow(item: DepositNotificationItem): DepositRow {
     reservation: item.reservation
       ? toDepositReservationView(item.reservation)
       : null,
-    canResolve: OPEN_STATUSES.includes(item.status),
+    canMatch: OPEN_STATUSES.includes(item.status),
+    canIgnore: IGNORABLE_STATUSES.includes(item.status),
   };
 }
 

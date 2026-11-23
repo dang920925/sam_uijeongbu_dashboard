@@ -75,17 +75,19 @@ export function DepositNotificationTable({
   onIgnore,
 }: DepositNotificationTableProps) {
   const actions = (row: DepositRow) =>
-    row.canResolve ? (
+    row.canMatch || row.canIgnore ? (
       <span className='inline-flex flex-wrap items-center gap-2'>
-        <Button
-          variant='contained'
-          size='small'
-          onClick={() => onMatch(row)}
-          aria-label={`${row.amountText} · ${row.receivedText} ${MSG_DEP.BTN_MATCH}`}
-          sx={BUTTON_SX}
-        >
-          {MSG_DEP.BTN_MATCH}
-        </Button>
+        {row.canMatch ? (
+          <Button
+            variant='contained'
+            size='small'
+            onClick={() => onMatch(row)}
+            aria-label={`${row.amountText} · ${row.receivedText} ${MSG_DEP.BTN_MATCH}`}
+            sx={BUTTON_SX}
+          >
+            {MSG_DEP.BTN_MATCH}
+          </Button>
+        ) : null}
         <Button
           variant='text'
           color='inherit'

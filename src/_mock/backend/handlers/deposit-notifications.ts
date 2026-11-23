@@ -46,6 +46,12 @@ const OPEN: DepositNotificationStatus[] = [
   'NEEDS_REVIEW',
   'UNMATCHED',
 ];
+// 서버와 같게 — 무시는 판정 안 함까지, 거르기 없는 목록은 무시함·판정 안 함을 뺀다(운영 스모크 2026-11-23)
+const IGNORABLE: DepositNotificationStatus[] = [...OPEN, 'IGNORED_SOURCE'];
+const HIDDEN_BY_DEFAULT: DepositNotificationStatus[] = [
+  'IGNORED',
+  'IGNORED_SOURCE',
+];
 
 function receivedOf(reservationId: string): number {
   return getStore()
@@ -204,13 +210,16 @@ function confirm(r: MockReservation, by: 'AUTO' | 'MANUAL') {
   r.version += 1;
 }
 
-function findOpen(ctx: MockContext): MockDepositNotification | Response {
+function findIn(
+  ctx: MockContext,
+  statuses: DepositNotificationStatus[]
+): MockDepositNotification | Response {
   const found = getStore().depositNotifications.find(
     (d) => d.id === ctx.params.id
   );
   if (!found)
     return apiError(ctx, 404, 'DEP_001', '입금 알림을 찾을 수 없습니다.');
-  if (!OPEN.includes(found.status))
+  if (!statuses.includes(found.status))
     return apiError(ctx, 409, 'DEP_002', '이미 처리된 입금 알림입니다.');
   return found;
 }
@@ -223,7 +232,9 @@ export const depositNotificationRoutes: MockRoute[] = [
     handle: (ctx) => {
       const status = ctx.query.get('status');
       const rows = getStore()
-        .depositNotifications.filter((d) => !status || d.status === status)
+        .depositNotifications.filter((d) =>
+          status ? d.status === status : !HIDDEN_BY_DEFAULT.includes(d.status)
+        )
         .sort(
           (a, b) =>
             b.receivedAt.localeCompare(a.receivedAt) || b.id.localeCompare(a.id)
@@ -275,7 +286,7 @@ export const depositNotificationRoutes: MockRoute[] = [
     pattern: /^\/v1\/admin\/deposit-notifications\/(?<id>[^/]+)\/match$/,
     auth: true,
     handle: (ctx) => {
-      const found = findOpen(ctx);
+      const found = findIn(ctx, OPEN);
       if (found instanceof Response) return found;
       const r = getStore().reservations.find(
         (x) => x.id === ctx.body.reservationId
@@ -311,7 +322,7 @@ export const depositNotificationRoutes: MockRoute[] = [
     pattern: /^\/v1\/admin\/deposit-notifications\/(?<id>[^/]+)\/ignore$/,
     auth: true,
     handle: (ctx) => {
-      const found = findOpen(ctx);
+      const found = findIn(ctx, IGNORABLE);
       if (found instanceof Response) return found;
       Object.assign(found, {
         status: 'IGNORED',
