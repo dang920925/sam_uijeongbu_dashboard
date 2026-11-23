@@ -21,6 +21,9 @@ export interface CompressedUploadResult {
   originalSize: number | null;
   /** 실제로 올린 바이트 수 */
   uploadedSize: number;
+  /** (U51) 올린 파일의 가로·세로 px — 모르면 null */
+  width: number | null;
+  height: number | null;
 }
 
 async function sendImage(
@@ -53,6 +56,8 @@ export async function uploadImageWithCompress(
     url,
     originalSize: prepared.originalSize,
     uploadedSize: prepared.file.size,
+    width: prepared.width,
+    height: prepared.height,
   };
 }
 

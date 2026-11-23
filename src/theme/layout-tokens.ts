@@ -10,6 +10,8 @@ export const LAYOUT = {
   panel: 320,
   dialog: 512,
   dialogWide: 640,
+  /** U51 보이는 위치 조정 창(designer §21.2 — --sp-16 × 15) */
+  dialogCrop: 960,
   dialogConfirm: 384,
   login: 400,
   touch: 44,

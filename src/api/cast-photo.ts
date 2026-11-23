@@ -1,10 +1,15 @@
 // ----------------------------------------------------------------------
 // (U48) 캐스트 사진 · 홈페이지 미리보기 요청 함수(back-end §25.2~25.5 · §25.9).
 // 이미지는 기존 업로드(POST /admin/uploads purpose CAST_PHOTO → PUT)로 올린 publicUrl 을 imageUrl 로 보낸다.
+// (U51 §27) 올리기·교체에 축소 후 크기(width·height — 둘 다 또는 생략)를 함께 보내고,
+// 조정 창 [저장]은 `…/display` PATCH(보낸 필드만), 배역 카드 비율은 공연 하나 PUT.
 // ----------------------------------------------------------------------
 import {
   fromCastPhotosResponse,
   fromGroupPhotoItems,
+  fromRolePhotoItem,
+  fromTeamPhotoItem,
+  toCastCardRatio,
 } from '@/src/api/cast-photo-mapper';
 import { endpoints } from '@/src/api/endpoints';
 import {
@@ -15,15 +20,38 @@ import {
   apiPut,
 } from '@/src/lib/api-client';
 import type {
+  AddGroupPhotoRequest,
+  CastCardRatioBody,
+  CastCardRatioCode,
   CastPhotos,
   CastPhotosResponse,
   GroupPhoto,
+  GroupPhotoDisplayRequest,
   GroupPhotoListResponse,
   PreviewTokenResponse,
   ReorderGroupPhotosRequest,
+  RolePhoto,
+  RolePhotoDisplayRequest,
+  RolePhotoItemResponse,
   SetPhotoRequest,
+  TeamPhoto,
+  TeamPhotoDisplayRequest,
   TeamPhotoItemResponse,
 } from '@/src/types/cast-photo';
+
+/** 올린 사진 — 공개 URL + 축소 후 크기(모르면 null) */
+export interface UploadedPhoto {
+  imageUrl: string;
+  width: number | null;
+  height: number | null;
+}
+
+/** 크기는 둘 다 있을 때만 보낸다(§27.3 — 하나만 보내면 400) */
+export function toSetPhotoRequest(photo: UploadedPhoto): SetPhotoRequest {
+  return photo.width && photo.height
+    ? { imageUrl: photo.imageUrl, width: photo.width, height: photo.height }
+    : { imageUrl: photo.imageUrl };
+}
 
 export async function fetchCastPhotos(
   performanceId: string
@@ -35,15 +63,26 @@ export async function fetchCastPhotos(
   );
 }
 
+export async function saveCastCardRatio(
+  performanceId: string,
+  castCardRatio: CastCardRatioCode
+): Promise<CastCardRatioCode> {
+  const res = await apiPut<CastCardRatioBody>(
+    endpoints.performances.castCardRatio(performanceId),
+    { castCardRatio } satisfies CastCardRatioBody
+  );
+  return toCastCardRatio(res.castCardRatio);
+}
+
 // ── 단체샷 ──
 
 export async function addGroupPhoto(
   performanceId: string,
-  imageUrl: string
+  photo: UploadedPhoto
 ): Promise<GroupPhoto[]> {
   const res = await apiPost<GroupPhotoListResponse>(
     endpoints.performances.groupPhotos(performanceId),
-    { imageUrl } satisfies SetPhotoRequest
+    toSetPhotoRequest(photo) satisfies AddGroupPhotoRequest
   );
   return fromGroupPhotoItems(res.items);
 }
@@ -62,11 +101,23 @@ export async function reorderGroupPhotos(
 export async function replaceGroupPhoto(
   performanceId: string,
   photoId: string,
-  imageUrl: string
+  photo: UploadedPhoto
 ): Promise<GroupPhoto[]> {
   const res = await apiPatch<GroupPhotoListResponse>(
     endpoints.performances.groupPhoto(performanceId, photoId),
-    { imageUrl } satisfies SetPhotoRequest
+    toSetPhotoRequest(photo)
+  );
+  return fromGroupPhotoItems(res.items);
+}
+
+export async function saveGroupPhotoDisplay(
+  performanceId: string,
+  photoId: string,
+  body: GroupPhotoDisplayRequest
+): Promise<GroupPhoto[]> {
+  const res = await apiPatch<GroupPhotoListResponse>(
+    endpoints.performances.groupPhotoDisplay(performanceId, photoId),
+    body
   );
   return fromGroupPhotoItems(res.items);
 }
@@ -82,11 +133,25 @@ export async function deleteGroupPhoto(
 
 export async function saveTeamPhoto(
   teamAccountId: string,
-  imageUrl: string
-): Promise<TeamPhotoItemResponse> {
-  return apiPut<TeamPhotoItemResponse>(
-    endpoints.teamAccounts.photo(teamAccountId),
-    { imageUrl } satisfies SetPhotoRequest
+  photo: UploadedPhoto
+): Promise<TeamPhoto> {
+  return fromTeamPhotoItem(
+    await apiPut<TeamPhotoItemResponse>(
+      endpoints.teamAccounts.photo(teamAccountId),
+      toSetPhotoRequest(photo)
+    )
+  );
+}
+
+export async function saveTeamPhotoDisplay(
+  teamAccountId: string,
+  body: TeamPhotoDisplayRequest
+): Promise<TeamPhoto> {
+  return fromTeamPhotoItem(
+    await apiPatch<TeamPhotoItemResponse>(
+      endpoints.teamAccounts.photoDisplay(teamAccountId),
+      body
+    )
   );
 }
 
@@ -99,11 +164,25 @@ export async function deleteTeamPhoto(teamAccountId: string): Promise<void> {
 export async function saveRolePhoto(
   roleId: string,
   actorProfileId: string,
-  imageUrl: string
+  photo: UploadedPhoto
 ): Promise<void> {
-  await apiPut(endpoints.roles.photo(roleId, actorProfileId), {
-    imageUrl,
-  } satisfies SetPhotoRequest);
+  await apiPut(
+    endpoints.roles.photo(roleId, actorProfileId),
+    toSetPhotoRequest(photo)
+  );
+}
+
+export async function saveRolePhotoDisplay(
+  roleId: string,
+  actorProfileId: string,
+  body: RolePhotoDisplayRequest
+): Promise<RolePhoto> {
+  return fromRolePhotoItem(
+    await apiPatch<RolePhotoItemResponse>(
+      endpoints.roles.photoDisplay(roleId, actorProfileId),
+      body
+    )
+  );
 }
 
 export async function deleteRolePhoto(

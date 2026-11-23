@@ -118,7 +118,7 @@ export const MSG_D14 = {
   PHOTO_ERROR: '캐스트 사진을 불러오지 못했습니다.',
   PHOTO_GROUP_TITLE: '단체샷',
   PHOTO_GROUP_HELP: (max: number) =>
-    `선택 · 최대 ${max}장 · 가로 사진 · 첫 장이 대표`,
+    `선택 · 최대 ${max}장 · 첫 장이 대표 · 사진마다 보이는 비율을 고를 수 있어요`,
   PHOTO_GROUP_MAIN: '대표',
   PHOTO_GROUP_UPLOAD: '단체샷 올리기',
   PHOTO_GROUP_UPLOAD_HELP:
@@ -131,7 +131,8 @@ export const MSG_D14 = {
   PHOTO_GROUP_REPLACE_ARIA: (n: number) => `단체샷 ${n} 교체`,
   PHOTO_GROUP_DELETE_ARIA: (n: number) => `단체샷 ${n} 삭제`,
   PHOTO_TEAM_TITLE: '팀샷',
-  PHOTO_TEAM_HELP: "선택 · 팀마다 1장 · 팀은 '팀 구성'에서 정해요",
+  PHOTO_TEAM_HELP:
+    "선택 · 팀마다 1장 · 팀은 '팀 구성'에서 정해요 · 사진마다 보이는 비율을 고를 수 있어요",
   PHOTO_TEAM_NONE:
     "팀이 없어요. '팀 계정' 탭에서 팀을 만들면 팀샷을 올릴 수 있어요.",
   PHOTO_TEAM_NAME: (label: string) => `${label}팀`,
@@ -144,7 +145,7 @@ export const MSG_D14 = {
   PHOTO_TEAM_DELETE_ARIA: (label: string) => `${label}팀 팀샷 삭제`,
   PHOTO_ROLE_TITLE: '배역 사진',
   PHOTO_ROLE_HELP:
-    '배역 × 배우마다 1장 · 세로 3:4 권장(다른 비율은 가운데를 잘라 보여요) · 배우 프로필 사진과 따로예요',
+    '배역 × 배우마다 1장 · 어떤 비율이든 괜찮아요 — [위치 조정]으로 카드·썸네일에 보일 부분을 정해요 · 배우 프로필 사진과 따로예요',
   PHOTO_ROLE_NONE: '배역에 배우를 넣으면 배역 사진을 올릴 수 있어요.',
   PHOTO_ROLE_MISSING_NONE: '사진이 없는 배역이 없어요.',
   PHOTO_FILTER_ARIA: '보기',
@@ -181,6 +182,73 @@ export const MSG_D14 = {
     `홈페이지 ${label}팀 탭에서 팀샷 자리가 없어져요.`,
   PHOTO_DELETE_GROUP: (n: number) => `단체샷 ${n}을 지울까요?`,
   PHOTO_DELETE_GROUP_DESC: '뒤 사진이 한 칸씩 앞으로 당겨져요.',
+  /** (U51) 보이는 비율 + 위치 조정 — designer §21 제안 문구 · 오류는 서버 문구(PHO_005·006 · COMMON_001) */
+  CARD_RATIO_LABEL: '배역 카드 비율',
+  CARD_RATIO_HELP: '홈페이지 배역 카드가 모두 이 비율로 보여요(공연마다 하나)',
+  CARD_RATIO_SAVED: '배역 카드 비율을 바꿨어요',
+  RATIO_ORIGINAL: '원본',
+  RATIO_LABEL: (ratio: string) => (ratio === 'ORIGINAL' ? '원본' : ratio),
+  ADJUST: '위치 조정',
+  ADJUST_ROLE_ARIA: (role: string, name: string) =>
+    `${role} ${name} 배역 사진 위치 조정`,
+  ADJUST_GROUP_ARIA: (n: number) => `단체샷 ${n} 보이는 비율·위치 조정`,
+  ADJUST_TEAM_ARIA: (label: string) => `${label}팀 팀샷 보이는 비율·위치 조정`,
+  STATUS_ADJUSTED: '배역 사진 · 위치 조정됨',
+  STATUS_CENTER: '배역 사진 · 가운데',
+  TILE_ORIGINAL: '원본 전체가 보여요',
+  TILE_CROPPED: (ratio: string) => `${ratio}로 잘라 보여요`,
+  CROP_TITLE: '보이는 위치 조정',
+  CROP_SUB: (who: string) => `${who} · 원본은 그대로 두고 보이는 부분만 정해요`,
+  CROP_WHO_ROLE: (role: string, name: string) =>
+    `${role} · ${name} · 배역 사진`,
+  CROP_WHO_TEAM: (label: string) => `${label}팀 팀샷`,
+  CROP_WHO_GROUP: (n: number) => `단체샷 ${n}`,
+  CROP_NEW_ROLE:
+    '사진을 올렸어요. 홈페이지에 보일 위치를 정해 주세요. 취소하면 가운데 기준으로 보여요. 나중에 [위치 조정]으로 언제든 바꿀 수 있어요.',
+  CROP_NEW_WIDE:
+    '사진을 올렸어요. 지금은 원본 전체가 보여요 — 그대로 저장해도 돼요. 비율을 고르면 보일 위치를 정할 수 있고, 나중에 [위치 조정]으로 언제든 바꿀 수 있어요.',
+  CROP_TARGET_ARIA: '맞출 대상',
+  CROP_TARGET_CARD: (ratio: string) => `카드 ${ratio}`,
+  CROP_TARGET_THUMB: '썸네일 ○',
+  CROP_TARGET_THUMB_AUTO: '썸네일 ○ 자동',
+  CROP_RATIO_ARIA: '보이는 비율',
+  CROP_STAGE_TAG: '원본 사진',
+  CROP_FRAME_CARD: (ratio: string) => `카드 ${ratio}`,
+  CROP_FRAME_WIDE: (ratio: string) => `보이는 비율 ${ratio}`,
+  CROP_FRAME_THUMB: '썸네일',
+  CROP_FRAME_THUMB_AUTO: '썸네일(자동)',
+  CROP_FRAME_ARIA: (label: string) =>
+    `${label} 보이는 위치. 끌거나 화살표 키로 옮기기, +/− 키로 확대`,
+  CROP_ORIGINAL_NOTE:
+    '원본 전체가 보여요. 비율을 고르면 보일 위치를 정할 수 있어요.',
+  CROP_ZOOM: '확대',
+  CROP_ZOOM_IN: '확대',
+  CROP_ZOOM_OUT: '축소',
+  CROP_READOUT: (x: number, y: number, zoomPercent: number) =>
+    `가로 ${x}% · 세로 ${y}% · 확대 ${zoomPercent}%`,
+  CROP_RESET: '가운데로 되돌리기',
+  CROP_THUMB_AUTO: '썸네일을 카드에 맞추기(자동)',
+  CROP_BLUR:
+    '확대가 커서 PC 화면에서 흐릿하게 보일 수 있어요. 더 큰 사진을 올리거나 확대를 줄여 주세요.',
+  CROP_HINT:
+    '끌어서 옮기기 · 화살표 키 1% (Shift 10%) · 두 손가락으로 확대 · +/− 키로 확대',
+  CROP_PREVIEW_TITLE: '홈페이지 미리보기',
+  CROP_PREVIEW_HELP:
+    '움직이는 대로 바로 바뀌어요 · 크기 비율은 실제와 같게 줄였어요',
+  CROP_PREVIEW_MOBILE_CARD: '모바일 카드',
+  CROP_PREVIEW_PC_CARD: 'PC 카드',
+  CROP_PREVIEW_BOARD: '보드 썸네일',
+  CROP_PREVIEW_MOBILE: '모바일',
+  CROP_PREVIEW_PC: 'PC',
+  CROP_NOTE_ROLE:
+    '사진을 눌러 크게 보기(라이트박스)는 언제나 원본 전체예요. 배역 사진이 없어 프로필 사진으로 대신할 때는 가운데 기준이에요.',
+  CROP_NOTE_WIDE:
+    '고른 비율은 모바일·PC 모두 똑같이 적용돼요. 크게 보기(라이트박스)는 언제나 원본 전체예요.',
+  CROP_LOADING: '사진을 여는 중…',
+  CROP_LOAD_FAILED: '사진을 열지 못했어요. 닫고 다시 시도해 주세요.',
+  CROP_CANCEL: '취소',
+  CROP_SAVE: '저장',
+  CROP_SAVED: '보이는 위치를 저장했어요',
   /** (U48) 홈페이지 미리보기 — §25.9(30분 토큰) */
   PREVIEW_BUTTON: '홈페이지 미리보기',
   PREVIEW_HELP: '공개 전 모습을 새 탭에서 봅니다. 링크는 30분 뒤 만료돼요.',
