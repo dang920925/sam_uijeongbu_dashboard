@@ -37,7 +37,8 @@ export const MSG_DEP = {
     CODE_ONLY: '입금자명 불일치(예매번호만 일치)',
     NAME_ONLY: '입금자명 불일치(이름만 일치)',
   },
-  IGNORED_SOURCE_REASON: '판정하지 않는 앱 알림',
+  // 허용 밖 앱 · '입금' 없는 카카오톡·카카오뱅크(잔액만) · 제목 '출금'(실제 카카오뱅크 형식 반영 2026-11-23, 제안 문구)
+  IGNORED_SOURCE_REASON: '판정하지 않는 알림(입금 아님·허용 밖 앱)',
   REASON: {
     MULTIPLE_MATCH: '맞는 예매가 여러 건',
     OVERPAID: '금액이 더 많음',

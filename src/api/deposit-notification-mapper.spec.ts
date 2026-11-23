@@ -115,7 +115,12 @@ describe('toDepositRow — 출처 앱', () => {
       row.statusTone,
       row.reasonText,
       row.canResolve,
-    ]).toEqual(['판정 안 함', 'neutral', '판정하지 않는 앱 알림', false]);
+    ]).toEqual([
+      '판정 안 함',
+      'neutral',
+      '판정하지 않는 알림(입금 아님·허용 밖 앱)',
+      false,
+    ]);
   });
 });
 
