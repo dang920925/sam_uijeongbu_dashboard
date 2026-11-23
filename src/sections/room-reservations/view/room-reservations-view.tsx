@@ -1,7 +1,8 @@
 'use client';
 
 // ----------------------------------------------------------------------
-// U34 관리자 연습실 예약 목록 View — 머리(제목·부제) → 주 이동 줄 → 표(날짜·시간·팀·작품·참석자(U45)·메모·삭제) / xs 카드.
+// U34 관리자 연습실 예약 목록 View — 머리(제목·부제) → 탭(예약 목록·시간 막기 — U46) → 주 이동 줄 →
+// 표(날짜·시간·팀·작품·참석자(U45)·메모·삭제) / xs 카드. (U46) 막은 시간 줄은 '막은 시간' 표시 + '이 날만 해제'.
 // 로딩 스켈레톤 · 오류 "다시 시도" · 빈 상태. props 만으로 렌더.
 // ----------------------------------------------------------------------
 import Button from '@mui/material/Button';
@@ -13,11 +14,13 @@ import { DataTable, type DataTableColumn } from '@/src/components/data-table';
 import { EmptyContent } from '@/src/components/empty-content';
 import { ErrorRetry } from '@/src/components/error-retry';
 import { Iconify } from '@/src/components/iconify';
+import { Label } from '@/src/components/label';
 import { PageContainer } from '@/src/components/page-container';
 import { PageHead } from '@/src/components/page-head';
 import { SectionStack } from '@/src/components/section-stack';
 import { TableSkeleton } from '@/src/components/table-skeleton';
 import { Typo } from '@/src/components/typo';
+import { RoomTabs } from '@/src/sections/room-reservations/components/room-tabs';
 import type { RoomRowDisplay } from '@/src/sections/room-reservations/utils/room-week';
 import type { RoomReservationsViewModel } from '@/src/sections/room-reservations/view/use-room-reservations-view-model';
 import { MSG_COMMON } from '@/src/shared/messages/common';
@@ -28,18 +31,32 @@ interface RoomReservationsViewProps {
 }
 
 export function RoomReservationsView({ vm }: RoomReservationsViewProps) {
-  const deleteButton = (row: RoomRowDisplay) => (
-    <IconButton
-      aria-label={MSG_ROOMS.DELETE_ARIA(
-        row.teamName,
-        `${row.dateText} ${row.timeText}`
-      )}
-      onClick={() => vm.onDelete(row.id)}
-      sx={{ color: 'error.main' }}
-    >
-      <Iconify icon='solar:trash-bin-trash-linear' />
-    </IconButton>
-  );
+  const deleteButton = (row: RoomRowDisplay) =>
+    row.kind === 'block' ? (
+      <Button
+        size='small'
+        variant='outlined'
+        color='inherit'
+        aria-label={MSG_ROOMS.BLOCK_SKIP_ARIA(
+          row.teamName,
+          `${row.dateText} ${row.timeText}`
+        )}
+        onClick={() => vm.onSkip(row.id)}
+      >
+        {MSG_ROOMS.BLOCK_SKIP}
+      </Button>
+    ) : (
+      <IconButton
+        aria-label={MSG_ROOMS.DELETE_ARIA(
+          row.teamName,
+          `${row.dateText} ${row.timeText}`
+        )}
+        onClick={() => vm.onDelete(row.id)}
+        sx={{ color: 'error.main' }}
+      >
+        <Iconify icon='solar:trash-bin-trash-linear' />
+      </IconButton>
+    );
   const columns: DataTableColumn<RoomRowDisplay>[] = [
     {
       key: 'date',
@@ -54,7 +71,18 @@ export function RoomReservationsView({ vm }: RoomReservationsViewProps) {
     {
       key: 'team',
       header: MSG_ROOMS.COL_TEAM,
-      render: (r) => <Typo.Body.Regular>{r.teamName}</Typo.Body.Regular>,
+      render: (r) =>
+        r.kind === 'block' ? (
+          <span
+            className='flex items-center gap-2'
+            data-testid='room-block-row'
+          >
+            <Label tone='neutral'>{MSG_ROOMS.BLOCK_ROW_LABEL}</Label>
+            <Typo.Body.Regular>{r.teamName}</Typo.Body.Regular>
+          </span>
+        ) : (
+          <Typo.Body.Regular>{r.teamName}</Typo.Body.Regular>
+        ),
     },
     {
       key: 'performance',
@@ -96,9 +124,16 @@ export function RoomReservationsView({ vm }: RoomReservationsViewProps) {
         </Typo.Body.Semibold>
         {deleteButton(r)}
       </div>
-      <Typo.Badge.Regular>
-        {r.teamName} · {r.performanceTitle}
-      </Typo.Badge.Regular>
+      {r.kind === 'block' ? (
+        <span className='flex items-center gap-2' data-testid='room-block-row'>
+          <Label tone='neutral'>{MSG_ROOMS.BLOCK_ROW_LABEL}</Label>
+          <Typo.Badge.Regular>{r.teamName}</Typo.Badge.Regular>
+        </span>
+      ) : (
+        <Typo.Badge.Regular>
+          {r.teamName} · {r.performanceTitle}
+        </Typo.Badge.Regular>
+      )}
       <Typo.Caption.Regular>
         {MSG_ROOMS.COL_ATTENDEES} {r.attendeesText}
       </Typo.Caption.Regular>
@@ -133,6 +168,7 @@ export function RoomReservationsView({ vm }: RoomReservationsViewProps) {
     <PageContainer>
       <SectionStack>
         <PageHead title={MSG_ROOMS.TITLE} subtitle={MSG_ROOMS.SUBTITLE} />
+        <RoomTabs current='list' />
         <div className='flex flex-wrap items-center gap-2'>
           <IconButton aria-label={MSG_ROOMS.WEEK_PREV} onClick={vm.onPrev}>
             <Iconify icon='solar:alt-arrow-left-linear' />
@@ -157,6 +193,16 @@ export function RoomReservationsView({ vm }: RoomReservationsViewProps) {
         isLoading={vm.deleteConfirm.isLoading}
         onConfirm={vm.deleteConfirm.onConfirm}
         onCancel={vm.deleteConfirm.onCancel}
+      />
+      <ConfirmDialog
+        open={vm.skipConfirm.isOpen}
+        message={MSG_ROOMS.BLOCK_SKIP_CONFIRM}
+        description={vm.skipConfirm.description}
+        confirmLabel={MSG_ROOMS.BLOCK_SKIP}
+        confirmColor='primary'
+        isLoading={vm.skipConfirm.isLoading}
+        onConfirm={vm.skipConfirm.onConfirm}
+        onCancel={vm.skipConfirm.onCancel}
       />
     </PageContainer>
   );

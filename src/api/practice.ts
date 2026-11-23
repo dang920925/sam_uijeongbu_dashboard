@@ -3,7 +3,8 @@
 // ----------------------------------------------------------------------
 import { endpoints } from '@/src/api/endpoints';
 import {
-  fromAdminRoomReservationResponse,
+  fromAdminRoomScheduleResponse,
+  fromRoomBlockResponse,
   fromTeamAccountListResponse,
   fromTeamAccountResponse,
   fromTeamRosterResponse,
@@ -18,8 +19,12 @@ import {
 } from '@/src/lib/api-client';
 import type { ItemsResponse } from '@/src/types/common';
 import type {
-  AdminRoomReservation,
-  AdminRoomReservationResponse,
+  AdminRoomSchedule,
+  AdminRoomScheduleResponse,
+  RoomBlock,
+  RoomBlockConflictResponse,
+  RoomBlockRequest,
+  RoomBlockResponse,
   TeamAccount,
   TeamAccountList,
   TeamAccountListResponse,
@@ -81,14 +86,16 @@ export async function setTeamAccountActive(
   );
 }
 
+/** 기간 연습실 일정 — 예약 + (U46) 막은 시간 */
 export async function fetchAdminRoomReservations(range: {
   from: string;
   to: string;
-}): Promise<AdminRoomReservation[]> {
-  const res = await apiFetch<ItemsResponse<AdminRoomReservationResponse>>(
-    withQuery(endpoints.roomReservations.list, range)
+}): Promise<AdminRoomSchedule> {
+  return fromAdminRoomScheduleResponse(
+    await apiFetch<AdminRoomScheduleResponse>(
+      withQuery(endpoints.roomReservations.list, range)
+    )
   );
-  return res.items.map(fromAdminRoomReservationResponse);
 }
 
 export async function deleteAdminRoomReservation(id: string): Promise<void> {
@@ -120,4 +127,54 @@ export async function removeTeamMember(
   memberId: string
 ): Promise<void> {
   await apiDelete(endpoints.teamAccounts.member(teamAccountId, memberId));
+}
+
+/** (U46) 막은 시간 목록 */
+export async function fetchRoomBlocks(): Promise<RoomBlock[]> {
+  const res = await apiFetch<ItemsResponse<RoomBlockResponse>>(
+    endpoints.roomBlocks.list
+  );
+  return res.items.map(fromRoomBlockResponse);
+}
+
+/** (U46) 저장 전 겹치는 팀 예약 */
+export async function fetchRoomBlockConflicts(
+  body: RoomBlockRequest
+): Promise<RoomBlockConflictResponse[]> {
+  const res = await apiPost<ItemsResponse<RoomBlockConflictResponse>>(
+    endpoints.roomBlocks.conflicts,
+    body
+  );
+  return res.items;
+}
+
+export async function createRoomBlock(
+  body: RoomBlockRequest
+): Promise<RoomBlock> {
+  return fromRoomBlockResponse(
+    await apiPost<RoomBlockResponse>(endpoints.roomBlocks.list, body)
+  );
+}
+
+export async function updateRoomBlock(
+  id: string,
+  body: RoomBlockRequest
+): Promise<RoomBlock> {
+  return fromRoomBlockResponse(
+    await apiPatch<RoomBlockResponse>(endpoints.roomBlocks.detail(id), body)
+  );
+}
+
+export async function deleteRoomBlock(id: string): Promise<void> {
+  await apiDelete(endpoints.roomBlocks.detail(id));
+}
+
+/** (U46) 이 날만 해제 */
+export async function skipRoomBlockDate(
+  id: string,
+  date: string
+): Promise<RoomBlock> {
+  return fromRoomBlockResponse(
+    await apiPost<RoomBlockResponse>(endpoints.roomBlocks.skip(id), { date })
+  );
 }

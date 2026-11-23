@@ -4,6 +4,7 @@ import {
   formatWeekTitle,
   kstDateOf,
   toRoomRowDisplay,
+  toRoomScheduleRows,
   weekRange,
   weekStartOf,
 } from '@/src/sections/room-reservations/utils/room-week';
@@ -39,6 +40,10 @@ describe('room-week', () => {
       )
     ).toEqual({
       id: 'r',
+      kind: 'reservation',
+      blockId: null,
+      date: '2026-12-01',
+      startMs: Date.parse('2026-12-01T10:00:00.000Z'),
       dateText: '12.01 (화)',
       timeText: '19:00–21:30',
       teamName: 'Dear-A',
@@ -64,5 +69,43 @@ describe('room-week', () => {
         '체크 안 함'
       ).attendeesText
     ).toBe('2명 · 김가, 이나');
+  });
+
+  it('(U46) 막은 시간 발생분은 제목을 팀 자리에 두고 예약과 시작 순으로 섞인다', () => {
+    const rows = toRoomScheduleRows(
+      {
+        reservations: [
+          {
+            id: 'r',
+            startAt: new Date('2026-12-01T10:00:00.000Z'),
+            endAt: new Date('2026-12-01T11:00:00.000Z'),
+            teamName: 'Dear-A',
+            memo: null,
+            performanceTitle: 'Dear',
+            attendeeNames: [],
+          },
+        ],
+        blocks: [
+          {
+            blockId: 'b1',
+            title: '고정 사용',
+            date: '2026-12-01',
+            startAt: new Date('2026-12-01T01:00:00.000Z'),
+            endAt: new Date('2026-12-01T09:00:00.000Z'),
+          },
+        ],
+      },
+      {
+        noMemo: '-',
+        noAttendees: '체크 안 함',
+        blockLabel: '막은 시간',
+        empty: '-',
+      }
+    );
+    expect(rows.map((r) => [r.kind, r.teamName, r.timeText, r.memo])).toEqual([
+      ['block', '고정 사용', '10:00–18:00', '막은 시간'],
+      ['reservation', 'Dear-A', '19:00–20:00', '-'],
+    ]);
+    expect(rows[0]).toMatchObject({ blockId: 'b1', date: '2026-12-01' });
   });
 });

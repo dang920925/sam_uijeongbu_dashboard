@@ -5,6 +5,7 @@
 // - 비밀번호는 혼동 문자 없는 12자, 재발급하면 바뀐다. 접두어는 영문·숫자 1~20자, 다른 작품과 겹치면 409 TEAM_003.
 // - 연습실 예약은 E2E 가 `POST /v1/__mock/room-reservations` 로 넣는다(팀 화면은 홈페이지 몫). attendees 이름 배열을 줄 수 있다.
 // - (U45) 팀 구성: 소속(팀 id → 단원 id 집합). 후보 = 공용 저장소의 기본 캐스트(role_casts, showId null) 배우(배역 순).
+// - (U46) 시간 막기: 규칙 목록 + 기간 조회 때 발생분 계산(KST, ISO 요일, 끝 24:00). 겹치는 목 예약은 onConflict 없으면 409 ROOM_007.
 // ----------------------------------------------------------------------
 import { findPerformanceAlive } from '@/src/_mock/backend/booking-model';
 import {
@@ -21,6 +22,7 @@ import { getStore } from '@/src/_mock/backend/mock-store';
 import type {
   AdminRoomReservationResponse,
   TeamAccountResponse,
+  RoomBlockResponse,
   TeamRosterResponse,
 } from '@/src/types/practice';
 
@@ -35,6 +37,8 @@ interface TeamMockState {
   rooms: AdminRoomReservationResponse[];
   /** (U45) 팀 id → 소속 단원 id */
   members: Map<string, Set<string>>;
+  /** (U46) 막은 시간 규칙 */
+  blocks: RoomBlockResponse[];
 }
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -52,6 +56,7 @@ function state(): TeamMockState {
       teams: [],
       rooms: [],
       members: new Map(),
+      blocks: [],
     };
   }
   return globalForTeam.__samTeamMock;
@@ -199,7 +204,188 @@ function roster(performanceId: string): TeamRosterResponse {
   };
 }
 
+const DAY = 86_400_000;
+const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
+const kstStartMs = (date: string) => Date.parse(`${date}T00:00:00+09:00`);
+const isoDay = (date: string) => new Date(`${date}T00:00:00Z`).getUTCDay() || 7;
+
+/** (U46) 기간 [from, to) 와 겹치는 블록 발생분 */
+function blockOccurrences(from: number, to: number) {
+  const out: {
+    blockId: string;
+    title: string;
+    date: string;
+    startAt: string;
+    endAt: string;
+  }[] = [];
+  for (const b of state().blocks) {
+    for (
+      let ms = Date.parse(`${b.startDate}T00:00:00Z`);
+      ms <= Date.parse(`${b.endDate}T00:00:00Z`);
+      ms += DAY
+    ) {
+      const date = new Date(ms).toISOString().slice(0, 10);
+      if (b.skipDates.includes(date)) continue;
+      if (b.repeat === 'WEEKLY' && !b.weekdays.includes(isoDay(date))) continue;
+      const start = kstStartMs(date) + toMin(b.startTime) * 60000;
+      const end = kstStartMs(date) + toMin(b.endTime) * 60000;
+      if (start >= to || end <= from) continue;
+      out.push({
+        blockId: b.id,
+        title: b.title,
+        date,
+        startAt: new Date(start).toISOString(),
+        endAt: new Date(end).toISOString(),
+      });
+    }
+  }
+  return out.sort((a, b) => a.startAt.localeCompare(b.startAt));
+}
+
+function readBlock(
+  body: Record<string, unknown>,
+  base?: RoomBlockResponse
+): RoomBlockResponse | string {
+  const pick = <K extends keyof RoomBlockResponse>(k: K) =>
+    (body[k] !== undefined ? body[k] : base?.[k]) as RoomBlockResponse[K];
+  const repeat = pick('repeat') ?? 'NONE';
+  const startDate = pick('startDate');
+  const block: RoomBlockResponse = {
+    id: base?.id ?? newId(),
+    title: String(pick('title') ?? '').trim(),
+    memo: (pick('memo') as string | null) ?? null,
+    repeat,
+    weekdays: repeat === 'WEEKLY' ? [...(pick('weekdays') ?? [])] : [],
+    startTime: pick('startTime'),
+    endTime: pick('endTime'),
+    startDate,
+    endDate: repeat === 'WEEKLY' ? pick('endDate') : startDate,
+    skipDates: base?.skipDates ?? [],
+    createdAt: base?.createdAt ?? nowIso(),
+  };
+  if (!block.title) return '제목을 입력해주세요.';
+  if (toMin(block.endTime) - toMin(block.startTime) < 30)
+    return '끝 시각은 시작보다 30분 이상 뒤여야 합니다.';
+  if (block.repeat === 'WEEKLY' && block.weekdays.length === 0)
+    return '반복할 요일을 하나 이상 골라주세요.';
+  if (block.endDate < block.startDate)
+    return '종료일은 시작일과 같거나 뒤여야 합니다.';
+  return block;
+}
+
+/** 규칙과 겹치는 아직 시작 안 한 목 예약 */
+function blockConflicts(block: RoomBlockResponse) {
+  const s = state();
+  const saved = s.blocks;
+  s.blocks = [block];
+  const from = kstStartMs(block.startDate);
+  const to = kstStartMs(block.endDate) + DAY;
+  const occ = blockOccurrences(from, to);
+  s.blocks = saved;
+  return s.rooms.filter(
+    (r) =>
+      Date.parse(r.startAt) > Date.now() &&
+      occ.some(
+        (o) =>
+          Date.parse(o.startAt) < Date.parse(r.endAt) &&
+          Date.parse(o.endAt) > Date.parse(r.startAt)
+      )
+  );
+}
+
+function saveBlock(
+  ctx: Parameters<MockRoute['handle']>[0],
+  base?: RoomBlockResponse
+) {
+  const block = readBlock(ctx.body, base);
+  if (typeof block === 'string') return validationError(ctx, block);
+  const conflicts = blockConflicts(block);
+  const onConflict = str(ctx.body.onConflict);
+  if (conflicts.length > 0 && !onConflict)
+    return apiError(
+      ctx,
+      409,
+      'ROOM_007',
+      '겹치는 팀 예약이 있습니다. 취소할지 유지할지 골라주세요.'
+    );
+  const s = state();
+  if (onConflict === 'CANCEL') {
+    const ids = new Set(conflicts.map((r) => r.id));
+    s.rooms = s.rooms.filter((r) => !ids.has(r.id));
+  }
+  s.blocks = [...s.blocks.filter((b) => b.id !== block.id), block];
+  return json(block, base ? 200 : 201);
+}
+
 export const teamAccountRoutes: MockRoute[] = [
+  {
+    method: 'GET',
+    pattern: /^\/v1\/admin\/room-blocks$/,
+    auth: true,
+    handle: () => json({ items: state().blocks }),
+  },
+  {
+    method: 'POST',
+    pattern: /^\/v1\/admin\/room-blocks\/conflicts$/,
+    auth: true,
+    handle: (ctx) => {
+      const block = readBlock(ctx.body);
+      if (typeof block === 'string') return validationError(ctx, block);
+      return json({
+        items: blockConflicts(block).map((r) => ({
+          id: r.id,
+          teamName: r.teamName,
+          performanceTitle: r.performanceTitle,
+          startAt: r.startAt,
+          endAt: r.endAt,
+        })),
+      });
+    },
+  },
+  {
+    method: 'POST',
+    pattern: /^\/v1\/admin\/room-blocks$/,
+    auth: true,
+    handle: (ctx) => saveBlock(ctx),
+  },
+  {
+    method: 'PATCH',
+    pattern: /^\/v1\/admin\/room-blocks\/(?<id>[^/]+)$/,
+    auth: true,
+    handle: (ctx) => {
+      const base = state().blocks.find((b) => b.id === ctx.params.id);
+      return base
+        ? saveBlock(ctx, base)
+        : apiError(ctx, 404, 'ROOM_008', '막은 시간을 찾을 수 없습니다.');
+    },
+  },
+  {
+    method: 'DELETE',
+    pattern: /^\/v1\/admin\/room-blocks\/(?<id>[^/]+)$/,
+    auth: true,
+    handle: (ctx) => {
+      const s = state();
+      const before = s.blocks.length;
+      s.blocks = s.blocks.filter((b) => b.id !== ctx.params.id);
+      return s.blocks.length < before
+        ? noContent()
+        : apiError(ctx, 404, 'ROOM_008', '막은 시간을 찾을 수 없습니다.');
+    },
+  },
+  {
+    method: 'POST',
+    pattern: /^\/v1\/admin\/room-blocks\/(?<id>[^/]+)\/skip$/,
+    auth: true,
+    handle: (ctx) => {
+      const block = state().blocks.find((b) => b.id === ctx.params.id);
+      if (!block)
+        return apiError(ctx, 404, 'ROOM_008', '막은 시간을 찾을 수 없습니다.');
+      const date = str(ctx.body.date) ?? '';
+      if (!block.skipDates.includes(date)) block.skipDates.push(date);
+      block.skipDates.sort();
+      return json(block);
+    },
+  },
   {
     method: 'GET',
     pattern: /^\/v1\/admin\/performances\/(?<id>[^/]+)\/team-members$/,
@@ -349,7 +535,7 @@ export const teamAccountRoutes: MockRoute[] = [
           (r) => Date.parse(r.startAt) < to && Date.parse(r.endAt) > from
         )
         .sort((a, b) => a.startAt.localeCompare(b.startAt));
-      return json({ items });
+      return json({ items, blocks: blockOccurrences(from, to) });
     },
   },
   {

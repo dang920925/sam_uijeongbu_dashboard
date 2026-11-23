@@ -100,7 +100,8 @@ export function useScheduleCalendar({
   );
   const roomQuery = useAdminRoomReservations(roomRange, showRooms);
   const roomEvents = useMemo(
-    () => (showRooms ? toRoomCalendarEvents(roomQuery.data ?? []) : []),
+    () =>
+      showRooms && roomQuery.data ? toRoomCalendarEvents(roomQuery.data) : [],
     [showRooms, roomQuery.data]
   );
   const events = useMemo(

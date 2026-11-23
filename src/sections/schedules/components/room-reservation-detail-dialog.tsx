@@ -45,6 +45,7 @@ export function RoomReservationDetailDialog({
 }: RoomReservationDetailDialogProps) {
   const titleId = useId();
   const room = event?.room ?? null;
+  const isBlock = Boolean(room?.blockId);
   return (
     <Dialog
       open={Boolean(event && room)}
@@ -57,7 +58,9 @@ export function RoomReservationDetailDialog({
         <>
           <DialogTitle id={titleId} className='flex flex-col gap-2'>
             <span>
-              <Label tone='neutral'>{MSG_D08.ROOM_LAYER}</Label>
+              <Label tone='neutral'>
+                {isBlock ? MSG_D08.BLOCK_LAYER : MSG_D08.ROOM_LAYER}
+              </Label>
             </span>
             <Typo.Title.Bold component='span'>{event.title}</Typo.Title.Bold>
           </DialogTitle>
@@ -65,33 +68,41 @@ export function RoomReservationDetailDialog({
             className='flex flex-col gap-3'
             data-testid='room-reservation-detail'
           >
-            <Row label={MSG_D08.ROOM_DETAIL_TEAM} value={room.teamName} />
+            {isBlock ? (
+              <Row label={MSG_D08.BLOCK_DETAIL_TITLE} value={room.teamName} />
+            ) : (
+              <Row label={MSG_D08.ROOM_DETAIL_TEAM} value={room.teamName} />
+            )}
             <Row
               label={MSG_D08.ROOM_DETAIL_TIME}
               value={`${event.date.replaceAll('-', '.')} ${event.timeText}`}
             />
-            <Row
-              label={MSG_D08.ROOM_DETAIL_PERFORMANCE}
-              value={room.performanceTitle}
-            />
-            <Row
-              label={MSG_D08.ROOM_DETAIL_ATTENDEES}
-              value={formatAttendees(
-                room.attendeeNames,
-                MSG_D08.ROOM_NO_ATTENDEES
-              )}
-            />
-            <Row
-              label={MSG_D08.ROOM_DETAIL_MEMO}
-              value={room.memo ?? MSG_COMMON.EMPTY_VALUE}
-            />
+            {isBlock ? null : (
+              <>
+                <Row
+                  label={MSG_D08.ROOM_DETAIL_PERFORMANCE}
+                  value={room.performanceTitle}
+                />
+                <Row
+                  label={MSG_D08.ROOM_DETAIL_ATTENDEES}
+                  value={formatAttendees(
+                    room.attendeeNames,
+                    MSG_D08.ROOM_NO_ATTENDEES
+                  )}
+                />
+                <Row
+                  label={MSG_D08.ROOM_DETAIL_MEMO}
+                  value={room.memo ?? MSG_COMMON.EMPTY_VALUE}
+                />
+              </>
+            )}
             <Typo.Caption.Regular color='text.secondary'>
-              {MSG_D08.ROOM_DETAIL_NOTE}
+              {isBlock ? MSG_D08.BLOCK_DETAIL_NOTE : MSG_D08.ROOM_DETAIL_NOTE}
             </Typo.Caption.Regular>
           </DialogContent>
           <DialogActions className='justify-between'>
             <Button color='error' onClick={onDelete} disabled={isDeleting}>
-              {MSG_D08.ROOM_DELETE}
+              {isBlock ? MSG_D08.BLOCK_SKIP : MSG_D08.ROOM_DELETE}
             </Button>
             <Button variant='outlined' color='inherit' onClick={onClose}>
               {MSG_COMMON.CLOSE}

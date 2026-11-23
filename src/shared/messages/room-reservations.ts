@@ -25,4 +25,15 @@ export const MSG_ROOMS = {
   /** (U45) 참석자 — 팀이 예약할 때 체크한 배우 */
   COL_ATTENDEES: '참석자',
   NO_ATTENDEES: '체크 안 함',
+  /** (U46) 막은 시간 줄·탭(제안 문구) */
+  TAB_LIST: '예약 목록',
+  TAB_BLOCKS: '시간 막기',
+  TABS_ARIA: '연습실 예약 메뉴',
+  BLOCK_ROW_LABEL: '막은 시간',
+  BLOCK_SKIP: '이 날만 해제',
+  BLOCK_SKIP_ARIA: (title: string, when: string) =>
+    `${title} ${when} 이 날만 해제`,
+  BLOCK_SKIP_CONFIRM: '이 날만 막은 시간을 해제하시겠습니까?',
+  BLOCK_SKIPPED: '이 날은 막은 시간을 해제했습니다.',
+  EMPTY_VALUE: '-',
 } as const;

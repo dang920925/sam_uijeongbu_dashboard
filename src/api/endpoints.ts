@@ -51,6 +51,13 @@ export const endpoints = {
       `${admin}/team-accounts/${id}/reset-password`,
   },
   /** U34 연습실 예약(관리) — 기간 목록·삭제 */
+  /** U46 연습실 시간 막기 */
+  roomBlocks: {
+    list: `${admin}/room-blocks`,
+    conflicts: `${admin}/room-blocks/conflicts`,
+    detail: (id: string) => `${admin}/room-blocks/${id}`,
+    skip: (id: string) => `${admin}/room-blocks/${id}/skip`,
+  },
   roomReservations: {
     list: `${admin}/room-reservations`,
     detail: (id: string) => `${admin}/room-reservations/${id}`,

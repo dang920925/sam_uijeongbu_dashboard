@@ -7,17 +7,24 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   addTeamMember,
+  createRoomBlock,
   createTeamAccount,
+  deleteRoomBlock,
   deleteAdminRoomReservation,
   fetchAdminRoomReservations,
+  fetchRoomBlockConflicts,
+  fetchRoomBlocks,
   fetchTeamAccounts,
   fetchTeamRoster,
   removeTeamMember,
   resetTeamPassword,
   setTeamAccountActive,
+  skipRoomBlockDate,
+  updateRoomBlock,
   updateTeamPrefix,
 } from '@/src/api/practice';
 import { ROOT_KEYS } from '@/src/api/root-keys';
+import type { RoomBlockRequest } from '@/src/types/practice';
 
 export const teamAccountKeys = {
   all: ROOT_KEYS.teamAccount,
@@ -29,6 +36,10 @@ export const teamRosterKeys = {
   all: [...ROOT_KEYS.teamAccount, 'roster'] as const,
   detail: (performanceId: string) =>
     [...teamRosterKeys.all, performanceId] as const,
+};
+
+export const roomBlockKeys = {
+  all: ROOT_KEYS.roomBlock,
 };
 
 export const roomReservationKeys = {
@@ -132,4 +143,52 @@ export function useToggleTeamMember(performanceId: string) {
         queryKey: teamRosterKeys.detail(performanceId),
       }),
   });
+}
+
+/** (U46) 막은 시간 목록 */
+export function useRoomBlocks() {
+  return useQuery({ queryKey: roomBlockKeys.all, queryFn: fetchRoomBlocks });
+}
+
+/** (U46) 막은 시간이 바뀌면 규칙 목록과 연습실 일정(예약·발생분)을 함께 다시 받는다 */
+function useInvalidateRoomSchedule() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: roomBlockKeys.all }),
+      queryClient.invalidateQueries({ queryKey: roomReservationKeys.all }),
+    ]);
+}
+
+export function useSaveRoomBlock() {
+  const invalidate = useInvalidateRoomSchedule();
+  return useMutation({
+    mutationFn: ({
+      id,
+      body,
+    }: {
+      id: string | null;
+      body: RoomBlockRequest;
+    }) => (id ? updateRoomBlock(id, body) : createRoomBlock(body)),
+    onSettled: invalidate,
+  });
+}
+
+export function useDeleteRoomBlock() {
+  const invalidate = useInvalidateRoomSchedule();
+  return useMutation({ mutationFn: deleteRoomBlock, onSettled: invalidate });
+}
+
+export function useSkipRoomBlockDate() {
+  const invalidate = useInvalidateRoomSchedule();
+  return useMutation({
+    mutationFn: ({ id, date }: { id: string; date: string }) =>
+      skipRoomBlockDate(id, date),
+    onSettled: invalidate,
+  });
+}
+
+/** (U46) 저장 전 겹치는 팀 예약 조회(읽기지만 본문이 있어 mutation 으로 부른다 — 캐시하지 않음) */
+export function useRoomBlockConflicts() {
+  return useMutation({ mutationFn: fetchRoomBlockConflicts });
 }

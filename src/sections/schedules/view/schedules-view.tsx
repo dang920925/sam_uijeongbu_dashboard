@@ -143,8 +143,12 @@ export function SchedulesView({ vm, body }: SchedulesViewProps) {
       />
       <ConfirmDialog
         open={vm.isRoomDeleteOpen}
-        message={MSG_D08.ROOM_DELETE_CONFIRM}
-        confirmLabel={MSG_D08.ROOM_DELETE}
+        message={
+          vm.isRoomBlock
+            ? MSG_D08.BLOCK_SKIP_CONFIRM
+            : MSG_D08.ROOM_DELETE_CONFIRM
+        }
+        confirmLabel={vm.isRoomBlock ? MSG_D08.BLOCK_SKIP : MSG_D08.ROOM_DELETE}
         isLoading={vm.isRoomDeleting}
         onConfirm={vm.onConfirmRoomDelete}
         onCancel={vm.onCancelRoomDelete}

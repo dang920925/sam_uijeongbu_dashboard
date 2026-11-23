@@ -2,6 +2,12 @@
 // 팀 계정·연습실 예약(관리) 매퍼(U34) + 전체 복사 문구(사용자 승인 형식 — 팀마다 한 줄, '비밀번호:').
 // ----------------------------------------------------------------------
 import type {
+  AdminRoomSchedule,
+  AdminRoomScheduleResponse,
+  RoomBlock,
+  RoomBlockOccurrence,
+  RoomBlockOccurrenceResponse,
+  RoomBlockResponse,
   AdminRoomReservation,
   AdminRoomReservationResponse,
   TeamAccount,
@@ -80,4 +86,43 @@ export function toTeamCopyAll(teams: readonly TeamAccount[]): string {
     .sort((a, b) => compareTeamLabels(a.label, b.label))
     .map(toTeamCopyLine)
     .join('\n');
+}
+
+/** (U46) 막은 시간 발생분 */
+export function fromRoomBlockOccurrenceResponse(
+  res: RoomBlockOccurrenceResponse
+): RoomBlockOccurrence {
+  return {
+    blockId: res.blockId,
+    title: res.title,
+    date: res.date,
+    startAt: new Date(res.startAt),
+    endAt: new Date(res.endAt),
+  };
+}
+
+/** 관리 연습실 일정 — 예약 + (U46) 막은 시간(없으면 빈 배열) */
+export function fromAdminRoomScheduleResponse(
+  res: AdminRoomScheduleResponse
+): AdminRoomSchedule {
+  return {
+    reservations: res.items.map(fromAdminRoomReservationResponse),
+    blocks: (res.blocks ?? []).map(fromRoomBlockOccurrenceResponse),
+  };
+}
+
+/** (U46) 막은 시간 규칙 */
+export function fromRoomBlockResponse(res: RoomBlockResponse): RoomBlock {
+  return {
+    id: res.id,
+    title: res.title,
+    memo: res.memo,
+    repeat: res.repeat,
+    weekdays: [...res.weekdays],
+    startTime: res.startTime,
+    endTime: res.endTime,
+    startDate: res.startDate,
+    endDate: res.endDate,
+    skipDates: [...res.skipDates],
+  };
 }

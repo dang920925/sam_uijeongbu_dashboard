@@ -76,3 +76,73 @@ export interface AdminRoomReservation {
   /** (U45) 참석자 이름(이름 순) */
   attendeeNames: string[];
 }
+
+/** (U46) 막은 시간 발생분 — 관리 예약 목록 응답 blocks */
+export interface RoomBlockOccurrenceResponse {
+  blockId: string;
+  title: string;
+  date: string;
+  startAt: string;
+  endAt: string;
+}
+
+export interface AdminRoomScheduleResponse {
+  items: AdminRoomReservationResponse[];
+  blocks?: RoomBlockOccurrenceResponse[];
+}
+
+export interface RoomBlockOccurrence {
+  blockId: string;
+  title: string;
+  date: string;
+  startAt: Date;
+  endAt: Date;
+}
+
+/** 관리 연습실 일정 — 예약 + 막은 시간 */
+export interface AdminRoomSchedule {
+  reservations: AdminRoomReservation[];
+  blocks: RoomBlockOccurrence[];
+}
+
+export type RoomBlockRepeat = 'NONE' | 'WEEKLY';
+
+/** (U46) GET /admin/room-blocks items */
+export interface RoomBlockResponse {
+  id: string;
+  title: string;
+  memo: string | null;
+  repeat: RoomBlockRepeat;
+  /** ISO 1=월 … 7=일 */
+  weekdays: number[];
+  startTime: string;
+  endTime: string;
+  startDate: string;
+  endDate: string;
+  skipDates: string[];
+  createdAt: string;
+}
+
+export type RoomBlock = Omit<RoomBlockResponse, 'createdAt'>;
+
+/** 추가·수정·겹침 확인 본문 */
+export interface RoomBlockRequest {
+  title: string;
+  memo: string | null;
+  repeat: RoomBlockRepeat;
+  weekdays: number[];
+  startTime: string;
+  endTime: string;
+  startDate: string;
+  endDate: string;
+  onConflict?: 'CANCEL' | 'KEEP';
+}
+
+/** POST /admin/room-blocks/conflicts items */
+export interface RoomBlockConflictResponse {
+  id: string;
+  teamName: string;
+  performanceTitle: string;
+  startAt: string;
+  endAt: string;
+}
