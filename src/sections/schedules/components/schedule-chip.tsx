@@ -10,7 +10,7 @@ import type { MouseEvent } from 'react';
 import { Typo } from '@/src/components/typo';
 import { CAL } from '@/src/sections/schedules/utils/calendar-dimensions';
 import type { CalendarEvent } from '@/src/sections/schedules/utils/calendar-event';
-import { scheduleToneSx } from '@/src/sections/schedules/components/schedule-tone';
+import { eventToneSx } from '@/src/sections/schedules/components/schedule-tone';
 import { MSG_D08 } from '@/src/shared/messages/d08';
 import { RADIUS } from '@/src/theme/layout-tokens';
 import { MOTION } from '@/src/theme/motion';
@@ -43,7 +43,7 @@ export function ScheduleChip({ event, onOpen }: ScheduleChipProps) {
           textAlign: 'left',
           transition: `background-color ${MOTION.duration.short}ms ${MOTION.easing.standard}, color ${MOTION.duration.short}ms ${MOTION.easing.standard}`,
         },
-        scheduleToneSx(event.type, event.isCancelled) as object,
+        eventToneSx(event) as object,
       ]}
     >
       {event.isCancelled ? (

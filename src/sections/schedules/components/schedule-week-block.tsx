@@ -9,8 +9,8 @@ import type { MouseEvent } from 'react';
 
 import { Typo } from '@/src/components/typo';
 import {
-  scheduleBarColor,
-  scheduleToneSx,
+  eventBarColor,
+  eventToneSx,
 } from '@/src/sections/schedules/components/schedule-tone';
 import { MINUTE_PX } from '@/src/sections/schedules/utils/calendar-dimensions';
 import type { WeekBlock } from '@/src/sections/schedules/utils/schedule-week';
@@ -56,11 +56,11 @@ export function ScheduleWeekBlock({ block, onOpen }: ScheduleWeekBlockProps) {
           borderRadius: `${RADIUS.sm}px`,
           boxSizing: 'border-box',
         },
-        scheduleToneSx(event.type, event.isCancelled) as object,
+        eventToneSx(event) as object,
         {
           borderLeft: 4,
           borderLeftStyle: event.isCancelled ? 'dashed' : 'solid',
-          borderLeftColor: scheduleBarColor(event.type, event.isCancelled),
+          borderLeftColor: eventBarColor(event),
         },
       ]}
     >

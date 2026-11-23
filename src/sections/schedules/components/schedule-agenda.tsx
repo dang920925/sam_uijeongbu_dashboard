@@ -8,7 +8,7 @@ import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
 
 import { Typo } from '@/src/components/typo';
-import { scheduleBarColor } from '@/src/sections/schedules/components/schedule-tone';
+import { eventBarColor } from '@/src/sections/schedules/components/schedule-tone';
 import type { AgendaDay } from '@/src/sections/schedules/utils/schedule-agenda';
 import { MSG_D08 } from '@/src/shared/messages/d08';
 import { LAYOUT, RADIUS } from '@/src/theme/layout-tokens';
@@ -91,7 +91,7 @@ export function ScheduleAgenda({ days, onOpenEvent }: ScheduleAgendaProps) {
                     width: 4,
                     flexShrink: 0,
                     borderRadius: 9999,
-                    bgcolor: scheduleBarColor(event.type, event.isCancelled),
+                    bgcolor: eventBarColor(event),
                   }}
                 />
                 <div className='flex min-w-0 flex-1 flex-col'>

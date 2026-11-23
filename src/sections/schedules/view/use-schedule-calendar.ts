@@ -5,11 +5,14 @@
 // - xs 는 주 보기가 없다(week → month), 월 = 아젠다. 칩 개수 lg 3 · md 2.
 // - 달/주 이동 방향을 기억해 격자 슬라이드 방향을 정한다(designer §14.4).
 // - 현재 시각 선은 마운트 뒤 1분마다 갱신(하이드레이션 일치 — 첫 렌더는 null).
+// - (v1.3.1) '연습실 예약' 레이어가 켜져 있으면 보기 범위(월·주·목록 30일)의 팀 연습실 예약을 받아 같은 격자에 섞는다
+//   (빗금 칩 — 공식 일정 아님). 실패해도 일정은 그대로 보인다(레이어만 빠짐).
 // JSX 없음.
 // ----------------------------------------------------------------------
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useAdminRoomReservations } from '@/src/api/practice-queries';
 import { useScheduleMonths } from '@/src/api/schedule-queries';
 import {
   effectiveView,
@@ -21,7 +24,14 @@ import {
   toCalendarQuery,
   type CalendarView,
 } from '@/src/sections/schedules/utils/calendar-nav';
-import { toCalendarEvents } from '@/src/sections/schedules/utils/calendar-event';
+import {
+  compareEvents,
+  toCalendarEvents,
+} from '@/src/sections/schedules/utils/calendar-event';
+import {
+  roomRangeFor,
+  toRoomCalendarEvents,
+} from '@/src/sections/schedules/utils/room-event';
 import { toKstMoment } from '@/src/sections/schedules/utils/kst-calendar';
 import { buildAgenda } from '@/src/sections/schedules/utils/schedule-agenda';
 import {
@@ -40,6 +50,8 @@ interface CalendarOptions {
   type: ScheduleType | undefined;
   isXs: boolean;
   isLg: boolean;
+  /** v1.3.1 연습실 예약 레이어 표시 */
+  showRooms: boolean;
 }
 
 const NOW_TICK_MS = 60_000;
@@ -61,6 +73,7 @@ export function useScheduleCalendar({
   type,
   isXs,
   isLg,
+  showRooms,
 }: CalendarOptions) {
   const router = useRouter();
   const pathname = usePathname();
@@ -81,7 +94,19 @@ export function useScheduleCalendar({
   const anchor = pending?.anchor ?? urlAnchor;
   const months = useMemo(() => monthsForView(view, anchor), [view, anchor]);
   const query = useScheduleMonths(months, type);
-  const events = useMemo(() => toCalendarEvents(query.items), [query.items]);
+  const roomRange = useMemo(
+    () => roomRangeFor(view, anchor, today),
+    [view, anchor, today]
+  );
+  const roomQuery = useAdminRoomReservations(roomRange, showRooms);
+  const roomEvents = useMemo(
+    () => (showRooms ? toRoomCalendarEvents(roomQuery.data ?? []) : []),
+    [showRooms, roomQuery.data]
+  );
+  const events = useMemo(
+    () => [...toCalendarEvents(query.items), ...roomEvents].sort(compareEvents),
+    [query.items, roomEvents]
+  );
 
   const monthWeeks = useMemo(
     () =>
@@ -126,6 +151,9 @@ export function useScheduleCalendar({
         : `${view}-${anchor.slice(0, 7)}`,
     direction,
     items: query.items,
+    /** 연습실 예약 레이어(보기 범위) — 목록 보기 아래 목록 · 상세가 쓴다 */
+    roomEvents,
+    isRoomsError: showRooms && roomQuery.isError,
     monthWeeks,
     weekDays,
     weekScrollMinutes: initialScrollMinutes(weekDays),

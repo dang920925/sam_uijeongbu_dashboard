@@ -7,12 +7,14 @@
 // - 칩·블록·아젠다 행 → 상세(md↑ 팝오버 / xs 아래 시트) → 수정·삭제·일정 취소·취소 해제.
 // - 추가 기본값: 머리 버튼 = 빈 값(J-63), 월 빈 자리 = 그 날 00:00(J-19), 주 빈 칸 = 그 칸 + 1시간(J-60).
 // - 저장 성공 → 저장된 일정 날짜로 이동(J-23). 삭제 실패는 확인창을 닫고 스낵바.
+// - (v1.3.1) '연습실 예약' 레이어 — 기본 켜짐. 칩(`room:{id}`)을 누르면 연습실 예약 상세 → '예약 삭제'(확인 후).
 // ----------------------------------------------------------------------
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useAllClasses, usePerformances } from '@/src/api/performance-queries';
+import { useDeleteAdminRoomReservation } from '@/src/api/practice-queries';
 import { toScheduleFormInput } from '@/src/api/schedule-mapper';
 import { useDeleteSchedule, useSchedules } from '@/src/api/schedule-queries';
 import type { SegmentOption } from '@/src/components/segment-pill';
@@ -27,6 +29,7 @@ import {
 } from '@/src/sections/schedules/utils/schedule-add-default';
 import { toScheduleDetail } from '@/src/sections/schedules/utils/schedule-detail';
 import { toScheduleRow } from '@/src/sections/schedules/utils/schedule-row';
+import { isRoomEventId } from '@/src/sections/schedules/utils/room-event';
 import { useScheduleCalendar } from '@/src/sections/schedules/view/use-schedule-calendar';
 import { useScheduleCancel } from '@/src/sections/schedules/view/use-schedule-cancel';
 import { useScheduleForm } from '@/src/sections/schedules/view/use-schedule-form';
@@ -77,9 +80,14 @@ export function useSchedulesViewModel(today: string) {
   const [deleteTarget, setDeleteTarget] = useState<Schedule | null>(null);
   const [detail, setDetail] = useState<Anchored<string> | null>(null);
   const [more, setMore] = useState<Anchored<string> | null>(null);
+  /** v1.3.1 연습실 예약 레이어 — 기본 켜짐 */
+  const [showRooms, setShowRooms] = useState(true);
+  const [roomDetailId, setRoomDetailId] = useState<string | null>(null);
+  const [roomDeleteOpen, setRoomDeleteOpen] = useState(false);
+  const removeRoom = useDeleteAdminRoomReservation();
   const type = typeFilter === 'ALL' ? undefined : typeFilter;
 
-  const calendar = useScheduleCalendar({ today, type, isXs, isLg });
+  const calendar = useScheduleCalendar({ today, type, isXs, isLg, showRooms });
   const isList = calendar.view === 'list';
   const listQuery = useSchedules({ type, page, size: ADMIN_PAGE_SIZE }, isList);
   const performancesQuery = usePerformances({ size: ADMIN_MAX_PAGE_SIZE });
@@ -162,7 +170,30 @@ export function useSchedulesViewModel(today: string) {
     });
   };
 
+  const roomDetail =
+    calendar.roomEvents.find((event) => event.id === roomDetailId) ?? null;
+
+  const handleConfirmRoomDelete = () => {
+    if (!roomDetail?.room) return;
+    removeRoom.mutate(roomDetail.room.id, {
+      onSuccess: () => {
+        setRoomDeleteOpen(false);
+        setRoomDetailId(null);
+        snackbar.success(MSG_D08.ROOM_DELETED);
+      },
+      onError: (error) => {
+        setRoomDeleteOpen(false);
+        snackbar.error(toErrorMessage(error));
+      },
+    });
+  };
+
   const openDetail = (id: string, anchor: HTMLElement | null) => {
+    if (isRoomEventId(id)) {
+      setMore(null);
+      setRoomDetailId(id);
+      return;
+    }
     // 더보기 팝오버 안 칩이면 더보기 단추에 붙인다(팝오버가 닫히며 칩이 사라지므로)
     setDetail({ value: id, anchor: more?.anchor ?? anchor });
     setMore(null);
@@ -244,6 +275,17 @@ export function useSchedulesViewModel(today: string) {
       direction: calendar.direction,
       isFetching: calendar.isFetching,
     },
+    showRooms,
+    onToggleRooms: () => setShowRooms((value) => !value),
+    /** 목록 보기 아래 연습실 예약(레이어 꺼짐이면 null) */
+    roomListEvents: showRooms && isList ? calendar.roomEvents : null,
+    roomDetail,
+    isRoomDeleteOpen: roomDeleteOpen,
+    isRoomDeleting: removeRoom.isPending,
+    onCloseRoomDetail: () => setRoomDetailId(null),
+    onRoomDelete: () => setRoomDeleteOpen(true),
+    onConfirmRoomDelete: handleConfirmRoomDelete,
+    onCancelRoomDelete: () => setRoomDeleteOpen(false),
     onConfirmDelete: handleConfirmDelete,
     onCancelDelete: () => setDeleteTarget(null),
   };
