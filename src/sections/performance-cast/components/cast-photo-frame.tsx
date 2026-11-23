@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------
-// (U48) 사진 틀 — 비율 고정(단체·팀샷 16:9, 배역 3:4) + 사진(가운데 잘라 채움) + 순서 칩 + 올리는 중 덮개(진행 막대).
+// (U48) 사진 틀 — 비율 고정(단체·팀샷 16:9, 배역 3:4) + 사진(배역은 가운데 잘라 채움, 단체·팀샷은 잘리지 않게 전체 표시) + 순서 칩 + 올리는 중 덮개(진행 막대).
 // 사진이 없으면 children(점선 올리기 버튼 등)을 그대로 채운다. props 만으로 렌더.
 // ----------------------------------------------------------------------
 import Box from '@mui/material/Box';
@@ -43,7 +43,17 @@ export function CastPhotoFrame({
         bgcolor: imageUrl ? 'semantic.surface.muted' : 'transparent',
       }}
     >
-      {imageUrl ? <Image src={imageUrl} alt={alt} sizes={sizes} /> : children}
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={alt}
+          sizes={sizes}
+          // 단체·팀샷은 세로가 긴 사진도 잘리지 않게 전체를 보여 준다(사용자 피드백)
+          fit={ratio === '16 / 9' ? 'contain' : 'cover'}
+        />
+      ) : (
+        children
+      )}
       {badge ? (
         <Box
           className='absolute left-2 top-2 px-2'
