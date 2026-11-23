@@ -157,6 +157,11 @@ export const endpoints = {
     match: (id: string) => `${admin}/deposit-notifications/${id}/match`,
     ignore: (id: string) => `${admin}/deposit-notifications/${id}/ignore`,
   },
+  /** U43 입금 알림 기기 — 목록 · 등록(토큰 한 번) · 해제 */
+  depositDevices: {
+    list: `${admin}/deposit-devices`,
+    revoke: (id: string) => `${admin}/deposit-devices/${id}`,
+  },
   /** U37 새 예매 푸시(develop §21) — 공개키 · 내 기기 GET·POST·DELETE · 시험 발송 */
   push: {
     publicKey: `${admin}/push/public-key`,
