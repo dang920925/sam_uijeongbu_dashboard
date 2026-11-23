@@ -113,29 +113,29 @@ async function openBooking(
     depositDeadlineHours: 24,
     refundPolicyText: '공연 전날까지 환불',
   });
-  const tier = await adminApi<Created>(
-    'POST',
-    `/admin/performances/${performanceId}/price-tiers`,
-    { name: '일반', price: 10000, visibility: 'PUBLIC', isActive: true }
-  );
-  return { showId: show.id, tierId: tier.id };
+  // U41(v1.3.1) — 가격은 기본가·SAM 관계자가
+  await adminApi('PUT', `/admin/performances/${performanceId}/inviter-prices`, {
+    base: 10000,
+    samRelated: 5000,
+  });
+  return { showId: show.id, tierId: '' };
 }
 
 let phoneSeq = 0;
 function reserve(
   showId: string,
-  tierId: string,
+  _tierId: string,
   extra: Record<string, unknown> = {}
 ) {
   phoneSeq += 1;
   return relayPost('/reservations', {
     showId,
-    items: [{ tierId, quantity: 1 }],
+    quantity: 1,
     bookerName: `${PREFIX}예매자`,
     bookerPhone: `010-3130-${String(phoneSeq).padStart(4, '0')}`,
     agreedToPrivacy: true,
     agreedToRefundPolicy: true,
-    inviterCategory: 'STAFF_RELATED',
+    inviter: { kind: 'STAFF_RELATED' },
     ...extra,
   });
 }
