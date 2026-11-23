@@ -130,11 +130,15 @@ test.describe('qa2 수정 확인', () => {
     ).toBeNull();
     const add = dialog.getByRole('button', { name: '추가' });
     await expect(add).toBeDisabled();
-    const look = await add.evaluate((el) => {
-      const s = getComputedStyle(el);
-      return { bg: s.backgroundColor, opacity: s.opacity };
-    });
     // U30(2026-11-20 지휘자 승인 — TH-1 예외): 색 리터럴 대신 테마 주 색(RAW.gold) + 50% 를 검사한다
-    expect(look).toEqual({ bg: toRgb(RAW.gold), opacity: '0.5' });
+    // (U48) 비활성으로 바뀌는 배경 전환(transition)이 끝난 값을 본다 — 전환 중간 색(232,161,34)을 읽어 실패하던 경합
+    await expect
+      .poll(() =>
+        add.evaluate((el) => {
+          const s = getComputedStyle(el);
+          return { bg: s.backgroundColor, opacity: s.opacity };
+        })
+      )
+      .toEqual({ bg: toRgb(RAW.gold), opacity: '0.5' });
   });
 });
