@@ -19,6 +19,8 @@ export interface RoomEventInfo {
   teamName: string;
   memo: string | null;
   performanceTitle: string;
+  /** (U45) 팀이 체크한 참석자 이름 */
+  attendeeNames: string[];
 }
 
 export interface CalendarEvent {

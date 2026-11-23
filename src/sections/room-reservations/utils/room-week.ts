@@ -1,6 +1,7 @@
 // ----------------------------------------------------------------------
 // 연습실 예약 목록 주 계산·표시값(순수 함수, KST 고정). 주는 월요일 시작.
 // ----------------------------------------------------------------------
+import { formatAttendees } from '@/src/api/practice-mapper';
 import type { AdminRoomReservation } from '@/src/types/practice';
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -50,12 +51,15 @@ export interface RoomRowDisplay {
   teamName: string;
   performanceTitle: string;
   memo: string;
+  /** (U45) "2명 · 김가, 이나" · 없으면 대체 문구 */
+  attendeesText: string;
 }
 
-/** 표 한 줄 — 'MM.DD (요일)' · 'HH:mm–HH:mm' */
+/** 표 한 줄 — 'MM.DD (요일)' · 'HH:mm–HH:mm' · 참석자(U45) */
 export function toRoomRowDisplay(
   r: AdminRoomReservation,
-  noMemo: string
+  noMemo: string,
+  noAttendees: string
 ): RoomRowDisplay {
   const start = kst(r.startAt);
   const end = kst(r.endAt);
@@ -66,5 +70,6 @@ export function toRoomRowDisplay(
     teamName: r.teamName,
     performanceTitle: r.performanceTitle,
     memo: r.memo ?? noMemo,
+    attendeesText: formatAttendees(r.attendeeNames, noAttendees),
   };
 }

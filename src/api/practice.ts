@@ -6,12 +6,14 @@ import {
   fromAdminRoomReservationResponse,
   fromTeamAccountListResponse,
   fromTeamAccountResponse,
+  fromTeamRosterResponse,
 } from '@/src/api/practice-mapper';
 import {
   apiDelete,
   apiFetch,
   apiPatch,
   apiPost,
+  apiPut,
   withQuery,
 } from '@/src/lib/api-client';
 import type { ItemsResponse } from '@/src/types/common';
@@ -22,6 +24,8 @@ import type {
   TeamAccountList,
   TeamAccountListResponse,
   TeamAccountResponse,
+  TeamRoster,
+  TeamRosterResponse,
 } from '@/src/types/practice';
 
 export async function fetchTeamAccounts(
@@ -89,4 +93,31 @@ export async function fetchAdminRoomReservations(range: {
 
 export async function deleteAdminRoomReservation(id: string): Promise<void> {
   await apiDelete(endpoints.roomReservations.detail(id));
+}
+
+/** (U45) 팀 구성 표 — 폐기 안 된 팀 × 캐스트 배우 */
+export async function fetchTeamRoster(
+  performanceId: string
+): Promise<TeamRoster> {
+  return fromTeamRosterResponse(
+    await apiFetch<TeamRosterResponse>(
+      endpoints.performances.teamMembers(performanceId)
+    )
+  );
+}
+
+/** (U45) 팀에 배우 넣기(멱등) */
+export async function addTeamMember(
+  teamAccountId: string,
+  memberId: string
+): Promise<void> {
+  await apiPut(endpoints.teamAccounts.member(teamAccountId, memberId), {});
+}
+
+/** (U45) 팀에서 배우 빼기(멱등) */
+export async function removeTeamMember(
+  teamAccountId: string,
+  memberId: string
+): Promise<void> {
+  await apiDelete(endpoints.teamAccounts.member(teamAccountId, memberId));
 }

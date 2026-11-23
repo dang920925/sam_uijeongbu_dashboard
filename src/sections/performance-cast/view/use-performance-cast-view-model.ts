@@ -7,6 +7,7 @@
 // - 배역: ▲▼ 순서(PUT order) · 모집 중 스위치 · 배우 빼기(DELETE /members/{id}/cast-roles/{roleId} — 회차 지정이
 //   남으면 안내 스낵바) · 수정·삭제. 배우 추가·출연자 추가·회차 칸은 배우 고르기(useActorPicker).
 // - 참여자: useCreditSection. 공개 안 됨 이유는 utils/cast-reasons.
+// - (U45) 팀 구성: useTeamRosterSection(배우 × 팀 체크 — 자기 조회 상태를 카드 안에서 보인다).
 // ----------------------------------------------------------------------
 import { useState } from 'react';
 
@@ -32,6 +33,7 @@ import {
 import { useActorPicker } from '@/src/sections/performance-cast/view/use-actor-picker';
 import { useCreditSection } from '@/src/sections/performance-cast/view/use-credit-section';
 import { useRoleDialog } from '@/src/sections/performance-cast/view/use-role-dialog';
+import { useTeamRosterSection } from '@/src/sections/performance-cast/view/use-team-roster-section';
 import { MSG_D14 } from '@/src/shared/messages/d14';
 import {
   isNotFoundError,
@@ -73,6 +75,7 @@ export function usePerformanceCastViewModel(performanceId: string) {
     snackbar
   );
   const onFail = (error: unknown) => snackbar.error(toApiErrorMessage(error));
+  const teamSection = useTeamRosterSection(performanceId, snackbar.error);
 
   const status: PerformanceCastStatus = performanceQuery.isError
     ? isNotFoundError(performanceQuery.error)
@@ -196,6 +199,7 @@ export function usePerformanceCastViewModel(performanceId: string) {
     },
     picker: picker.state,
     creditSection,
+    teamSection,
   };
 }
 

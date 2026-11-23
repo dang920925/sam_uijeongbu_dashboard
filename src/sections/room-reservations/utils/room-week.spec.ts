@@ -32,8 +32,10 @@ describe('room-week', () => {
           teamName: 'Dear-A',
           memo: null,
           performanceTitle: 'Dear',
+          attendeeNames: [],
         },
-        '-'
+        '-',
+        '체크 안 함'
       )
     ).toEqual({
       id: 'r',
@@ -42,6 +44,25 @@ describe('room-week', () => {
       teamName: 'Dear-A',
       performanceTitle: 'Dear',
       memo: '-',
+      attendeesText: '체크 안 함',
     });
+  });
+
+  it('(U45) 참석자가 있으면 인원 수와 이름을 보인다', () => {
+    expect(
+      toRoomRowDisplay(
+        {
+          id: 'r',
+          startAt: new Date('2026-12-01T10:00:00.000Z'),
+          endAt: new Date('2026-12-01T11:00:00.000Z'),
+          teamName: 'Dear-A',
+          memo: '동선',
+          performanceTitle: 'Dear',
+          attendeeNames: ['김가', '이나'],
+        },
+        '-',
+        '체크 안 함'
+      ).attendeesText
+    ).toBe('2명 · 김가, 이나');
   });
 });

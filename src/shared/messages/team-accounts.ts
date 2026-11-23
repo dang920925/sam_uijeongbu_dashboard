@@ -41,4 +41,8 @@ export const MSG_TEAMS = {
   REVOKED: '폐기됨',
   INACTIVE: '사용 안 함',
   ACTIVE: '사용 중',
+  /** (U45) 팀별 소속 배우 — 배역·캐스팅 탭 '팀 구성'에서 정한다 */
+  COL_MEMBERS: '소속 배우',
+  MEMBERS_NONE: '미배정',
+  MEMBERS_HELP: '소속 배우는 배역·캐스팅 탭의 팀 구성에서 정합니다.',
 } as const;

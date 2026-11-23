@@ -1,7 +1,7 @@
 'use client';
 
 // ----------------------------------------------------------------------
-// 연습실 예약 상세(v1.3.1 사용자 요청 — 일정 캘린더 '연습실 예약' 레이어 칩을 누르면) — 팀 · 시간 · 작품 · 메모 +
+// 연습실 예약 상세(v1.3.1 사용자 요청 — 일정 캘린더 '연습실 예약' 레이어 칩을 누르면) — 팀 · 시간 · 작품 · 참석자(U45) · 메모 +
 // "팀이 등록한 연습실 예약…" 안내 + '예약 삭제'(관리자 — 확인 후 DELETE /admin/room-reservations/{id}).
 // props 만으로 그린다(값·삭제는 ViewModel).
 // ----------------------------------------------------------------------
@@ -12,6 +12,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useId } from 'react';
 
+import { formatAttendees } from '@/src/api/practice-mapper';
 import { Label } from '@/src/components/label';
 import { Typo } from '@/src/components/typo';
 import type { CalendarEvent } from '@/src/sections/schedules/utils/calendar-event';
@@ -72,6 +73,13 @@ export function RoomReservationDetailDialog({
             <Row
               label={MSG_D08.ROOM_DETAIL_PERFORMANCE}
               value={room.performanceTitle}
+            />
+            <Row
+              label={MSG_D08.ROOM_DETAIL_ATTENDEES}
+              value={formatAttendees(
+                room.attendeeNames,
+                MSG_D08.ROOM_NO_ATTENDEES
+              )}
             />
             <Row
               label={MSG_D08.ROOM_DETAIL_MEMO}

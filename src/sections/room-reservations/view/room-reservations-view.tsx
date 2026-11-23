@@ -1,7 +1,7 @@
 'use client';
 
 // ----------------------------------------------------------------------
-// U34 관리자 연습실 예약 목록 View — 머리(제목·부제) → 주 이동 줄 → 표(날짜·시간·팀·작품·메모·삭제) / xs 카드.
+// U34 관리자 연습실 예약 목록 View — 머리(제목·부제) → 주 이동 줄 → 표(날짜·시간·팀·작품·참석자(U45)·메모·삭제) / xs 카드.
 // 로딩 스켈레톤 · 오류 "다시 시도" · 빈 상태. props 만으로 렌더.
 // ----------------------------------------------------------------------
 import Button from '@mui/material/Button';
@@ -64,6 +64,15 @@ export function RoomReservationsView({ vm }: RoomReservationsViewProps) {
       ),
     },
     {
+      key: 'attendees',
+      header: MSG_ROOMS.COL_ATTENDEES,
+      render: (r) => (
+        <Typo.Caption.Regular data-testid='room-attendees'>
+          {r.attendeesText}
+        </Typo.Caption.Regular>
+      ),
+    },
+    {
       key: 'memo',
       header: MSG_ROOMS.COL_MEMO,
       render: (r) => (
@@ -90,6 +99,9 @@ export function RoomReservationsView({ vm }: RoomReservationsViewProps) {
       <Typo.Badge.Regular>
         {r.teamName} · {r.performanceTitle}
       </Typo.Badge.Regular>
+      <Typo.Caption.Regular>
+        {MSG_ROOMS.COL_ATTENDEES} {r.attendeesText}
+      </Typo.Caption.Regular>
       <Typo.Caption.Regular color='text.secondary'>
         {r.memo}
       </Typo.Caption.Regular>

@@ -8,6 +8,8 @@ import type {
   TeamAccountList,
   TeamAccountListResponse,
   TeamAccountResponse,
+  TeamRoster,
+  TeamRosterResponse,
 } from '@/src/types/practice';
 
 export function fromTeamAccountResponse(res: TeamAccountResponse): TeamAccount {
@@ -37,7 +39,26 @@ export function fromAdminRoomReservationResponse(
     teamName: res.teamName,
     memo: res.memo,
     performanceTitle: res.performanceTitle,
+    attendeeNames: (res.attendees ?? []).map((a) => a.name),
   };
+}
+
+/** (U45) 팀 구성 표 — 응답 그대로(배열은 복사) */
+export function fromTeamRosterResponse(res: TeamRosterResponse): TeamRoster {
+  return {
+    teams: res.teams.map((t) => ({ ...t, memberIds: [...t.memberIds] })),
+    members: res.members.map((m) => ({ ...m, roleNames: [...m.roleNames] })),
+  };
+}
+
+/** (U45) 참석자 글자 — "2명 · 김가, 이나", 없으면 emptyText */
+export function formatAttendees(
+  names: readonly string[],
+  emptyText: string
+): string {
+  return names.length === 0
+    ? emptyText
+    : `${names.length}명 · ${names.join(', ')}`;
 }
 
 /** 한 팀 줄 — "A - 아이디: Dear-A, 비밀번호: xxxx"(사용자 승인 형식 2026-11-20 — PR-8 보정) */

@@ -102,6 +102,9 @@ export const MSG_D08 = {
   ROOM_DETAIL_TIME: '시간',
   ROOM_DETAIL_PERFORMANCE: '작품',
   ROOM_DETAIL_MEMO: '메모',
+  /** (U45) 팀이 체크한 참석자 */
+  ROOM_DETAIL_ATTENDEES: '참석자',
+  ROOM_NO_ATTENDEES: '체크 안 함',
   ROOM_DETAIL_NOTE:
     '팀이 등록한 연습실 예약입니다. 공식 일정이 아니며 홈페이지에는 보이지 않습니다.',
   ROOM_DELETE: '예약 삭제',

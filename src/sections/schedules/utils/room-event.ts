@@ -65,6 +65,7 @@ export function toRoomCalendarEvent(
       teamName: room.teamName,
       memo: room.memo,
       performanceTitle: room.performanceTitle,
+      attendeeNames: room.attendeeNames,
     },
     title,
     type: 'PRACTICE',

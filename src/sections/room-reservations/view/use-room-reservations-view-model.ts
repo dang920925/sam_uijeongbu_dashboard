@@ -32,7 +32,7 @@ export function useRoomReservationsViewModel() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const rows = (query.data ?? []).map((r) =>
-    toRoomRowDisplay(r, MSG_ROOMS.NO_MEMO)
+    toRoomRowDisplay(r, MSG_ROOMS.NO_MEMO, MSG_ROOMS.NO_ATTENDEES)
   );
   const target = rows.find((r) => r.id === deleteId) ?? null;
 

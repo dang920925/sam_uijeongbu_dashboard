@@ -22,4 +22,7 @@ export const MSG_ROOMS = {
   DELETE_DESC: (team: string, when: string) => `${team} · ${when}`,
   DELETED: '예약을 삭제했습니다.',
   NO_MEMO: '-',
+  /** (U45) 참석자 — 팀이 예약할 때 체크한 배우 */
+  COL_ATTENDEES: '참석자',
+  NO_ATTENDEES: '체크 안 함',
 } as const;

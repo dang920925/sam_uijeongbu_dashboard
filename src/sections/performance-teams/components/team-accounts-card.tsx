@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------
 // U34 '팀 계정' 카드(design §13 SCR-D04) — 머리(제목·부제 + "전체 복사"·"팀 추가") → 접두어(수정·저장) → 표 → 안내.
-// lg 표: 팀 · 아이디 · 비밀번호(가림 + 보기) · 상태 Label · 사용 스위치 · 동작(복사·재발급) / md·xs 카드.
+// lg 표: 팀 · 아이디 · 비밀번호(가림 + 보기) · 소속 배우(U45) · 상태 Label · 사용 스위치 · 동작(복사·재발급) / md·xs 카드.
 // 접두어가 없는(기존) 작품은 빈 상태 + "팀 계정 만들기". props 만으로 렌더.
 // ----------------------------------------------------------------------
 import Button from '@mui/material/Button';
@@ -112,6 +112,15 @@ export function TeamAccountsCard({ card }: TeamAccountsCardProps) {
     },
     { key: 'password', header: MSG_TEAMS.COL_PASSWORD, render: password },
     {
+      key: 'members',
+      header: MSG_TEAMS.COL_MEMBERS,
+      render: (row) => (
+        <Typo.Caption.Regular data-testid='team-members'>
+          {row.membersText}
+        </Typo.Caption.Regular>
+      ),
+    },
+    {
       key: 'status',
       header: <span className='sr-only'>{MSG_TEAMS.ACTIVE}</span>,
       render: (row) => <Label tone={row.statusTone}>{row.statusText}</Label>,
@@ -134,6 +143,9 @@ export function TeamAccountsCard({ card }: TeamAccountsCardProps) {
         <Label tone={row.statusTone}>{row.statusText}</Label>
       </div>
       {password(row)}
+      <Typo.Caption.Regular>
+        {MSG_TEAMS.COL_MEMBERS} {row.membersText}
+      </Typo.Caption.Regular>
       <div className='flex items-center justify-between gap-2'>
         {activeSwitch(row)}
         {actions(row)}
@@ -173,7 +185,7 @@ export function TeamAccountsCard({ card }: TeamAccountsCardProps) {
       footer={
         <div className='px-4 pb-4 md:px-6 md:pb-6'>
           <Typo.Caption.Regular color='text.secondary'>
-            {MSG_TEAMS.NOTICE}
+            {MSG_TEAMS.NOTICE} {MSG_TEAMS.MEMBERS_HELP}
           </Typo.Caption.Regular>
         </div>
       }

@@ -3,7 +3,8 @@
 // 같이 비운다(공용 저장소 객체가 바뀐 것으로 알아챈다 — mock-store 를 고치지 않게).
 // - 공연 등록(handlers/performances)이 provisionMockTeam 으로 접두어·A 계정을 만든다(PR-1).
 // - 비밀번호는 혼동 문자 없는 12자, 재발급하면 바뀐다. 접두어는 영문·숫자 1~20자, 다른 작품과 겹치면 409 TEAM_003.
-// - 연습실 예약은 E2E 가 `POST /v1/__mock/room-reservations` 로 넣는다(팀 화면은 홈페이지 몫).
+// - 연습실 예약은 E2E 가 `POST /v1/__mock/room-reservations` 로 넣는다(팀 화면은 홈페이지 몫). attendees 이름 배열을 줄 수 있다.
+// - (U45) 팀 구성: 소속(팀 id → 단원 id 집합). 후보 = 공용 저장소의 기본 캐스트(role_casts, showId null) 배우(배역 순).
 // ----------------------------------------------------------------------
 import { findPerformanceAlive } from '@/src/_mock/backend/booking-model';
 import {
@@ -20,6 +21,7 @@ import { getStore } from '@/src/_mock/backend/mock-store';
 import type {
   AdminRoomReservationResponse,
   TeamAccountResponse,
+  TeamRosterResponse,
 } from '@/src/types/practice';
 
 interface MockTeam extends TeamAccountResponse {
@@ -31,6 +33,8 @@ interface TeamMockState {
   prefixes: Map<string, string>;
   teams: MockTeam[];
   rooms: AdminRoomReservationResponse[];
+  /** (U45) 팀 id → 소속 단원 id */
+  members: Map<string, Set<string>>;
 }
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -47,6 +51,7 @@ function state(): TeamMockState {
       prefixes: new Map(),
       teams: [],
       rooms: [],
+      members: new Map(),
     };
   }
   return globalForTeam.__samTeamMock;
@@ -142,7 +147,107 @@ function list(performanceId: string) {
   };
 }
 
+/** (U45) 공연 기본 캐스트 배우 — 배역 순 → 캐스트 순, 배우마다 한 줄 */
+function castCandidates(performanceId: string): TeamRosterResponse['members'] {
+  const store = getStore();
+  const roles = store.roles
+    .filter((r) => r.performanceId === performanceId)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const byMember = new Map<string, TeamRosterResponse['members'][number]>();
+  for (const role of roles) {
+    const rows = store.roleCasts
+      .filter((c) => c.roleId === role.id && c.showId === null)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    for (const row of rows) {
+      const member = store.members.find((m) => m.id === row.memberId);
+      if (!member) continue;
+      const roleName = role.name ?? '출연';
+      const found = byMember.get(member.id);
+      if (!found)
+        byMember.set(member.id, {
+          memberId: member.id,
+          name: member.name,
+          roleNames: [roleName],
+        });
+      else if (!found.roleNames.includes(roleName))
+        found.roleNames.push(roleName);
+    }
+  }
+  return [...byMember.values()];
+}
+
+function roster(performanceId: string): TeamRosterResponse {
+  const s = state();
+  const members = castCandidates(performanceId);
+  return {
+    teams: s.teams
+      .filter((t) => t.performanceId === performanceId && !t.revokedAt)
+      .sort(
+        (a, b) =>
+          a.label.length - b.label.length || a.label.localeCompare(b.label)
+      )
+      .map((t) => ({
+        teamAccountId: t.id,
+        label: t.label,
+        username: t.username,
+        isActive: t.isActive,
+        memberIds: members
+          .map((m) => m.memberId)
+          .filter((id) => s.members.get(t.id)?.has(id)),
+      })),
+    members,
+  };
+}
+
 export const teamAccountRoutes: MockRoute[] = [
+  {
+    method: 'GET',
+    pattern: /^\/v1\/admin\/performances\/(?<id>[^/]+)\/team-members$/,
+    auth: true,
+    handle: (ctx) =>
+      findPerformanceAlive(ctx.params.id)
+        ? json(roster(ctx.params.id))
+        : apiError(ctx, 404, 'PERF_001', '작품 정보를 찾을 수 없습니다.'),
+  },
+  {
+    method: 'PUT',
+    pattern:
+      /^\/v1\/admin\/team-accounts\/(?<id>[^/]+)\/members\/(?<memberId>[^/]+)$/,
+    auth: true,
+    handle: (ctx) => {
+      const s = state();
+      const team = s.teams.find((t) => t.id === ctx.params.id && !t.revokedAt);
+      if (!team)
+        return apiError(ctx, 404, 'TEAM_005', '팀 계정을 찾을 수 없습니다.');
+      const isCast = castCandidates(team.performanceId).some(
+        (m) => m.memberId === ctx.params.memberId
+      );
+      if (!isCast)
+        return apiError(
+          ctx,
+          400,
+          'TEAM_006',
+          '이 공연 캐스트에 있는 배우만 팀에 넣을 수 있습니다.'
+        );
+      const set = s.members.get(team.id) ?? new Set<string>();
+      set.add(ctx.params.memberId);
+      s.members.set(team.id, set);
+      return noContent();
+    },
+  },
+  {
+    method: 'DELETE',
+    pattern:
+      /^\/v1\/admin\/team-accounts\/(?<id>[^/]+)\/members\/(?<memberId>[^/]+)$/,
+    auth: true,
+    handle: (ctx) => {
+      const s = state();
+      if (!s.teams.some((t) => t.id === ctx.params.id && !t.revokedAt))
+        return apiError(ctx, 404, 'TEAM_005', '팀 계정을 찾을 수 없습니다.');
+      s.members.get(ctx.params.id)?.delete(ctx.params.memberId);
+      return noContent();
+    },
+  },
   {
     method: 'GET',
     pattern: /^\/v1\/admin\/performances\/(?<id>[^/]+)\/team-accounts$/,
@@ -261,11 +366,14 @@ export const teamAccountRoutes: MockRoute[] = [
     },
   },
   {
-    // 목 전용 — E2E 가 예약을 넣는다. 본문 { startAt, endAt, teamName, memo?, performanceTitle? }
+    // 목 전용 — E2E 가 예약을 넣는다. 본문 { startAt, endAt, teamName, memo?, performanceTitle?, attendees?(이름 배열) }
     method: 'POST',
     pattern: /^\/v1\/__mock\/room-reservations$/,
     auth: false,
     handle: (ctx) => {
+      const names = Array.isArray(ctx.body.attendees)
+        ? ctx.body.attendees.filter((n): n is string => typeof n === 'string')
+        : [];
       const room: AdminRoomReservationResponse = {
         id: newId(),
         startAt: str(ctx.body.startAt) ?? nowIso(),
@@ -274,6 +382,8 @@ export const teamAccountRoutes: MockRoute[] = [
         memo: str(ctx.body.memo),
         performanceId: str(ctx.body.performanceId) ?? newId(),
         performanceTitle: str(ctx.body.performanceTitle) ?? '[작품 제목]',
+        attendees: names.map((name) => ({ memberId: newId(), name })),
+        attendeeCount: names.length,
       };
       state().rooms.push(room);
       return json(room, 201);

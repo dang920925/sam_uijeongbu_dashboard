@@ -6,10 +6,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  addTeamMember,
   createTeamAccount,
   deleteAdminRoomReservation,
   fetchAdminRoomReservations,
   fetchTeamAccounts,
+  fetchTeamRoster,
+  removeTeamMember,
   resetTeamPassword,
   setTeamAccountActive,
   updateTeamPrefix,
@@ -20,6 +23,12 @@ export const teamAccountKeys = {
   all: ROOT_KEYS.teamAccount,
   list: (performanceId: string) =>
     [...teamAccountKeys.all, 'list', performanceId] as const,
+};
+
+export const teamRosterKeys = {
+  all: [...ROOT_KEYS.teamAccount, 'roster'] as const,
+  detail: (performanceId: string) =>
+    [...teamRosterKeys.all, performanceId] as const,
 };
 
 export const roomReservationKeys = {
@@ -91,5 +100,36 @@ export function useDeleteAdminRoomReservation() {
     mutationFn: deleteAdminRoomReservation,
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: roomReservationKeys.all }),
+  });
+}
+
+/** (U45) 팀 구성 표 */
+export function useTeamRoster(performanceId: string) {
+  return useQuery({
+    queryKey: teamRosterKeys.detail(performanceId),
+    queryFn: () => fetchTeamRoster(performanceId),
+  });
+}
+
+/** (U45) 팀 소속 배우 넣기·빼기 — 한 칸씩 */
+export function useToggleTeamMember(performanceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      teamAccountId,
+      memberId,
+      checked,
+    }: {
+      teamAccountId: string;
+      memberId: string;
+      checked: boolean;
+    }) =>
+      checked
+        ? addTeamMember(teamAccountId, memberId)
+        : removeTeamMember(teamAccountId, memberId),
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: teamRosterKeys.detail(performanceId),
+      }),
   });
 }

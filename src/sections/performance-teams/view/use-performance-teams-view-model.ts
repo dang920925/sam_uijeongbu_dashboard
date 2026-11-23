@@ -5,6 +5,7 @@
 // - 공연(제목·404)은 D04 상태 카드, 팀 목록은 본문 로딩·오류(TEAM_004 기능 꺼짐 포함 — 서버 문구)·내용.
 // - 비밀번호는 기본 가림, 줄마다 보기/복사, "전체 복사" = 사용 중 계정만 라벨 순, 팀마다 한 줄 "A - 아이디: …, 비밀번호: …"(PR-8 — 사용자 승인 형식).
 // - 재발급은 확인 대화상자(세션 무효 안내) 뒤. 사용 스위치·접두어 저장은 바로 반영, 실패는 스낵바.
+// - (U45) 팀별 소속 배우 — 팀 구성 표(배역·캐스팅 탭에서 정함)를 읽어 이름만 보인다. 표를 못 읽으면 "미배정"으로 보인다.
 // ----------------------------------------------------------------------
 import { useState } from 'react';
 
@@ -15,9 +16,11 @@ import {
   useResetTeamPassword,
   useSetTeamAccountActive,
   useTeamAccounts,
+  useTeamRoster,
   useUpdateTeamPrefix,
 } from '@/src/api/practice-queries';
 import { useAppSnackbar } from '@/src/hooks/use-app-snackbar';
+import { toTeamMemberNames } from '@/src/sections/performance-cast/utils/team-roster-rows';
 import {
   isValidTeamPrefix,
   toTeamRows,
@@ -35,6 +38,7 @@ export function usePerformanceTeamsViewModel(performanceId: string) {
   const snackbar = useAppSnackbar();
   const performanceQuery = usePerformance(performanceId);
   const teamsQuery = useTeamAccounts(performanceId);
+  const rosterQuery = useTeamRoster(performanceId);
   const create = useCreateTeamAccount(performanceId);
   const savePrefix = useUpdateTeamPrefix(performanceId);
   const reset = useResetTeamPassword();
@@ -87,7 +91,11 @@ export function usePerformanceTeamsViewModel(performanceId: string) {
     onBodyRetry: () => void teamsQuery.refetch(),
     card: {
       hasPrefix: prefix !== null,
-      rows: toTeamRows(teams, revealed),
+      rows: toTeamRows(
+        teams,
+        revealed,
+        rosterQuery.data ? toTeamMemberNames(rosterQuery.data) : undefined
+      ),
       isBusy: create.isPending || setActive.isPending || reset.isPending,
       prefixValue,
       prefixError,
